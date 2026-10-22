@@ -8,7 +8,7 @@ import kotlin.math.*
  */
 internal object TemperatureDisplay {
     const val SHELL_SCALE = 1.003f
-    const val DEFAULT_OPACITY = .8f
+    const val DEFAULT_OPACITY = 1f
     fun smooth(grid:TemperatureGrid):FloatArray {
         val w=grid.width;val h=grid.height;val raw=grid.copyCelsius()
         var sums=FloatArray(raw.size){if(raw[it].isFinite())raw[it] else 0f}

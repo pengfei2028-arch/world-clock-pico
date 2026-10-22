@@ -7,7 +7,7 @@ import java.util.Locale
 internal class TemperatureState {
     var manifest by mutableStateOf<TemperatureManifest?>(null)
     var index by mutableIntStateOf(0)
-    var strength by mutableFloatStateOf(.8f)
+    var strength by mutableFloatStateOf(TemperatureDisplay.DEFAULT_OPACITY)
     var displayedManifest by mutableStateOf<TemperatureManifest?>(null)
     var displayed by mutableStateOf<TemperatureFrame?>(null)
     var grid by mutableStateOf<TemperatureGrid?>(null)

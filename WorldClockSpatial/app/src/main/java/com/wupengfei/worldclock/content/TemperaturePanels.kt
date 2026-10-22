@@ -24,7 +24,6 @@ import com.pico.spatial.ui.foundation.material.backgroundMaterial
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-private val tempTime=DateTimeFormatter.ofPattern("MM-dd HH:mm").withZone(ZoneId.systemDefault())
 @Composable internal fun ModulePanel(state:ClockState){
     Row(Modifier.width(230.dp).height(38.dp),horizontalArrangement=Arrangement.spacedBy(6.dp)){
         for((mode,title) in listOf(EarthMode.WORLD_TIME to "世界时间",EarthMode.TEMPERATURE to "全球气温")){
@@ -34,29 +33,24 @@ private val tempTime=DateTimeFormatter.ofPattern("MM-dd HH:mm").withZone(ZoneId.
         }
     }
 }
-@Composable internal fun TemperatureInfo(state:ClockState){
-    val t=state.temperature;val m=t.displayedManifest?:t.manifest
-    Column(Modifier.width(656.dp).height(88.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(5.dp)){
-        Text("2 m "+t.kindLabel+" · NOAA GFS · "+(t.displayed?.validTime?.let{tempTime.format(it)+" "+ZoneId.systemDefault().id}?:"正在载入")+(if(t.loading)" · 切换中" else ""),style=uiText(12))
-        Row(Modifier.fillMaxWidth().height(48.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(14.dp)){
-            TemperatureLegend(Modifier.weight(1f));TemperatureStrength(state)
-        }
-        Text((if(m?.stale(state.now)==true)"数据已过期 · " else "")+t.status,style=uiText(11),color=Color.White.copy(alpha=.65f))
-    }
-}
-@Composable private fun TemperatureLegend(modifier:Modifier){
+/** Shares the time ruler's 528 dp bounds and uses proportional Celsius intervals. */
+@Composable internal fun TemperatureLegend(modifier:Modifier=Modifier){
     val tm=rememberTextMeasurer();val style=uiText(10)
-    val text=remember(style){listOf("−30","−20","−10","0","10","20","30","40").map{tm.measure(it,style=style)}}
+    val labels=remember(tm,style){TemperaturePalette.displayTicks.map { value ->
+        tm.measure(when(value){-30->"≤ −30";40->"≥ 40 °C";else->value.toString().replace("-","−")},style=style)
+    }}
     Canvas(modifier.height(48.dp)){
-        val w=(size.width-42.dp.toPx())/TemperaturePalette.colors.size
-        // First/last swatches explicitly extend beyond the fixed scale.
-        val low=tm.measure("<",style=style);val high=tm.measure("> °C",style=style)
-        drawText(low,Color.White,topLeft=Offset(0f,27.dp.toPx()))
-        drawText(high,Color.White,topLeft=Offset(TemperaturePalette.colors.size*w-high.size.width,27.dp.toPx()))
-        TemperaturePalette.colors.forEachIndexed{i,c->drawRect(Color(c),Offset(i*w,9.dp.toPx()),Size(w,12.dp.toPx()))}
-        text.forEachIndexed{i,l->val x=(i*2+1)*w;drawText(l,Color.White,topLeft=Offset((x-l.size.width/2).coerceIn(0f,size.width-l.size.width),27.dp.toPx()))}
-        drawRect(Color(0xFF747B83),Offset(size.width-26.dp.toPx(),9.dp.toPx()),Size(20.dp.toPx(),12.dp.toPx()))
-        val missing=tm.measure("缺失",style=style);drawText(missing,Color.White,topLeft=Offset(size.width-missing.size.width,21.dp.toPx()))
+        val low=-35f;val high=45f
+        fun x(c:Float)=(c-low)/(high-low)*size.width
+        val edges=listOf(low)+TemperaturePalette.breaks.map{it.toFloat()}+listOf(high)
+        TemperaturePalette.colors.forEachIndexed{i,c->
+            val left=x(edges[i]);val right=x(edges[i+1])
+            drawRect(Color(c),Offset(left,8.dp.toPx()),Size(right-left,12.dp.toPx()))
+        }
+        labels.forEachIndexed{i,label->
+            val center=x(TemperaturePalette.displayTicks[i].toFloat())
+            drawText(label,Color.White,topLeft=Offset((center-label.size.width/2f).coerceIn(0f,size.width-label.size.width),25.dp.toPx()))
+        }
     }
 }
 @Composable private fun TemperatureStrength(state:ClockState){
@@ -97,12 +91,12 @@ private val tempTime=DateTimeFormatter.ofPattern("MM-dd HH:mm").withZone(ZoneId.
     Glass(Modifier.width(310.dp)){
         Text(t.kindLabel+" · NOAA GFS",style=uiText(16))
         Text("全球 0.25° · 离地 2 m 空气温度",style=uiText(12))
-        Text("色带作显示平滑；城市数值保留原始网格精度。",style=uiText(12))
+        TemperatureStrength(state)
         Text("起报："+(m?.runTime?.toString()?:"—"),style=uiText(12))
         Text("有效："+(t.displayed?.validTime?.toString()?:"—"),style=uiText(12))
         Text("服务端获取："+(m?.fetchedAt?.toString()?:"—"),style=uiText(12))
         Text("设备取得："+(m?.receivedAt?.toString()?:"—"),style=uiText(12))
-        Text("逐小时模型预报，不是逐小时全球实测。海洋同样显示空气温度。",style=uiText(12))
+        Text((if(m?.stale(state.now)==true)"数据已过期 · " else "")+t.status+(if(t.loading)" · 切换中" else ""),style=uiText(12),color=Color.White.copy(alpha=.7f))
         Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){
             GlassAction({state.touchUi();t.select(t.index-1)},Modifier.weight(1f).height(34.dp),t.index>0){Text("前一小时",style=uiText(12))}
             GlassAction({state.touchUi();t.select(t.index+1)},Modifier.weight(1f).height(34.dp),t.index<(t.manifest?.frames?.lastIndex?:0)){Text("后一小时",style=uiText(12))}

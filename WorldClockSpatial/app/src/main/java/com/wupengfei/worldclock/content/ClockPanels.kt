@@ -290,12 +290,16 @@ internal fun TimePanel(state:ClockState){
     DisposableEffect(Unit){onDispose{state.onTimeScrub?.invoke(false);state.uiManipulating=false}}
     val captionHoverGroup=remember{SpatialHoverEffectGroup.obtain()}
     CompositionLocalProvider(LocalViewConfiguration provides pickup){
-        Column(Modifier.width(656.dp).height(162.dp),horizontalAlignment=Alignment.CenterHorizontally){
+        Column(Modifier.width(656.dp).height(if(state.mode==EarthMode.TEMPERATURE)222.dp else 162.dp),horizontalAlignment=Alignment.CenterHorizontally){
             // Fixed slot above the ruler: entering preview never moves the controls.
             Box(Modifier.fillMaxWidth().height(32.dp),contentAlignment=Alignment.Center){
-                if(state.mode==EarthMode.TEMPERATURE)GlassAction({state.touchUi();state.temperature.now(state.now)},Modifier.height(28.dp)){Text("现在 · 最近预报时次",style=uiText(13))}
+                if(state.mode==EarthMode.TEMPERATURE)GlassAction({state.touchUi();state.temperature.now(state.now)},Modifier.height(28.dp)){Text("现在",style=uiText(13))}
                 else if(state.preview)GlassAction({state.live()},Modifier.height(28.dp)){Text("回到现在",style=uiText(13))}
                 else if(state.clockNotice.isNotBlank())Text(state.clockNotice,style=uiText(12))
+            }
+            if(state.mode==EarthMode.TEMPERATURE){
+                TemperatureLegend(Modifier.width(528.dp))
+                Spacer(Modifier.height(12.dp))
             }
             Row(Modifier.fillMaxWidth().height(64.dp),verticalAlignment=Alignment.CenterVertically,
                 horizontalArrangement=Arrangement.spacedBy(16.dp)){

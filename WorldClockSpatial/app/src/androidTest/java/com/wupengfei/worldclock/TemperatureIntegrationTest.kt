@@ -24,7 +24,7 @@ class TemperatureIntegrationTest {
   fun loaded(){waitFor("Requested frame committed"){s.temperature.displayed==s.temperature.requested&&!s.temperature.loading}}
   loaded();SystemClock.sleep(1200)
   i.runOnMainSync{assertTrue(TemperatureTestAccess.renderer!!.originalSurfaceIntact())}
-  i.runOnMainSync{assertEquals(.8f,TemperatureTestAccess.renderer!!.shellOpacity(),.001f)}
+  i.runOnMainSync{assertEquals(1f,TemperatureTestAccess.renderer!!.shellOpacity(),.001f)}
   val visual=InstrumentationRegistry.getArguments().getString("visualReview")=="true"
   if(visual)i.runOnMainSync{s.onTimeScrub?.invoke(true)}
   assertNotNull(s.temperature.grid?.sample(39.9042,116.4074))
@@ -32,7 +32,7 @@ class TemperatureIntegrationTest {
   Log.i("TemperatureAcceptance","HOURLY_VISIBLE; valid="+s.temperature.displayed?.validTime)
   if(visual)SystemClock.sleep(30000)
   i.runOnMainSync{s.temperature.strength=0f};SystemClock.sleep(if(visual)15000 else 1000)
-  i.runOnMainSync{s.temperature.strength=.8f;if(visual)s.onTimeScrub?.invoke(false)}
+  i.runOnMainSync{s.temperature.strength=1f;if(visual)s.onTimeScrub?.invoke(false)}
   val times=mutableListOf<Long>();val nativeBytes=mutableListOf<Long>();var maxTextures=0
   repeat(2){round->
    for(index in m.frames.indices){

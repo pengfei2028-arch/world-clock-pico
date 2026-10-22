@@ -1,0 +1,94 @@
+{
+  "version": 55,
+  "baseline": "37ec2dd",
+  "date": "2026-10-22",
+  "apk": {
+    "file": "builds/WorldClock_v55_TemperaturePalette.apk",
+    "bytes": 203192955,
+    "sha256": "e5151124e5a50c46f1413a552719fc5ace20dba8e71b060813bb44c547d3c7a7"
+  },
+  "unitTests": {
+    "tests": 92,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "simulator": {
+    "device": "emulator-5554",
+    "instrumentation": "TestRunner: run finished: 1 tests, 0 failed, 0 ignored",
+    "hourlySwitches": 52,
+    "medianMs": 606,
+    "maxMs": 685,
+    "maxLiveTextures": 2,
+    "nativeHeapBytes": [
+      75609984,
+      75789312
+    ],
+    "defaultShellOpacity": 1,
+    "originalSurfaceRetained": true,
+    "worldTimeAndCitiesRestored": true,
+    "beijingCelsius": 15.08526427519999,
+    "displayedTime": "2026-10-22T09:00:00Z",
+    "screenshots": [
+      "screenshots/v55-temperature-100.png",
+      "screenshots/v55-world-restored.png"
+    ],
+    "limits": [
+      "Intermittent truncated screenshot reproduced; complete capture separately reviewed.",
+      "ADB instrumentation command remained open after TestRunner completion; app restarted normally after saving assertion evidence."
+    ]
+  },
+  "resources": {
+    "originalApkAssetsUnchanged": 17,
+    "temperatureFilesUnchanged": 53
+  },
+  "hardware": {
+    "connected": false,
+    "visualAndGestureValidated": false
+  },
+  "deployment": {
+    "publicTemperatureServer": false
+  },
+  "palette": {
+    "thresholdsC": [
+      -30,
+      -20,
+      -10,
+      0,
+      10,
+      15,
+      20,
+      25,
+      28,
+      31,
+      34,
+      37,
+      40
+    ],
+    "colorsSrgb": [
+      "0634a4",
+      "065ac9",
+      "1187da",
+      "16afe3",
+      "4bcbe2",
+      "83dbe5",
+      "b6e5e5",
+      "ece7a5",
+      "ffd470",
+      "ffb754",
+      "fa913b",
+      "ee632f",
+      "d73628",
+      "a90d28"
+    ],
+    "defaultOpacity": 1,
+    "legendWidths": "proportional to Celsius intervals"
+  },
+  "mainUi": {
+    "legendWidthDp": 528,
+    "timeRulerWidthDp": 528,
+    "explanatoryText": false,
+    "missingSwatch": false,
+    "strengthControl": "inside closed-by-default options"
+  }
+}

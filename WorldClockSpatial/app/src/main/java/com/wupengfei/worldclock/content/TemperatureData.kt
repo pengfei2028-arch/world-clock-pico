@@ -44,8 +44,11 @@ internal class TemperatureGrid(val width:Int,val height:Int,private val values:S
     }
 }
 internal object TemperaturePalette {
-    val breaks=(-30..40 step 5).toList()
+    // Fixed physical thresholds; never normalize against a frame's extrema.
+    val breaks=listOf(-30,-20,-10,0,10,15,20,25,28,31,34,37,40)
+    // Dataset manifest contract remains independent of display-band refinement.
     val labeledBreaks=(-30..40 step 10).toList()
-    val colors=listOf(0xFF0634A4L,0xFF065AC9L,0xFF0D80D4L,0xFF13A5DFL,0xFF3DBCDFL,0xFF67D2DFL,0xFF95DACEL,0xFFC2E1BDL,0xFFE1E29FL,0xFFFFE280L,0xFFFFC360L,0xFFFFA43FL,0xFFF87730L,0xFFF14A21L,0xFFCF2A23L,0xFFAD0924L)
+    val displayTicks=listOf(-30,-10,0,10,20,25,31,40)
+    val colors=listOf(0xFF0634A4L,0xFF065AC9L,0xFF1187DAL,0xFF16AFE3L,0xFF4BCBE2L,0xFF83DBE5L,0xFFB6E5E5L,0xFFECE7A5L,0xFFFFD470L,0xFFFFB754L,0xFFFA913BL,0xFFEE632FL,0xFFD73628L,0xFFA90D28L)
     fun band(c:Double)=breaks.count{c>=it}
 }
