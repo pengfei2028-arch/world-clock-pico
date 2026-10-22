@@ -1,0 +1,547 @@
+#usda 1.0
+(
+    defaultPrim = "Root"
+    doc = """Generated from Composed Stage of root layer C:\\Users\\Admin\\Documents\\Codex\\2026-10-20\\new-chat-2\\WorldClockEditor\\Sources\\Scenes\\SunEffectsV31.usda
+"""
+    metersPerUnit = 1
+    upAxis = "Y"
+)
+
+def Xform "Root"
+{
+    def Xform "SunAuthoringV31"
+    {
+        def Material "DefaultMaterial" (
+            customData = {
+                bool applyToneMapping = 0
+                string blendingMode = "TRANSPARENT"
+                string cullingMode = "NONE"
+                bool depthTest = 1
+                bool depthWrite = 0
+                string materialType = "SHADER_GRAPH"
+                float opacityThreshold = 0
+                string shaderGraphGuid = "3948824f-23bb-4097-9532-202610210036"
+            }
+        )
+        {
+            token outputs:mtlx:surface.connect = </Root/SunAuthoringV31/DefaultMaterial/Surface.outputs:out>
+            token outputs:spatial:vertex
+            float2 ui:nodegraph:subgraphOutputs:pos = (377.25, 102.75)
+
+            def Shader "UV"
+            {
+                uniform token info:id = "ND_texcoord_vector2"
+                int inputs:index = 0
+                float2 outputs:out
+                float2 ui:nodegraph:node:pos = (0, 0)
+            }
+
+            def Shader "CenteredUV"
+            {
+                uniform token info:id = "ND_add_vector2"
+                float2 inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/UV.outputs:out>
+                float2 inputs:in2 = (-0.5, -0.5)
+                float2 outputs:out
+                float2 ui:nodegraph:node:pos = (220, 0)
+            }
+
+            def Shader "RadiusCoordinates"
+            {
+                uniform token info:id = "ND_multiply_vector2"
+                float2 inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/CenteredUV.outputs:out>
+                float2 inputs:in2 = (2, 2)
+                float2 outputs:out
+                float2 ui:nodegraph:node:pos = (440, 0)
+            }
+
+            def Shader "RadiusSquared"
+            {
+                uniform token info:id = "ND_dotproduct_vector2"
+                float2 inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/RadiusCoordinates.outputs:out>
+                float2 inputs:in2.connect = </Root/SunAuthoringV31/DefaultMaterial/RadiusCoordinates.outputs:out>
+                float outputs:out
+                float2 ui:nodegraph:node:pos = (660, 0)
+            }
+
+            def Shader "WhiteCoreFalloff"
+            {
+                uniform token info:id = "ND_multiply_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/RadiusSquared.outputs:out>
+                float inputs:in2 = -450
+                float outputs:out
+                float2 ui:nodegraph:node:pos = (880, 0)
+            }
+
+            def Shader "WhiteCoreGaussian"
+            {
+                uniform token info:id = "ND_exp_float"
+                float inputs:in.connect = </Root/SunAuthoringV31/DefaultMaterial/WhiteCoreFalloff.outputs:out>
+                float outputs:out
+                float2 ui:nodegraph:node:pos = (0, 180)
+            }
+
+            def Shader "WhiteCoreStrength"
+            {
+                uniform token info:id = "ND_multiply_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/WhiteCoreGaussian.outputs:out>
+                float inputs:in2 = 1.8
+                float outputs:out
+                float2 ui:nodegraph:node:pos = (220, 180)
+            }
+
+            def Shader "InnerBloomFalloff"
+            {
+                uniform token info:id = "ND_multiply_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/RadiusSquared.outputs:out>
+                float inputs:in2 = -75
+                float outputs:out
+                float2 ui:nodegraph:node:pos = (440, 180)
+            }
+
+            def Shader "InnerBloomGaussian"
+            {
+                uniform token info:id = "ND_exp_float"
+                float inputs:in.connect = </Root/SunAuthoringV31/DefaultMaterial/InnerBloomFalloff.outputs:out>
+                float outputs:out
+                float2 ui:nodegraph:node:pos = (660, 180)
+            }
+
+            def Shader "InnerBloomStrength"
+            {
+                uniform token info:id = "ND_multiply_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/InnerBloomGaussian.outputs:out>
+                float inputs:in2 = 0.5
+                float outputs:out
+                float2 ui:nodegraph:node:pos = (880, 180)
+            }
+
+            def Shader "WideHaloFalloff"
+            {
+                uniform token info:id = "ND_multiply_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/RadiusSquared.outputs:out>
+                float inputs:in2 = -9
+                float outputs:out
+                float2 ui:nodegraph:node:pos = (0, 360)
+            }
+
+            def Shader "WideHaloGaussian"
+            {
+                uniform token info:id = "ND_exp_float"
+                float inputs:in.connect = </Root/SunAuthoringV31/DefaultMaterial/WideHaloFalloff.outputs:out>
+                float outputs:out
+                float2 ui:nodegraph:node:pos = (220, 360)
+            }
+
+            def Shader "WideHaloStrength"
+            {
+                uniform token info:id = "ND_multiply_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/WideHaloGaussian.outputs:out>
+                float inputs:in2 = 0.16
+                float outputs:out
+                float2 ui:nodegraph:node:pos = (440, 360)
+            }
+
+            def Shader "RayCoordinates"
+            {
+                uniform token info:id = "ND_multiply_vector2"
+                float2 inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/RadiusCoordinates.outputs:out>
+                float2 inputs:in2 = (3, 80)
+                float2 outputs:out
+                float2 ui:nodegraph:node:pos = (660, 360)
+            }
+
+            def Shader "RayRadiusSquared"
+            {
+                uniform token info:id = "ND_dotproduct_vector2"
+                float2 inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/RayCoordinates.outputs:out>
+                float2 inputs:in2.connect = </Root/SunAuthoringV31/DefaultMaterial/RayCoordinates.outputs:out>
+                float outputs:out
+                float2 ui:nodegraph:node:pos = (880, 360)
+            }
+
+            def Shader "HorizontalRayFalloff"
+            {
+                uniform token info:id = "ND_multiply_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/RayRadiusSquared.outputs:out>
+                float inputs:in2 = -1
+                float outputs:out
+                float2 ui:nodegraph:node:pos = (0, 540)
+            }
+
+            def Shader "HorizontalRayGaussian"
+            {
+                uniform token info:id = "ND_exp_float"
+                float inputs:in.connect = </Root/SunAuthoringV31/DefaultMaterial/HorizontalRayFalloff.outputs:out>
+                float outputs:out
+                float2 ui:nodegraph:node:pos = (220, 540)
+            }
+
+            def Shader "HorizontalRayStrength"
+            {
+                uniform token info:id = "ND_multiply_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/HorizontalRayGaussian.outputs:out>
+                float inputs:in2 = 0.06
+                float outputs:out
+                float2 ui:nodegraph:node:pos = (440, 540)
+            }
+
+            def Shader "CoreAndBloom"
+            {
+                uniform token info:id = "ND_add_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/WhiteCoreStrength.outputs:out>
+                float inputs:in2.connect = </Root/SunAuthoringV31/DefaultMaterial/InnerBloomStrength.outputs:out>
+                float outputs:out
+                float2 ui:nodegraph:node:pos = (660, 540)
+            }
+
+            def Shader "WithHalo"
+            {
+                uniform token info:id = "ND_add_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/CoreAndBloom.outputs:out>
+                float inputs:in2.connect = </Root/SunAuthoringV31/DefaultMaterial/WideHaloStrength.outputs:out>
+                float outputs:out
+                float2 ui:nodegraph:node:pos = (880, 540)
+            }
+
+            def Shader "WithRay"
+            {
+                uniform token info:id = "ND_add_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/WithHalo.outputs:out>
+                float inputs:in2.connect = </Root/SunAuthoringV31/DefaultMaterial/HorizontalRayStrength.outputs:out>
+                float outputs:out
+                float2 ui:nodegraph:node:pos = (0, 720)
+            }
+
+            def Shader "Opacity"
+            {
+                uniform token info:id = "ND_clamp_float"
+                float inputs:high = 1
+                float inputs:in.connect = </Root/SunAuthoringV31/DefaultMaterial/WithRay.outputs:out>
+                float inputs:low = 0
+                float outputs:out
+                float2 ui:nodegraph:node:pos = (220, 720)
+            }
+
+            def Shader "TintLevel"
+            {
+                uniform token info:id = "ND_multiply_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/Opacity.outputs:out>
+                float inputs:in2 = 0.2
+                float outputs:out
+                float2 ui:nodegraph:node:pos = (440, 720)
+            }
+
+            def Shader "TintFloor"
+            {
+                uniform token info:id = "ND_add_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/TintLevel.outputs:out>
+                float inputs:in2 = 0.8
+                float outputs:out
+                float2 ui:nodegraph:node:pos = (660, 720)
+            }
+
+            def Shader "SunColor"
+            {
+                uniform token info:id = "ND_multiply_color3FA"
+                color3f inputs:in1 = (1, 0.985, 0.96)
+                float inputs:in2.connect = </Root/SunAuthoringV31/DefaultMaterial/TintFloor.outputs:out>
+                color3f outputs:out
+                float2 ui:nodegraph:node:pos = (880, 720)
+            }
+
+            def Shader "VeilU"
+            {
+                uniform token info:id = "ND_dotproduct_vector2"
+                float2 inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/RadiusCoordinates.outputs:out>
+                float2 inputs:in2 = (1, 0)
+                float outputs:out
+            }
+
+            def Shader "VeilV"
+            {
+                uniform token info:id = "ND_dotproduct_vector2"
+                float2 inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/RadiusCoordinates.outputs:out>
+                float2 inputs:in2 = (0, 1)
+                float outputs:out
+            }
+
+            def Shader "VeilRight"
+            {
+                uniform token info:id = "ND_multiply_vector3FA"
+                vector3f inputs:in1 = (40, 0, 0)
+                float inputs:in2.connect = </Root/SunAuthoringV31/DefaultMaterial/VeilU.outputs:out>
+                vector3f outputs:out
+            }
+
+            def Shader "VeilUp"
+            {
+                uniform token info:id = "ND_multiply_vector3FA"
+                vector3f inputs:in1 = (0, 40, 0)
+                float inputs:in2.connect = </Root/SunAuthoringV31/DefaultMaterial/VeilV.outputs:out>
+                vector3f outputs:out
+            }
+
+            def Shader "VeilOffset"
+            {
+                uniform token info:id = "ND_add_vector3"
+                vector3f inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/VeilRight.outputs:out>
+                vector3f inputs:in2.connect = </Root/SunAuthoringV31/DefaultMaterial/VeilUp.outputs:out>
+                vector3f outputs:out
+            }
+
+            def Shader "VeilCenter"
+            {
+                uniform token info:id = "ND_add_vector3"
+                vector3f inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/VeilOffset.outputs:out>
+                vector3f inputs:in2 = (0, 0, -350)
+                vector3f outputs:out
+            }
+
+            def Shader "VeilDirection"
+            {
+                uniform token info:id = "ND_normalize_vector3"
+                vector3f inputs:in.connect = </Root/SunAuthoringV31/DefaultMaterial/VeilCenter.outputs:out>
+                vector3f outputs:out
+            }
+
+            def Shader "VeilForward"
+            {
+                uniform token info:id = "ND_dotproduct_vector3"
+                vector3f inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/VeilDirection.outputs:out>
+                vector3f inputs:in2 = (0, 0, -1)
+                float outputs:out
+            }
+
+            def Shader "VeilMask_Remap"
+            {
+                uniform token info:id = "ND_remap_float"
+                float inputs:in.connect = </Root/SunAuthoringV31/DefaultMaterial/VeilForward.outputs:out>
+                float inputs:inhigh = 0.809017
+                float inputs:inlow = 0.7431448
+                float inputs:outhigh = 1
+                float inputs:outlow = 0
+                float outputs:out
+            }
+
+            def Shader "VeilMask_T"
+            {
+                uniform token info:id = "ND_clamp_float"
+                float inputs:high = 1
+                float inputs:in.connect = </Root/SunAuthoringV31/DefaultMaterial/VeilMask_Remap.outputs:out>
+                float inputs:low = 0
+                float outputs:out
+            }
+
+            def Shader "VeilMask_T2"
+            {
+                uniform token info:id = "ND_multiply_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/VeilMask_T.outputs:out>
+                float inputs:in2.connect = </Root/SunAuthoringV31/DefaultMaterial/VeilMask_T.outputs:out>
+                float outputs:out
+            }
+
+            def Shader "VeilMask_T3"
+            {
+                uniform token info:id = "ND_multiply_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/VeilMask_T2.outputs:out>
+                float inputs:in2.connect = </Root/SunAuthoringV31/DefaultMaterial/VeilMask_T.outputs:out>
+                float outputs:out
+            }
+
+            def Shader "VeilMask_Six"
+            {
+                uniform token info:id = "ND_multiply_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/VeilMask_T.outputs:out>
+                float inputs:in2 = 6
+                float outputs:out
+            }
+
+            def Shader "VeilMask_Minus"
+            {
+                uniform token info:id = "ND_subtract_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/VeilMask_Six.outputs:out>
+                float inputs:in2 = 15
+                float outputs:out
+            }
+
+            def Shader "VeilMask_Inner"
+            {
+                uniform token info:id = "ND_multiply_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/VeilMask_T.outputs:out>
+                float inputs:in2.connect = </Root/SunAuthoringV31/DefaultMaterial/VeilMask_Minus.outputs:out>
+                float outputs:out
+            }
+
+            def Shader "VeilMask_Plus"
+            {
+                uniform token info:id = "ND_add_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/VeilMask_Inner.outputs:out>
+                float inputs:in2 = 10
+                float outputs:out
+            }
+
+            def Shader "VeilMask"
+            {
+                uniform token info:id = "ND_multiply_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/VeilMask_T3.outputs:out>
+                float inputs:in2.connect = </Root/SunAuthoringV31/DefaultMaterial/VeilMask_Plus.outputs:out>
+                float outputs:out
+            }
+
+            def Shader "BoundedOpacity"
+            {
+                uniform token info:id = "ND_multiply_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/Opacity.outputs:out>
+                float inputs:in2.connect = </Root/SunAuthoringV31/DefaultMaterial/VeilMask.outputs:out>
+                float outputs:out
+            }
+
+            def Shader "VeilReveal"
+            {
+                uniform token info:id = "ND_multiply_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/VeilMask.outputs:out>
+                float inputs:in2 = 1
+                float outputs:out
+            }
+
+            def Shader "DitherSeed"
+            {
+                uniform token info:id = "ND_dotproduct_vector2"
+                float2 inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/UV.outputs:out>
+                float2 inputs:in2 = (12989.8, 78233)
+                float outputs:out
+            }
+
+            def Shader "DitherSin"
+            {
+                uniform token info:id = "ND_sin_float"
+                float inputs:in.connect = </Root/SunAuthoringV31/DefaultMaterial/DitherSeed.outputs:out>
+                float outputs:out
+            }
+
+            def Shader "DitherHash"
+            {
+                uniform token info:id = "ND_multiply_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/DitherSin.outputs:out>
+                float inputs:in2 = 43758.547
+                float outputs:out
+            }
+
+            def Shader "DitherFrac"
+            {
+                uniform token info:id = "ND_fract_float"
+                float inputs:in.connect = </Root/SunAuthoringV31/DefaultMaterial/DitherHash.outputs:out>
+                float outputs:out
+            }
+
+            def Shader "DitherCenter"
+            {
+                uniform token info:id = "ND_add_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/DitherFrac.outputs:out>
+                float inputs:in2 = -0.5
+                float outputs:out
+            }
+
+            def Shader "DitherAmplitude"
+            {
+                uniform token info:id = "ND_multiply_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/DitherCenter.outputs:out>
+                float inputs:in2 = 0.012
+                float outputs:out
+            }
+
+            def Shader "DitherEnvelopeGain"
+            {
+                uniform token info:id = "ND_multiply_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/Opacity.outputs:out>
+                float inputs:in2 = 166.66667
+                float outputs:out
+            }
+
+            def Shader "DitherEnvelope"
+            {
+                uniform token info:id = "ND_clamp_float"
+                float inputs:high = 1
+                float inputs:in.connect = </Root/SunAuthoringV31/DefaultMaterial/DitherEnvelopeGain.outputs:out>
+                float inputs:low = 0
+                float outputs:out
+            }
+
+            def Shader "DitherBounded"
+            {
+                uniform token info:id = "ND_multiply_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/DitherAmplitude.outputs:out>
+                float inputs:in2.connect = </Root/SunAuthoringV31/DefaultMaterial/DitherEnvelope.outputs:out>
+                float outputs:out
+            }
+
+            def Shader "DitheredOpacity"
+            {
+                uniform token info:id = "ND_add_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/Opacity.outputs:out>
+                float inputs:in2.connect = </Root/SunAuthoringV31/DefaultMaterial/DitherBounded.outputs:out>
+                float outputs:out
+            }
+
+            def Shader "ClampedOpacity"
+            {
+                uniform token info:id = "ND_clamp_float"
+                float inputs:high = 1
+                float inputs:in.connect = </Root/SunAuthoringV31/DefaultMaterial/DitheredOpacity.outputs:out>
+                float inputs:low = 0
+                float outputs:out
+            }
+
+            def Shader "Reveal"
+            {
+                uniform token info:id = "ND_multiply_float"
+                float inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/ClampedOpacity.outputs:out>
+                float inputs:in2.connect = </Root/SunAuthoringV31/DefaultMaterial/VeilReveal.outputs:out>
+                float outputs:out
+            }
+
+            def Shader "VeiledSunColor"
+            {
+                uniform token info:id = "ND_multiply_color3FA"
+                color3f inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/SunColor.outputs:out>
+                float inputs:in2.connect = </Root/SunAuthoringV31/DefaultMaterial/VeilReveal.outputs:out>
+                color3f outputs:out
+            }
+
+            def Shader "SoftSunColor"
+            {
+                uniform token info:id = "ND_multiply_color3FA"
+                color3f inputs:in1.connect = </Root/SunAuthoringV31/DefaultMaterial/VeiledSunColor.outputs:out>
+                float inputs:in2 = 0.8
+                color3f outputs:out
+            }
+
+            def Shader "Surface"
+            {
+                uniform token info:id = "ND__unlit_surfaceshader"
+                color3f inputs:color.connect = </Root/SunAuthoringV31/DefaultMaterial/SoftSunColor.outputs:out>
+                float inputs:opacity.connect = </Root/SunAuthoringV31/DefaultMaterial/Reveal.outputs:out>
+                token outputs:out
+            }
+        }
+    }
+
+    def Mesh "SunGlow" (
+        apiSchemas = ["MaterialBindingAPI"]
+    )
+    {
+        uniform bool doubleSided = 1
+        int[] faceVertexCounts = [3, 3]
+        int[] faceVertexIndices = [0, 1, 2, 0, 2, 3]
+        rel material:binding = </Root/SunAuthoringV31/DefaultMaterial>
+        normal3f[] normals = [(0, 0, 1), (0, 0, 1), (0, 0, 1), (0, 0, 1)] (
+            interpolation = "vertex"
+        )
+        point3f[] points = [(-40, -40, 0), (40, -40, 0), (40, 40, 0), (-40, 40, 0)]
+        texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1)] (
+            interpolation = "vertex"
+        )
+        uniform token subdivisionScheme = "none"
+    }
+}
+

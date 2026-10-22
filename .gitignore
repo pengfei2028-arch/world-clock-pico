@@ -1,0 +1,27 @@
+# Build output and local tool state
+**/.gradle/
+**/.kotlin/
+**/build/
+**/.idea/
+**/.cxx/
+**/.externalNativeBuild/
+**/.CacheData/
+**/.Component/
+**/.Library/
+**/UserSettings/
+**/local.properties
+**/captures/
+*.iml
+*.log
+*.hprof
+*.apk
+*.aab
+*.jks
+*.keystore
+.env
+.env.*
+!.env.example
+google-services.json
+Thumbs.db
+.DS_Store
+
