@@ -243,7 +243,7 @@ fun HomeStage() {
                 earth.components.set(earthOpacity)
                 // Data maps must bypass sRGB decoding. The v06 USDZ packer emitted
                 // SRGB8_A8 for these two samplers despite MaterialX colorspace=raw.
-                // Reload the exact original 8192x4096 files through the SDK's explicit
+                // V52: load the original normal and user AI specular 8192x4096 files through the SDK's explicit
                 // RAW + LINEAR path. Day/night remain sRGB color textures.
                 val linearDataOptions = TextureCreateOption().apply {
                     colorSpace = TextureColorSpace.RAW
@@ -252,7 +252,7 @@ fun HomeStage() {
                 val normalData = TextureResource.load("earth_data/normal_8k.jpg",
                     LoadType.FROM_ASSETS, linearDataOptions)
                 resources.textures.add(normalData)
-                val specularData = TextureResource.load("earth_data/specular_8k.png",
+                val specularData = TextureResource.load("earth_data/specular_ai_v52_8k.png",
                     LoadType.FROM_ASSETS, linearDataOptions)
                 resources.textures.add(specularData)
                 var correctedMaterials = 0
@@ -294,7 +294,7 @@ fun HomeStage() {
                 Log.i("WorldClockEarth", "V42 view-plane manual rotation; gain 336deg/m; drag capped 70deg/s; release dwell 3s then gentle pole return; independent shimmer clock")
                 bindLinearDataMaps(earth)
                 check(correctedMaterials == 1)
-                Log.i("WorldClockEarth", "V49 original 8K normal/specular bound RAW+LINEAR; approved sea/land reflection only; original normal/night/lighting graph retained; V51 user AI 8K day colour texture")
+                Log.i("WorldClockEarth", "V52 user AI 8192x4096 specular map bound RAW+LINEAR; original normal unchanged; V51 Earth bundle and AI day texture preserved")
                 // Keep the imported axial tilt hierarchy. Only scale and translate its parent.
                 earth.components[TransformComponent::class.java]?.apply {
                     setPosition(Vector3(eye.x, eye.y - EARTH_CENTER_DROP_M, eye.z - 6f * WORLD_SCALE))
@@ -575,7 +575,7 @@ fun HomeStage() {
                         maxGapSeconds = 0.0
                     }
                 }
-                Log.i("WorldClockEarth", "V31 Earth loaded; night emission 0.9 (5x) with spatial UV noise +/-50%; V51 user AI 8192x4096 day colour map; original 8192x4096 night/normal/specular maps; V49 approved reflection branch; diameter 48m, forward distance 60m, center 4deg lower, angular diameter about 47deg; IBL disabled")
+                Log.i("WorldClockEarth", "V31 Earth loaded; night emission 0.9 (5x) with spatial UV noise +/-50%; V51 user AI 8192x4096 day colour map; original 8192x4096 night/normal; V52 user AI 8192x4096 specular map; V49 approved reflection branch; diameter 48m, forward distance 60m, center 4deg lower, angular diameter about 47deg; IBL disabled")
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (error: Exception) {

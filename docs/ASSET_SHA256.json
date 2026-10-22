@@ -1,5 +1,5 @@
 {
-  "version": "0.51.0",
+  "version": "0.52.0",
   "originalResolution": "8192x4096",
   "assets": [
     {
@@ -141,6 +141,16 @@
       "path": "WorldClockEditor/Sources/Textures/day_ai_v51_8k.png",
       "bytes": 38847354,
       "sha256": "e034b66dfefab2171d49ecbf8ac68606e0902397203447eea56b60ec6a2932eb"
+    },
+    {
+      "path": "WorldClockEditor/Sources/Textures/specular_ai_v52_8k.png",
+      "bytes": 6437474,
+      "sha256": "171e20f9c6df227fc960acca2ca82043daaa18de12a9de7b320c4291b2e2cd35"
+    },
+    {
+      "path": "WorldClockSpatial/app/src/main/assets/earth_data/specular_ai_v52_8k.png",
+      "bytes": 6437474,
+      "sha256": "171e20f9c6df227fc960acca2ca82043daaa18de12a9de7b320c4291b2e2cd35"
     }
   ]
 }

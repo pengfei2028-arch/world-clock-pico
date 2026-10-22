@@ -1,0 +1,456 @@
+#usda 1.0
+(
+    defaultPrim = "Root"
+    doc = """Generated from Composed Stage of root layer C:\\Users\\Admin\\Documents\\Codex\\2026-10-20\\new-chat-2\\WorldClockEditor\\Sources\\Materials\\EarthSurface_v14.usda
+
+
+Generated from Composed Stage of root layer C:\\Users\\Admin\\Documents\\Codex\\2026-10-20\\new-chat-2\\WorldClockEditor\\Sources\\Materials\\EarthSurface_v39.usda
+
+
+Generated from Composed Stage of root layer C:\\Users\\Admin\\Documents\\Codex\\2026-10-20\\new-chat-2\\WorldClockEditor\\Sources\\Materials\\EarthSurface_v48.usda
+"""
+    metersPerUnit = 1
+)
+
+def Xform "Root"
+{
+    def Xform "EarthShaderV05"
+    {
+        def Xform "_materials"
+        {
+        }
+    }
+
+    def Xform "EarthShaderV06"
+    {
+        def Xform "_materials"
+        {
+            def Material "EarthSurface" (
+                customData = {
+                    bool applyToneMapping = 1
+                    string blendingMode = "OPAQUE"
+                    string cullingMode = "BACK"
+                    bool depthTest = 1
+                    bool depthWrite = 1
+                    string materialType = "SHADER_GRAPH"
+                    float opacityThreshold = 0
+                    string shaderGraphGuid = "ad1187f7-2916-4a35-9532-202610220049"
+                }
+            )
+            {
+                token outputs:mtlx:surface.connect = </Root/EarthShaderV06/_materials/EarthSurface/Surface.outputs:out>
+                token outputs:spatial:vertex
+                float2 ui:nodegraph:subgraphOutputs:pos = (377.25, 102.75)
+
+                def Shader "GeoNormal"
+                {
+                    uniform token info:id = "ND_normal_vector3"
+                    string inputs:space = "world"
+                    vector3f outputs:out
+                }
+
+                def Shader "SunDot"
+                {
+                    uniform token info:id = "ND_dotproduct_vector3"
+                    vector3f inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/GeoNormal.outputs:out>
+                    vector3f inputs:in2 = (0.9785237, 0.00081487, 0.20613265)
+                    float outputs:out
+                }
+
+                def Shader "NormalFade_Remap"
+                {
+                    uniform token info:id = "ND_remap_float"
+                    float inputs:in.connect = </Root/EarthShaderV06/_materials/EarthSurface/SunDot.outputs:out>
+                    float inputs:inhigh = 0.52991927
+                    float inputs:inlow = 0
+                    float inputs:outhigh = 1
+                    float inputs:outlow = 0
+                    float outputs:out
+                }
+
+                def Shader "NormalFade_T"
+                {
+                    uniform token info:id = "ND_clamp_float"
+                    float inputs:high = 1
+                    float inputs:in.connect = </Root/EarthShaderV06/_materials/EarthSurface/NormalFade_Remap.outputs:out>
+                    float inputs:low = 0
+                    float outputs:out
+                }
+
+                def Shader "NormalFade_T2"
+                {
+                    uniform token info:id = "ND_multiply_float"
+                    float inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/NormalFade_T.outputs:out>
+                    float inputs:in2.connect = </Root/EarthShaderV06/_materials/EarthSurface/NormalFade_T.outputs:out>
+                    float outputs:out
+                }
+
+                def Shader "NormalFade_T3"
+                {
+                    uniform token info:id = "ND_multiply_float"
+                    float inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/NormalFade_T2.outputs:out>
+                    float inputs:in2.connect = </Root/EarthShaderV06/_materials/EarthSurface/NormalFade_T.outputs:out>
+                    float outputs:out
+                }
+
+                def Shader "NormalFade_Six"
+                {
+                    uniform token info:id = "ND_multiply_float"
+                    float inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/NormalFade_T.outputs:out>
+                    float inputs:in2 = 6
+                    float outputs:out
+                }
+
+                def Shader "NormalFade_Minus"
+                {
+                    uniform token info:id = "ND_subtract_float"
+                    float inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/NormalFade_Six.outputs:out>
+                    float inputs:in2 = 15
+                    float outputs:out
+                }
+
+                def Shader "NormalFade_Inner"
+                {
+                    uniform token info:id = "ND_multiply_float"
+                    float inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/NormalFade_T.outputs:out>
+                    float inputs:in2.connect = </Root/EarthShaderV06/_materials/EarthSurface/NormalFade_Minus.outputs:out>
+                    float outputs:out
+                }
+
+                def Shader "NormalFade_Plus"
+                {
+                    uniform token info:id = "ND_add_float"
+                    float inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/NormalFade_Inner.outputs:out>
+                    float inputs:in2 = 10
+                    float outputs:out
+                }
+
+                def Shader "NormalFade"
+                {
+                    uniform token info:id = "ND_multiply_float"
+                    float inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/NormalFade_T3.outputs:out>
+                    float inputs:in2.connect = </Root/EarthShaderV06/_materials/EarthSurface/NormalFade_Plus.outputs:out>
+                    float outputs:out
+                }
+
+                def Shader "NormalStrength"
+                {
+                    uniform token info:id = "ND_multiply_float"
+                    float inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/NormalFade.outputs:out>
+                    float inputs:in2 = 1.4
+                    float outputs:out
+                }
+
+                def Shader "Day"
+                {
+                    uniform token info:id = "ND_image_color3"
+                    asset inputs:file = @../Textures/day_ai_v51_8k.png@ (
+                        colorSpace = "srgb_texture"
+                    )
+                    color3f outputs:out
+                }
+
+                def Shader "Night"
+                {
+                    uniform token info:id = "ND_image_color3"
+                    asset inputs:file = @../Textures/night_8k.jpg@ (
+                        colorSpace = "srgb_texture"
+                    )
+                    color3f outputs:out
+                }
+
+                def Shader "NormalTex"
+                {
+                    uniform token info:id = "ND_image_vector3"
+                    asset inputs:file = @../Textures/normal_8k.jpg@ (
+                        colorSpace = "raw"
+                    )
+                    vector3f outputs:out
+                }
+
+                def Shader "NormalDouble"
+                {
+                    uniform token info:id = "ND_multiply_vector3FA"
+                    vector3f inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/NormalTex.outputs:out>
+                    float inputs:in2 = 2
+                    vector3f outputs:out
+                }
+
+                def Shader "NormalDecoded"
+                {
+                    uniform token info:id = "ND_subtract_vector3"
+                    vector3f inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/NormalDouble.outputs:out>
+                    vector3f inputs:in2 = (1, 1, 1)
+                    vector3f outputs:out
+                }
+
+                def Shader "NormalScaleXY"
+                {
+                    uniform token info:id = "ND_combine3_vector3"
+                    float inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/NormalStrength.outputs:out>
+                    float inputs:in2.connect = </Root/EarthShaderV06/_materials/EarthSurface/NormalStrength.outputs:out>
+                    float inputs:in3 = 1
+                    vector3f outputs:out
+                }
+
+                def Shader "NormalScaled"
+                {
+                    uniform token info:id = "ND_multiply_vector3"
+                    vector3f inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/NormalDecoded.outputs:out>
+                    vector3f inputs:in2.connect = </Root/EarthShaderV06/_materials/EarthSurface/NormalScaleXY.outputs:out>
+                    vector3f outputs:out
+                }
+
+                def Shader "NormalMap"
+                {
+                    uniform token info:id = "ND_normalize_vector3"
+                    vector3f inputs:in.connect = </Root/EarthShaderV06/_materials/EarthSurface/NormalScaled.outputs:out>
+                    vector3f outputs:out
+                }
+
+                def Shader "NightDim"
+                {
+                    uniform token info:id = "ND_multiply_color3FA"
+                    color3f inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/Night.outputs:out>
+                    float inputs:in2 = 0.18
+                    color3f outputs:out
+                }
+
+                def Shader "NightUV"
+                {
+                    uniform token info:id = "ND_texcoord_vector2"
+                    int inputs:index = 0
+                    float2 outputs:out
+                }
+
+                def Shader "NightUVScale"
+                {
+                    uniform token info:id = "ND_multiply_vector2"
+                    float2 inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/NightUV.outputs:out>
+                    float2 inputs:in2 = (100, 50)
+                    float2 outputs:out
+                }
+
+                def Shader "NightUV3"
+                {
+                    uniform token info:id = "ND_convert_vector2_vector3"
+                    float2 inputs:in.connect = </Root/EarthShaderV06/_materials/EarthSurface/NightUVScale.outputs:out>
+                    vector3f outputs:out
+                }
+
+                def Shader "NoiseTimePosition"
+                {
+                    uniform token info:id = "ND_add_vector3"
+                    vector3f inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/NightUV3.outputs:out>
+                    vector3f inputs:in2 = (0, 0, 0.37)
+                    vector3f outputs:out
+                }
+
+                def Shader "NightNoise"
+                {
+                    uniform token info:id = "ND_noise3d_float"
+                    float inputs:amplitude = 2
+                    float inputs:pivot = 1
+                    vector3f inputs:position.connect = </Root/EarthShaderV06/_materials/EarthSurface/NoiseTimePosition.outputs:out>
+                    float outputs:out
+                }
+
+                def Shader "NightNoiseClamp"
+                {
+                    uniform token info:id = "ND_clamp_float"
+                    float inputs:high = 1.5
+                    float inputs:in.connect = </Root/EarthShaderV06/_materials/EarthSurface/NightNoise.outputs:out>
+                    float inputs:low = 0.5
+                    float outputs:out
+                }
+
+                def Shader "NightLocal"
+                {
+                    uniform token info:id = "ND_multiply_color3FA"
+                    color3f inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/NightDim.outputs:out>
+                    float inputs:in2.connect = </Root/EarthShaderV06/_materials/EarthSurface/NightNoiseClamp.outputs:out>
+                    color3f outputs:out
+                }
+
+                def Shader "NightColor"
+                {
+                    uniform token info:id = "ND_multiply_color3FA"
+                    color3f inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/NightLocal.outputs:out>
+                    float inputs:in2.connect = </Root/EarthShaderV06/_materials/EarthSurface/NightMask.outputs:out>
+                    color3f outputs:out
+                }
+
+                def Shader "SpecularTex"
+                {
+                    uniform token info:id = "ND_image_float"
+                    asset inputs:file = @../Textures/specular_ai_v52_8k.png@ (
+                        colorSpace = "raw"
+                    )
+                    float outputs:out
+                }
+
+                def Shader "SpecularRoot"
+                {
+                    uniform token info:id = "ND_sqrt_float"
+                    float inputs:in.connect = </Root/EarthShaderV06/_materials/EarthSurface/SpecularTex.outputs:out>
+                    float outputs:out
+                }
+
+                def Shader "DayReflectance"
+                {
+                    uniform token info:id = "ND_multiply_float"
+                    float inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/DielectricFresnelAmplitude.outputs:out>
+                    float inputs:in2 = 2.5
+                    float outputs:out
+                }
+
+                def Shader "NightRGBA"
+                {
+                    uniform token info:id = "ND_convert_color3_color4"
+                    color3f inputs:in.connect = </Root/EarthShaderV06/_materials/EarthSurface/NightColor.outputs:out>
+                    color4f outputs:out
+                }
+
+                def Shader "Surface"
+                {
+                    uniform token info:id = "ND_pbr_surfaceshader"
+                    color3f inputs:baseColor.connect = </Root/EarthShaderV06/_materials/EarthSurface/Day.outputs:out>
+                    float inputs:clearCoat = 0
+                    color4f inputs:emissive.connect = </Root/EarthShaderV06/_materials/EarthSurface/NightRGBA.outputs:out>
+                    float inputs:metallic = 0
+                    vector3f inputs:normal.connect = </Root/EarthShaderV06/_materials/EarthSurface/NormalMap.outputs:out>
+                    float inputs:opacity = 1
+                    float inputs:reflectance.connect = </Root/EarthShaderV06/_materials/EarthSurface/DayReflectance.outputs:out>
+                    float inputs:roughness = 0.46358454
+                    float inputs:roughness.connect = </Root/EarthShaderV06/_materials/EarthSurface/OceanLandRoughness.outputs:out>
+                    token outputs:out
+                    float2 ui:nodegraph:node:pos = (93.5, 102.75)
+                    int ui:nodegraph:node:stackingOrder = 15
+                }
+
+                def Shader "NightMask_Remap"
+                {
+                    uniform token info:id = "ND_remap_float"
+                    float inputs:in.connect = </Root/EarthShaderV06/_materials/EarthSurface/SunDot.outputs:out>
+                    float inputs:inhigh = -0.20791169
+                    float inputs:inlow = 0
+                    float inputs:outhigh = 1
+                    float inputs:outlow = 0
+                    float outputs:out
+                }
+
+                def Shader "NightMask_T"
+                {
+                    uniform token info:id = "ND_clamp_float"
+                    float inputs:high = 1
+                    float inputs:in.connect = </Root/EarthShaderV06/_materials/EarthSurface/NightMask_Remap.outputs:out>
+                    float inputs:low = 0
+                    float outputs:out
+                }
+
+                def Shader "NightMask_T2"
+                {
+                    uniform token info:id = "ND_multiply_float"
+                    float inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/NightMask_T.outputs:out>
+                    float inputs:in2.connect = </Root/EarthShaderV06/_materials/EarthSurface/NightMask_T.outputs:out>
+                    float outputs:out
+                }
+
+                def Shader "NightMask_T3"
+                {
+                    uniform token info:id = "ND_multiply_float"
+                    float inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/NightMask_T2.outputs:out>
+                    float inputs:in2.connect = </Root/EarthShaderV06/_materials/EarthSurface/NightMask_T.outputs:out>
+                    float outputs:out
+                }
+
+                def Shader "NightMask_Six"
+                {
+                    uniform token info:id = "ND_multiply_float"
+                    float inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/NightMask_T.outputs:out>
+                    float inputs:in2 = 6
+                    float outputs:out
+                }
+
+                def Shader "NightMask_Minus"
+                {
+                    uniform token info:id = "ND_subtract_float"
+                    float inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/NightMask_Six.outputs:out>
+                    float inputs:in2 = 15
+                    float outputs:out
+                }
+
+                def Shader "NightMask_Inner"
+                {
+                    uniform token info:id = "ND_multiply_float"
+                    float inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/NightMask_T.outputs:out>
+                    float inputs:in2.connect = </Root/EarthShaderV06/_materials/EarthSurface/NightMask_Minus.outputs:out>
+                    float outputs:out
+                }
+
+                def Shader "NightMask_Plus"
+                {
+                    uniform token info:id = "ND_add_float"
+                    float inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/NightMask_Inner.outputs:out>
+                    float inputs:in2 = 10
+                    float outputs:out
+                }
+
+                def Shader "NightMask"
+                {
+                    uniform token info:id = "ND_multiply_float"
+                    float inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/NightMask_T3.outputs:out>
+                    float inputs:in2.connect = </Root/EarthShaderV06/_materials/EarthSurface/NightMask_Plus.outputs:out>
+                    float outputs:out
+                }
+
+                def Shader "OceanLandRoughness"
+                {
+                    uniform token info:id = "ND_remap_float"
+                    float inputs:in.connect = </Root/EarthShaderV06/_materials/EarthSurface/SpecularTex.outputs:out>
+                    float inputs:inhigh = 1
+                    float inputs:inlow = 0
+                    float inputs:outhigh = 0.3
+                    float inputs:outlow = 0.78
+                    float outputs:out
+                }
+
+                def Shader "OceanLandIOR"
+                {
+                    uniform token info:id = "ND_remap_float"
+                    float inputs:in.connect = </Root/EarthShaderV06/_materials/EarthSurface/SpecularTex.outputs:out>
+                    float inputs:inhigh = 1
+                    float inputs:inlow = 0
+                    float inputs:outhigh = 1.333
+                    float inputs:outlow = 1.45
+                    float outputs:out
+                }
+
+                def Shader "IORMinusOne"
+                {
+                    uniform token info:id = "ND_subtract_float"
+                    float inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/OceanLandIOR.outputs:out>
+                    float inputs:in2 = 1
+                    float outputs:out
+                }
+
+                def Shader "IORPlusOne"
+                {
+                    uniform token info:id = "ND_add_float"
+                    float inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/OceanLandIOR.outputs:out>
+                    float inputs:in2 = 1
+                    float outputs:out
+                }
+
+                def Shader "DielectricFresnelAmplitude"
+                {
+                    uniform token info:id = "ND_divide_float"
+                    float inputs:in1.connect = </Root/EarthShaderV06/_materials/EarthSurface/IORMinusOne.outputs:out>
+                    float inputs:in2.connect = </Root/EarthShaderV06/_materials/EarthSurface/IORPlusOne.outputs:out>
+                    float outputs:out
+                }
+            }
+        }
+    }
+}
+

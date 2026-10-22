@@ -1,6 +1,12 @@
 # 世界时钟 · World Clock for PICO
 
-基于 **PICO Spatial SDK 6.1.9、Kotlin 和 Compose** 的 MR 地球与世界时间应用。当前分支是 **V51 / 0.51.0 的 AI 颜色图试验版**；主分支 V50 仍为原贴图回退基线。本工程不是 Unity 项目。
+基于 **PICO Spatial SDK 6.1.9、Kotlin 和 Compose** 的 MR 地球与世界时间应用。当前分支是 **V52 / 0.52.0 的 AI 颜色及高光图试验版**；主分支 V50 仍为原贴图回退基线。本工程不是 Unity 项目。
+
+## V52 高光图试验
+
+V52 / 0.52.0：用户提供原始8192×4096高光遮罩，SHA256 171e20f9c6df227fc960acca2ca82043daaa18de12a9de7b320c4291b2e2cd35。只将运行时 SpecularTex_file 改绑到 earth_data/specular_ai_v52_8k.png，保留 RAW + LINEAR；V51 Earth.bundle 完全不变，16项既有APK资源均保持字节一致，原高光图仍保留。颜色继续用V51的AI原图；海洋/陆地粗糙度.30/.78、IOR1.333/1.45及其他参数不变。编辑器候选源为EarthSwanV52，运行时仍加载既有EarthSwanV51后覆盖高光纹理。
+
+APK构建与资源一致性检查通过；V51为本次直接回退版本。编辑器重新导出不是这次运行时替换的必要步骤。
 
 ## 当前功能
 

@@ -1,7 +1,7 @@
 {
   "projectName": "WorldClockEarth",
   "projectPath": ".",
-  "scene": "Sources/Scenes/EarthSwanV51.usda",
-  "sceneCount": 4,
+  "scene": "Sources/Scenes/EarthSwanV52.usda",
+  "sceneCount": 5,
   "version": 1
 }
