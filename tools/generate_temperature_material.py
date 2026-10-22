@@ -50,8 +50,8 @@ n('Validity','ND_dotproduct_vector3','float',in1=link('Temperature','vector3f'),
 n('Valid','ND_remap_float','float',**{'in':link('Validity'),'inlow':f(.999),'inhigh':f(1),'outlow':f(0),'outhigh':f(1)})
 n('ValidClamp','ND_clamp_float','float',**{'in':link('Valid'),'low':f(0),'high':f(1)})
 # Fixed Celsius bands shared with TemperaturePalette; warmer than 25 C uses 3 C steps.
-thresholds=[-30,-20,-10,0,10,15,20,25,28,31,34,37,40]
-colors=["0634a4","065ac9","1187da","16afe3","4bcbe2","83dbe5","b6e5e5","ece7a5","ffd470","ffb754","fa913b","ee632f","d73628","a90d28"]
+thresholds=[-30,-20,-10,0,5,10,15,20,25,28,31,34,37,40]
+colors=["061b56","082878","0a359d","0d43ba","114fc5","126fdb","00abd4","21c5b8","e4da55","ffca46","ffaa32","f88328","ed5425","d52f2a","a5102c"]
 last=None
 for i,threshold in enumerate(thresholds):
  n('BandRange'+str(i),'ND_remap_float','float',**{'in':link('Celsius'),'inlow':f(threshold-.22),'inhigh':f(threshold+.22),'outlow':f(0),'outhigh':f(1)})
@@ -60,7 +60,7 @@ for i,threshold in enumerate(thresholds):
  n(name,'ND_mix_color3','color3f',bg=link(last,'color3f') if last else c(srgb(colors[0])),fg=c(srgb(colors[i+1])),mix=link('Band'+str(i)))
  last=name
 n('Palette','ND_mix_color3','color3f',bg=c(srgb('747b83')),fg=link(last,'color3f'),mix=link('ValidClamp'))
-# V55: a transparent data shell, not a replacement Earth material.
+# V56: a transparent data shell, not a replacement Earth material.
 # Palette is display-referred sRGB converted to linear; no tonemapping or sunlight tint.
 # Reuse original 8K albedo and sea mask only for neutral relief; temperature hue remains independent.
 n('SurfaceUV','ND_texcoord_vector2','float2',index=('int',0))
@@ -68,8 +68,9 @@ n('Day','ND_image_color3','color3f',file=('asset','@../Textures/temperature_plac
 n('Sea','ND_image_float','float',file=('asset','@../Textures/temperature_placeholder.png@'),texcoord=link('SurfaceUV','float2'))
 n('LumaVector','ND_convert_color3_vector3','vector3f',**{'in':link('Day','color3f')})
 n('Luma','ND_dotproduct_vector3','float',in1=link('LumaVector','vector3f'),in2=v('(.2126, .7152, .0722)'))
-n('LandValue','ND_remap_float','float',**{'in':link('Luma'),'inlow':f(.02),'inhigh':f(.4),'outlow':f(.5),'outhigh':f(1.3)})
-n('LandClamp','ND_clamp_float','float',**{'in':link('LandValue'),'low':f(.5),'high':f(1.3)})
+# Keep relief neutral and below unity: no white/pastel lift or hot-channel clipping.
+n('LandValue','ND_remap_float','float',**{'in':link('Luma'),'inlow':f(.02),'inhigh':f(.4),'outlow':f(.65),'outhigh':f(1)})
+n('LandClamp','ND_clamp_float','float',**{'in':link('LandValue'),'low':f(.65),'high':f(1)})
 n('SeaClamp','ND_clamp_float','float',**{'in':link('Sea'),'low':f(0),'high':f(1)})
 n('ReliefFactor','ND_mix_float','float',bg=link('LandClamp'),fg=f(1),mix=link('SeaClamp'))
 n('SurfaceNormal','ND_normal_vector3','vector3f',space=('string','"world"'))
@@ -88,13 +89,13 @@ material='''        def Material "EarthSurface" (
                 bool depthTest = 1
                 bool depthWrite = 0
                 string materialType = "SHADER_GRAPH"
-                string shaderGraphGuid = "ad1187f7-2916-4a35-9532-202610220055"
+                string shaderGraphGuid = "ad1187f7-2916-4a35-9532-202610220056"
             }
         ) {
             token outputs:mtlx:surface.connect = </EarthAsset/_materials/EarthSurface/Surface.outputs:out>
 '''+''.join(nodes)+'        }\n    }\n}\n'
 output=base[:base.index('        def Material "EarthSurface"')]+material
-(editor/'Sources/Models/TemperatureShellV55.usda').write_text(output)
-scene=(editor/'Sources/Scenes/EarthSwanV51.usda').read_text().replace('EarthShaderV51.usda','TemperatureShellV55.usda')
-(editor/'Sources/Scenes/TemperatureV55.usda').write_text(scene.rstrip()+'\n')
+(editor/'Sources/Models/TemperatureShellV56.usda').write_text(output)
+scene=(editor/'Sources/Scenes/EarthSwanV51.usda').read_text().replace('EarthShaderV51.usda','TemperatureShellV56.usda')
+(editor/'Sources/Scenes/TemperatureV56.usda').write_text(scene.rstrip()+'\n')
 print(json.dumps({'uv1Corners':len(uv),'vertices':len(pts),'sameGeometry':True,'nodes':len(nodes)}))

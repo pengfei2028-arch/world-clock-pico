@@ -330,7 +330,7 @@ fun HomeStage() {
                 Log.i("WorldClockEarth", "V42 view-plane manual rotation; gain 336deg/m; drag capped 70deg/s; release dwell 3s then gentle pole return; independent shimmer clock")
                 bindLinearDataMaps(earth)
                 check(correctedMaterials == 1)
-                try { resources.temperatureRenderer=TemperatureRenderer.create(earth,clock.temperature,java.io.File(context.cacheDir,"temperature-display-v55"));if(com.wupengfei.worldclock.BuildConfig.DEBUG)TemperatureTestAccess.renderer=resources.temperatureRenderer } catch(e:Exception){clock.temperature.status="气温材质加载失败";Log.e("WorldClockTemperature","Material load failed",e)}
+                try { resources.temperatureRenderer=TemperatureRenderer.create(earth,clock.temperature,java.io.File(context.cacheDir,"temperature-display-v56"));if(com.wupengfei.worldclock.BuildConfig.DEBUG)TemperatureTestAccess.renderer=resources.temperatureRenderer } catch(e:Exception){clock.temperature.status="气温材质加载失败";Log.e("WorldClockTemperature","Material load failed",e)}
                 Log.i("WorldClockEarth", "V52 user AI 8192x4096 specular map bound RAW+LINEAR; original normal unchanged; V51 Earth bundle and AI day texture preserved")
                 // Keep the imported axial tilt hierarchy. Only scale and translate its parent.
                 earth.components[TransformComponent::class.java]?.apply {

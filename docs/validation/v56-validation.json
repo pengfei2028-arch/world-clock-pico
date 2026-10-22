@@ -1,0 +1,103 @@
+{
+  "version": 56,
+  "baseline": "4609d4b",
+  "date": "2026-10-22",
+  "apk": {
+    "file": "builds/WorldClock_v56_DeepBlueTemperature.apk",
+    "bytes": 202600624,
+    "sha256": "919253b98df8bd86090be79d69f3e6830fbff8abcdff252cf0a2ca83aac46cba"
+  },
+  "unitTests": {
+    "tests": 92,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "palette": {
+    "thresholdsC": [
+      -30,
+      -20,
+      -10,
+      0,
+      5,
+      10,
+      15,
+      20,
+      25,
+      28,
+      31,
+      34,
+      37,
+      40
+    ],
+    "colorsSrgb": [
+      "061b56",
+      "082878",
+      "0a359d",
+      "0d43ba",
+      "114fc5",
+      "126fdb",
+      "00abd4",
+      "21c5b8",
+      "e4da55",
+      "ffca46",
+      "ffaa32",
+      "f88328",
+      "ed5425",
+      "d52f2a",
+      "a5102c"
+    ],
+    "legendMaterialMatch": true,
+    "zeroCelsiusNominalSrgb": {
+      "before": [
+        56,
+        190,
+        227
+      ],
+      "after": [
+        15,
+        73,
+        192
+      ]
+    },
+    "neutralReliefRange": [
+      0.65,
+      1
+    ],
+    "defaultOpacity": 1
+  },
+  "resources": {
+    "originalApkAssetsUnchanged": 17,
+    "temperatureFilesUnchanged": 53
+  },
+  "visual": {
+    "device": "emulator-5554",
+    "validTime": "2026-10-22T09:00:00Z",
+    "screenshot": "screenshots/v56-temperature-deep-blue.png",
+    "reviewed": true
+  },
+  "hardware": {
+    "connected": false,
+    "wearingAndGestureValidated": false
+  },
+  "limitations": [
+    "Public temperature server not deployed; existing real sample retained.",
+    "Existing intermittent simulator screenshot truncation not claimed fixed."
+  ],
+  "simulator": {
+    "instrumentationTests": 1,
+    "failed": 0,
+    "hourlySwitches": 52,
+    "medianMs": 603,
+    "maxMs": 652,
+    "maxLiveTextures": 2,
+    "nativeHeapBytes": [
+      71540384,
+      71584288
+    ],
+    "worldTimeAndCitiesRestored": true,
+    "originalSurfaceRetained": true,
+    "beijingCelsius": 15.08526427519999,
+    "runnerCleanup": "Assertions and TestRunner completed; ADB instrumentation wait cleared by normal app restart."
+  }
+}

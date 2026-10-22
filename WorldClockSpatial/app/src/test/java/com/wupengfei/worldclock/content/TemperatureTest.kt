@@ -16,8 +16,8 @@ class TemperatureTest {
   assertNull(g.sample(Double.NaN,0.0));assertNull(g.sample(91.0,0.0))
  }
  @Test fun fixedPaletteHasExplicitExtremes(){
-  assertEquals(0,TemperaturePalette.band(-80.0));assertEquals(13,TemperaturePalette.band(60.0))
-  assertEquals(4,TemperaturePalette.band(0.0));assertEquals(7,TemperaturePalette.band(20.0))
+  assertEquals(0,TemperaturePalette.band(-80.0));assertEquals(14,TemperaturePalette.band(60.0))
+  assertEquals(4,TemperaturePalette.band(0.0));assertEquals(8,TemperaturePalette.band(20.0))
   assertEquals(TemperaturePalette.band(25.0),TemperaturePalette.band(27.99))
   assertNotEquals(TemperaturePalette.band(27.99),TemperaturePalette.band(28.0))
   assertEquals(listOf(25,28,31,34,37,40),TemperaturePalette.breaks.filter{it>=25})

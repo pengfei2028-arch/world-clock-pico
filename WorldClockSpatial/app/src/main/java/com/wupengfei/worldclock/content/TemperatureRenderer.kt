@@ -37,12 +37,12 @@ internal class TemperatureRenderer private constructor(private val earthModel:Mo
         material.setParameter("Surface_opacity",1f)
         material.setParameter("Day_file",originalMaterial.getParameter<TextureResource>("Day_file"))
         material.setParameter("Sea_file",originalMaterial.getParameter<TextureResource>("SpecularTex_file"))
-        shell.setName("TemperatureShell_V55")
+        shell.setName("TemperatureShell_V56")
         shell.components.set(opacity)
         shell.components.set(EnvironmentLightingSettingsComponent(0f))
         shell.components.set(ModelComponent(temperatureMesh,material))
         shell.components[TransformComponent::class.java]?.setScaleVector(Vector3(TemperatureDisplay.SHELL_SCALE,TemperatureDisplay.SHELL_SCALE,TemperatureDisplay.SHELL_SCALE))
-        Log.i("WorldClockTemperature","V55 independent shell; radius=1.003; opacity=1; fixed 3C hot bands; original 8K Earth untouched")
+        Log.i("WorldClockTemperature","V56 independent shell; radius=1.003; opacity=1; deep blue at 0C; fixed 3C hot bands; original 8K Earth untouched")
     }
     suspend fun prepare(m:TemperatureManifest,frame:TemperatureFrame,grid:TemperatureGrid){
         var tex:TextureResource?=null;var file:File?=null
@@ -52,7 +52,7 @@ internal class TemperatureRenderer private constructor(private val earthModel:Mo
                 ensureActive()
                 val bitmap=Bitmap.createBitmap(TemperatureDisplay.pixels(grid,smooth),grid.width+2,grid.height+2,Bitmap.Config.ARGB_8888)
                 try {
-                    cache.mkdirs();file=File.createTempFile("temperature-v55-",".png",cache)
+                    cache.mkdirs();file=File.createTempFile("temperature-v56-",".png",cache)
                     checkNotNull(file).outputStream().use{check(bitmap.compress(Bitmap.CompressFormat.PNG,100,it))}
                 }finally{bitmap.recycle()}
                 ensureActive()
@@ -72,7 +72,7 @@ internal class TemperatureRenderer private constructor(private val earthModel:Mo
             current?.let{retired.add((tick+3) to it)}
             current=next;pending=null
             state.displayedManifest=next.manifest;state.displayed=next.frame;state.grid=next.grid;state.loading=false
-            Log.i("WorldClockTemperature","V55 frame committed "+next.frame.validTime+"; smoothed display; original-grid Beijing="+next.grid.sample(39.9042,116.4074))
+            Log.i("WorldClockTemperature","V56 frame committed "+next.frame.validTime+"; smoothed display; original-grid Beijing="+next.grid.sample(39.9042,116.4074))
         }
         val want=mode==EarthMode.TEMPERATURE&&current!=null
         opacity.opacity=if(want)state.strength.coerceIn(0f,1f) else 0f
@@ -80,7 +80,7 @@ internal class TemperatureRenderer private constructor(private val earthModel:Mo
             lastStrength=opacity.opacity
             reflectionParameters.forEach{(key,value)->originalMaterial.setParameter(key,1f+(value-1f)*(1f-lastStrength))}
         }
-        if(want!=active){active=want;Log.i("WorldClockTemperature","V55 mode="+mode+"; shell="+want+"; originalSurfaceIntact="+originalSurfaceIntact())}
+        if(want!=active){active=want;Log.i("WorldClockTemperature","V56 mode="+mode+"; shell="+want+"; originalSurfaceIntact="+originalSurfaceIntact())}
         val it=retired.iterator();while(it.hasNext()){val item=it.next();if(item.first<=tick){item.second.close();it.remove()}}
     }
     @Synchronized override fun close(){
@@ -95,7 +95,7 @@ internal class TemperatureRenderer private constructor(private val earthModel:Mo
             fun find(e:Entity):Entity?=if(e.components[ModelComponent::class.java]!=null)e else e.getChildren().firstNotNullOfOrNull{find(it)}
             val surface=checkNotNull(find(earth));val model=checkNotNull(surface.components[ModelComponent::class.java])
             val bundle=AssetBundle.load("asset://Temperature.bundle")
-            val owner=bundle.loadModelSuspend("TemperatureV55")
+            val owner=bundle.loadModelSuspend("TemperatureV56")
             val shell=Entity()
             val renderer=TemperatureRenderer(model,owner,shell,bundle,checkNotNull(find(owner)?.components?.get(ModelComponent::class.java)),state,cache)
             check(surface.addChild(shell)){"Cannot attach temperature shell"}
