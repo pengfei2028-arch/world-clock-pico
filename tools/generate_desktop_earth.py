@@ -69,5 +69,5 @@ material = '''        def Material "EarthSurface" (
 '''+''.join(nodes)+'        }\n    }\n}\n'
 (root/'Sources/Models/DesktopEarthV58.usda').write_text(base[:base.index('        def Material "EarthSurface"')]+material)
 scene=(root/'Sources/Scenes/EarthSwanV51.usda').read_text().replace('EarthShaderV51.usda','DesktopEarthV58.usda')
-(root/'Sources/Scenes/DesktopEarthV58.usda').write_text(scene)
+(root/'Sources/Scenes/DesktopEarthV58.usda').write_text(scene.rstrip()+'\n')
 print(json.dumps(outputs, indent=2))

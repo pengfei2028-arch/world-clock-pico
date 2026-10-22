@@ -170,4 +170,3 @@ internal fun findGlobeEntity(entity:Entity,name:String):Entity? {
     entity.getChildren().forEach{findGlobeEntity(it,name)?.let{return it}}
     return null
 }
-
