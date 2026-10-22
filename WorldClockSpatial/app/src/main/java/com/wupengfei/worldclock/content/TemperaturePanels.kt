@@ -48,13 +48,13 @@ private val tempTime=DateTimeFormatter.ofPattern("MM-dd HH:mm").withZone(ZoneId.
     val tm=rememberTextMeasurer();val style=uiText(10)
     val text=remember(style){listOf("−30","−20","−10","0","10","20","30","40").map{tm.measure(it,style=style)}}
     Canvas(modifier.height(48.dp)){
-        val w=(size.width-42.dp.toPx())/9
+        val w=(size.width-42.dp.toPx())/TemperaturePalette.colors.size
         // First/last swatches explicitly extend beyond the fixed scale.
         val low=tm.measure("<",style=style);val high=tm.measure("> °C",style=style)
         drawText(low,Color.White,topLeft=Offset(0f,27.dp.toPx()))
-        drawText(high,Color.White,topLeft=Offset(9*w-high.size.width,27.dp.toPx()))
+        drawText(high,Color.White,topLeft=Offset(TemperaturePalette.colors.size*w-high.size.width,27.dp.toPx()))
         TemperaturePalette.colors.forEachIndexed{i,c->drawRect(Color(c),Offset(i*w,9.dp.toPx()),Size(w,12.dp.toPx()))}
-        text.forEachIndexed{i,l->val x=(i+1)*w;drawText(l,Color.White,topLeft=Offset((x-l.size.width/2).coerceIn(0f,size.width-l.size.width),27.dp.toPx()))}
+        text.forEachIndexed{i,l->val x=(i*2+1)*w;drawText(l,Color.White,topLeft=Offset((x-l.size.width/2).coerceIn(0f,size.width-l.size.width),27.dp.toPx()))}
         drawRect(Color(0xFF747B83),Offset(size.width-26.dp.toPx(),9.dp.toPx()),Size(20.dp.toPx(),12.dp.toPx()))
         val missing=tm.measure("缺失",style=style);drawText(missing,Color.White,topLeft=Offset(size.width-missing.size.width,21.dp.toPx()))
     }
@@ -97,6 +97,7 @@ private val tempTime=DateTimeFormatter.ofPattern("MM-dd HH:mm").withZone(ZoneId.
     Glass(Modifier.width(310.dp)){
         Text(t.kindLabel+" · NOAA GFS",style=uiText(16))
         Text("全球 0.25° · 离地 2 m 空气温度",style=uiText(12))
+        Text("色带作显示平滑；城市数值保留原始网格精度。",style=uiText(12))
         Text("起报："+(m?.runTime?.toString()?:"—"),style=uiText(12))
         Text("有效："+(t.displayed?.validTime?.toString()?:"—"),style=uiText(12))
         Text("服务端获取："+(m?.fetchedAt?.toString()?:"—"),style=uiText(12))

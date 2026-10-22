@@ -1,0 +1,59 @@
+{
+  "version": "0.54.0",
+  "baseCommit": "ee6626a0469e58db006a2a4ff25fce69299e625e",
+  "unit": {
+    "tests": 92,
+    "failures": 0,
+    "errors": 0
+  },
+  "simulator": {
+    "device": "emulator-5554",
+    "result": "com.wupengfei.worldclock.TemperatureIntegrationTest:.\r\n\r\nTime: 118.415\r\n\r\nOK (1 test)",
+    "switches": 52,
+    "medianMs": 605,
+    "maxMs": 671,
+    "maxLiveTextures": 2,
+    "nativeHeapBytes": [
+      76059648,
+      76222720
+    ],
+    "originalMeshMaterialIntact": true,
+    "shellDefaultOpacity": 0.8,
+    "shellRadiusRatio": 1.003,
+    "modeRestoreAndCityReads": true,
+    "visualScreenshot": "../screenshots/v54-temperature-shell-80.png",
+    "captureLimitation": "Intermittent rectangular truncation still present; not a continuous no-flicker certification."
+  },
+  "originalAssets": {
+    "count": 17,
+    "allUnchanged": true,
+    "files": {
+      "assets/Clouds.bundle": true,
+      "assets/DistantStars.glb": true,
+      "assets/Earth.bundle": true,
+      "assets/ForwardVeil.glb": true,
+      "assets/ForwardVeilAlpha.png": true,
+      "assets/StarPointAlpha.png": true,
+      "assets/SunEffects.bundle": true,
+      "assets/box.usdz": true,
+      "assets/cities/NOTICE.txt": true,
+      "assets/cities/TZDATA_LICENSE.txt": true,
+      "assets/cities/catalog.tsv": true,
+      "assets/cities/pin_positions.tsv": true,
+      "assets/cities/timezones.tsv": true,
+      "assets/cloud_data/clouds_8k.jpg": true,
+      "assets/earth_data/normal_8k.jpg": true,
+      "assets/earth_data/specular_8k.png": true,
+      "assets/earth_data/specular_ai_v52_8k.png": true
+    }
+  },
+  "hardware": {
+    "verified": false,
+    "reason": "No SWAN attached"
+  },
+  "apk": {
+    "file": "WorldClock_v54_TemperatureShell.apk",
+    "bytes": 203652904,
+    "sha256": "d61db18369e8153d4821ec5864a0af17132246d60fd0ac9848e6c5490c5451bf"
+  }
+}

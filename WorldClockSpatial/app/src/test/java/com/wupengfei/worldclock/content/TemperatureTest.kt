@@ -16,8 +16,8 @@ class TemperatureTest {
   assertNull(g.sample(Double.NaN,0.0));assertNull(g.sample(91.0,0.0))
  }
  @Test fun fixedPaletteHasExplicitExtremes(){
-  assertEquals(0,TemperaturePalette.band(-80.0));assertEquals(8,TemperaturePalette.band(60.0))
-  assertEquals(4,TemperaturePalette.band(0.0));assertEquals(6,TemperaturePalette.band(20.0))
+  assertEquals(0,TemperaturePalette.band(-80.0));assertEquals(15,TemperaturePalette.band(60.0))
+  assertEquals(7,TemperaturePalette.band(0.0));assertEquals(11,TemperaturePalette.band(20.0))
  }
  @Test fun timeModeRoundtripPreservesClockPreviewAndCitySelection(){
   val s=ClockState();s.now=Instant.parse("2026-10-22T06:00:00Z");s.setOffset(135f);s.rulerCenter=s.instant;s.selectedId="beijing"

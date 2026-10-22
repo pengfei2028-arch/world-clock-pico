@@ -28,7 +28,7 @@ internal class TemperatureRepository(private val context:Context,
         require(j.getString("source")=="NOAA GFS"&&j.getString("variable")=="TMP"&&j.getString("level")=="2 m above ground"&&j.getString("units")=="C")
         require(j.getInt("width")==1440&&j.getInt("height")==721&&j.getInt("missingValue")==-32768)
         require(j.getInt("textureWidth")==1442&&j.getInt("textureHeight")==723)
-        require((0 until j.getJSONArray("legendBreaksC").length()).map{j.getJSONArray("legendBreaksC").getInt(it)}==TemperaturePalette.breaks)
+        require((0 until j.getJSONArray("legendBreaksC").length()).map{j.getJSONArray("legendBreaksC").getInt(it)}==TemperaturePalette.labeledBreaks)
         require(j.getDouble("longitudeStart")==-180.0&&j.getDouble("latitudeStart")==90.0&&j.getDouble("stepDegrees")==.25)
         val run=Instant.parse(j.getString("runTime"));val a=j.getJSONArray("frames");require(a.length() in 1..49)
         val frames=(0 until a.length()).map { i->val f=a.getJSONObject(i)

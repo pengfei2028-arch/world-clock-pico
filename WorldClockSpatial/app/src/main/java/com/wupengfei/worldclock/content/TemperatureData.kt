@@ -15,6 +15,7 @@ internal data class TemperatureManifest(val id:String,val runTime:Instant,val fe
 }
 internal class TemperatureGrid(val width:Int,val height:Int,private val values:ShortArray){
     init{require(width>=2&&height>=2&&values.size==width*height)}
+    internal fun copyCelsius() = FloatArray(values.size) { if(values[it]==Short.MIN_VALUE) Float.NaN else values[it]/100f }
     fun sample(latitude:Double,longitude:Double):Double? {
         if(!latitude.isFinite()||!longitude.isFinite()||latitude !in -90.0..90.0)return null
         val x=((longitude+180)%360+360)%360/360*width
@@ -43,7 +44,8 @@ internal class TemperatureGrid(val width:Int,val height:Int,private val values:S
     }
 }
 internal object TemperaturePalette {
-    val breaks=listOf(-30,-20,-10,0,10,20,30,40)
-    val colors=listOf(0xFF173D8AL,0xFF2462AEL,0xFF2D97CAL,0xFF76C5D3L,0xFFC7DDCEL,0xFFF2D583L,0xFFF3AB58L,0xFFDD653CL,0xFFA92C32L)
+    val breaks=(-30..40 step 5).toList()
+    val labeledBreaks=(-30..40 step 10).toList()
+    val colors=listOf(0xFF0634A4L,0xFF065AC9L,0xFF0D80D4L,0xFF13A5DFL,0xFF3DBCDFL,0xFF67D2DFL,0xFF95DACEL,0xFFC2E1BDL,0xFFE1E29FL,0xFFFFE280L,0xFFFFC360L,0xFFFFA43FL,0xFFF87730L,0xFFF14A21L,0xFFCF2A23L,0xFFAD0924L)
     fun band(c:Double)=breaks.count{c>=it}
 }

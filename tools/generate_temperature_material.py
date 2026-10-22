@@ -49,49 +49,55 @@ n('Celsius','ND_add_float','float',in1=link('Decoded'),in2=f(-100))
 n('Validity','ND_dotproduct_vector3','float',in1=link('Temperature','vector3f'),in2=v('(0, 0, 1)'))
 n('Valid','ND_remap_float','float',**{'in':link('Validity'),'inlow':f(.999),'inhigh':f(1),'outlow':f(0),'outhigh':f(1)})
 n('ValidClamp','ND_clamp_float','float',**{'in':link('Valid'),'low':f(0),'high':f(1)})
-colors=['173d8a','2462ae','2d97ca','76c5d3','c7ddce','f2d583','f3ab58','dd653c','a92c32']
+colors=['0634a4','065ac9','13a5df','67d2df','c2e1bd','ffe280','ffa43f','f14a21','ad0924']
+anchors=colors
+colors=[anchors[0]]
+for a,b in zip(anchors[1:-1],anchors[2:]):
+ colors += [a, ''.join(f'{((int(a[j:j+2],16)+int(b[j:j+2],16)+1)//2):02x}' for j in (0,2,4))]
+colors += [anchors[-1]]
 last=None
-for i,threshold in enumerate([-30,-20,-10,0,10,20,30,40]):
- n('BandRange'+str(i),'ND_remap_float','float',**{'in':link('Celsius'),'inlow':f(threshold-.45),'inhigh':f(threshold+.45),'outlow':f(0),'outhigh':f(1)})
+for i,threshold in enumerate(range(-30,41,5)):
+ n('BandRange'+str(i),'ND_remap_float','float',**{'in':link('Celsius'),'inlow':f(threshold-.22),'inhigh':f(threshold+.22),'outlow':f(0),'outhigh':f(1)})
  n('Band'+str(i),'ND_clamp_float','float',**{'in':link('BandRange'+str(i)),'low':f(0),'high':f(1)})
  name='Color'+str(i)
  n(name,'ND_mix_color3','color3f',bg=link(last,'color3f') if last else c(srgb(colors[0])),fg=c(srgb(colors[i+1])),mix=link('Band'+str(i)))
  last=name
 n('Palette','ND_mix_color3','color3f',bg=c(srgb('747b83')),fg=link(last,'color3f'),mix=link('ValidClamp'))
+# V54: a transparent data shell, not a replacement Earth material.
+# Palette is display-referred sRGB converted to linear; no tonemapping or sunlight tint.
+# Reuse original 8K albedo and sea mask only for neutral relief; temperature hue remains independent.
 n('SurfaceUV','ND_texcoord_vector2','float2',index=('int',0))
 n('Day','ND_image_color3','color3f',file=('asset','@../Textures/temperature_placeholder.png@'),texcoord=link('SurfaceUV','float2'))
+n('Sea','ND_image_float','float',file=('asset','@../Textures/temperature_placeholder.png@'),texcoord=link('SurfaceUV','float2'))
 n('LumaVector','ND_convert_color3_vector3','vector3f',**{'in':link('Day','color3f')})
 n('Luma','ND_dotproduct_vector3','float',in1=link('LumaVector','vector3f'),in2=v('(.2126, .7152, .0722)'))
-n('NeutralValue','ND_remap_float','float',**{'in':link('Luma'),'inlow':f(0),'inhigh':f(1),'outlow':f(.03),'outhigh':f(.9)})
-n('Neutral','ND_convert_float_color3','color3f',**{'in':link('NeutralValue')})
-n('MutedDay','ND_mix_color3','color3f',bg=link('Day','color3f'),fg=link('Neutral','color3f'),mix=f(.8))
-n('Overlay','ND_mix_color3','color3f',bg=link('MutedDay','color3f'),fg=link('Palette','color3f'),mix=f(.55))
-n('ReliefValue','ND_remap_float','float',**{'in':link('Luma'),'inlow':f(0),'inhigh':f(1),'outlow':f(.65),'outhigh':f(1.45)})
-n('Relief','ND_multiply_color3FA','color3f',in1=link('Overlay','color3f'),in2=link('ReliefValue'))
-n('Diffuse','ND_multiply_color3FA','color3f',in1=link('Relief','color3f'),in2=f(.65))
-n('Fill','ND_multiply_color3FA','color3f',in1=link('Relief','color3f'),in2=f(.55))
-n('FillRGBA','ND_convert_color3_color4','color4f',**{'in':link('Fill','color3f')})
-n('Normal','ND_image_vector3','vector3f',file=('asset','@../Textures/temperature_placeholder.png@'),texcoord=link('SurfaceUV','float2'))
-n('NormalDouble','ND_multiply_vector3FA','vector3f',in1=link('Normal','vector3f'),in2=f(2))
-n('NormalDecoded','ND_subtract_vector3','vector3f',in1=link('NormalDouble','vector3f'),in2=v('(1, 1, 1)'))
-n('NormalSoft','ND_multiply_vector3','vector3f',in1=link('NormalDecoded','vector3f'),in2=v('(.55, .55, 1)'))
-n('NormalMap','ND_normalize_vector3','vector3f',**{'in':link('NormalSoft','vector3f')})
-n('Surface','ND_pbr_surfaceshader','token',baseColor=link('Diffuse','color3f'),emissive=link('FillRGBA','color4f'),normal=link('NormalMap','vector3f'),metallic=f(0),roughness=f(.95),reflectance=f(.05),opacity=f(1))
+n('LandValue','ND_remap_float','float',**{'in':link('Luma'),'inlow':f(.02),'inhigh':f(.4),'outlow':f(.5),'outhigh':f(1.3)})
+n('LandClamp','ND_clamp_float','float',**{'in':link('LandValue'),'low':f(.5),'high':f(1.3)})
+n('SeaClamp','ND_clamp_float','float',**{'in':link('Sea'),'low':f(0),'high':f(1)})
+n('ReliefFactor','ND_mix_float','float',bg=link('LandClamp'),fg=f(1),mix=link('SeaClamp'))
+n('SurfaceNormal','ND_normal_vector3','vector3f',space=('string','"world"'))
+n('ViewDirection','ND__viewdirection_vector3','vector3f',space=('string','"world"'))
+n('Facing','ND_dotproduct_vector3','float',in1=link('SurfaceNormal','vector3f'),in2=link('ViewDirection','vector3f'))
+n('FacingAbs','ND_absval_float','float',**{'in':link('Facing')})
+n('Roundness','ND_remap_float','float',**{'in':link('FacingAbs'),'inlow':f(0),'inhigh':f(1),'outlow':f(.6),'outhigh':f(1)})
+n('ReliefColor','ND_multiply_color3FA','color3f',in1=link('Palette','color3f'),in2=link('ReliefFactor'))
+n('ShellColor','ND_multiply_color3FA','color3f',in1=link('ReliefColor','color3f'),in2=link('Roundness'))
+n('Surface','ND__unlit_surfaceshader','token',color=link('ShellColor','color3f'),opacity=f(1),applyPostProcessToneMap=('bool','0'),hasPremultipliedAlpha=('bool','0'))
 material='''        def Material "EarthSurface" (
             customData = {
-                bool applyToneMapping = 1
-                string blendingMode = "OPAQUE"
+                bool applyToneMapping = 0
+                string blendingMode = "TRANSPARENT"
                 string cullingMode = "BACK"
                 bool depthTest = 1
-                bool depthWrite = 1
+                bool depthWrite = 0
                 string materialType = "SHADER_GRAPH"
-                string shaderGraphGuid = "ad1187f7-2916-4a35-9532-202610220053"
+                string shaderGraphGuid = "ad1187f7-2916-4a35-9532-202610220054"
             }
         ) {
             token outputs:mtlx:surface.connect = </EarthAsset/_materials/EarthSurface/Surface.outputs:out>
 '''+''.join(nodes)+'        }\n    }\n}\n'
 output=base[:base.index('        def Material "EarthSurface"')]+material
-(editor/'Sources/Models/TemperatureEarthV53.usda').write_text(output)
-scene=(editor/'Sources/Scenes/EarthSwanV51.usda').read_text().replace('EarthShaderV51.usda','TemperatureEarthV53.usda')
-(editor/'Sources/Scenes/TemperatureV53.usda').write_text(scene.rstrip()+'\n')
+(editor/'Sources/Models/TemperatureShellV54.usda').write_text(output)
+scene=(editor/'Sources/Scenes/EarthSwanV51.usda').read_text().replace('EarthShaderV51.usda','TemperatureShellV54.usda')
+(editor/'Sources/Scenes/TemperatureV54.usda').write_text(scene.rstrip()+'\n')
 print(json.dumps({'uv1Corners':len(uv),'vertices':len(pts),'sameGeometry':True,'nodes':len(nodes)}))
