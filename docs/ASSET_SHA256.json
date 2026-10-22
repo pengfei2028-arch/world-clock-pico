@@ -1,5 +1,5 @@
 {
-  "version": "0.50.0",
+  "version": "0.51.0",
   "originalResolution": "8192x4096",
   "assets": [
     {
@@ -69,8 +69,8 @@
     },
     {
       "path": "WorldClockSpatial/app/src/main/assets/Earth.bundle",
-      "bytes": 30999075,
-      "sha256": "28c67615fcc539bb29ea6e6a1317dc7759488c8b80bca0ecd9b22e76bbe00c02"
+      "bytes": 39843407,
+      "sha256": "5bd6c4d201a6741879d14805104df058df9c450299d4424d0202b839d0370847"
     },
     {
       "path": "WorldClockSpatial/app/src/main/assets/earth_data/normal_8k.jpg",
@@ -136,6 +136,11 @@
       "path": "WorldClockSpatial/gradle/wrapper/gradle-wrapper.jar",
       "bytes": 59203,
       "sha256": "e996d452d2645e70c01c11143ca2d3742734a28da2bf61f25c82bdc288c9e637"
+    },
+    {
+      "path": "WorldClockEditor/Sources/Textures/day_ai_v51_8k.png",
+      "bytes": 38847354,
+      "sha256": "e034b66dfefab2171d49ecbf8ac68606e0902397203447eea56b60ec6a2932eb"
     }
   ]
 }

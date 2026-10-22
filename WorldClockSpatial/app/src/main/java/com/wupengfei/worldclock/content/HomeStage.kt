@@ -238,7 +238,7 @@ fun HomeStage() {
                 val bundle = AssetBundle.load("asset://Earth.bundle")
                 check(bundle.valid) { "Earth bundle is invalid" }
                 resources.bundle = bundle
-                val earth = bundle.loadModelSuspend("EarthSwanV49")
+                val earth = bundle.loadModelSuspend("EarthSwanV51")
                 val earthOpacity = OpacityControllerComponent(0f)
                 earth.components.set(earthOpacity)
                 // Data maps must bypass sRGB decoding. The v06 USDZ packer emitted
@@ -294,7 +294,7 @@ fun HomeStage() {
                 Log.i("WorldClockEarth", "V42 view-plane manual rotation; gain 336deg/m; drag capped 70deg/s; release dwell 3s then gentle pole return; independent shimmer clock")
                 bindLinearDataMaps(earth)
                 check(correctedMaterials == 1)
-                Log.i("WorldClockEarth", "V49 original 8K normal/specular bound RAW+LINEAR; approved sea/land reflection only; original normal/day/night/lighting graph retained")
+                Log.i("WorldClockEarth", "V49 original 8K normal/specular bound RAW+LINEAR; approved sea/land reflection only; original normal/night/lighting graph retained; V51 user AI 8K day colour texture")
                 // Keep the imported axial tilt hierarchy. Only scale and translate its parent.
                 earth.components[TransformComponent::class.java]?.apply {
                     setPosition(Vector3(eye.x, eye.y - EARTH_CENTER_DROP_M, eye.z - 6f * WORLD_SCALE))
@@ -575,7 +575,7 @@ fun HomeStage() {
                         maxGapSeconds = 0.0
                     }
                 }
-                Log.i("WorldClockEarth", "V31 Earth loaded; night emission 0.9 (5x) with spatial UV noise +/-50%; ALL FOUR original 8192x4096 maps; V49 approved reflection branch; diameter 48m, forward distance 60m, center 4deg lower, angular diameter about 47deg; IBL disabled")
+                Log.i("WorldClockEarth", "V31 Earth loaded; night emission 0.9 (5x) with spatial UV noise +/-50%; V51 user AI 8192x4096 day colour map; original 8192x4096 night/normal/specular maps; V49 approved reflection branch; diameter 48m, forward distance 60m, center 4deg lower, angular diameter about 47deg; IBL disabled")
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (error: Exception) {

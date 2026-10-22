@@ -1,6 +1,6 @@
 # 世界时钟 · World Clock for PICO
 
-基于 **PICO Spatial SDK 6.1.9、Kotlin 和 Compose** 的 MR 地球与世界时间应用。当前基线是已安装到 SWAN 头显的 **V50 / 0.50.0**。本工程不是 Unity 项目。
+基于 **PICO Spatial SDK 6.1.9、Kotlin 和 Compose** 的 MR 地球与世界时间应用。当前分支是 **V51 / 0.51.0 的 AI 颜色图试验版**；主分支 V50 仍为原贴图回退基线。本工程不是 Unity 项目。
 
 ## 当前功能
 
@@ -53,13 +53,19 @@ adb -s <设备序列号> shell am start -n com.wupengfei.worldclock/.platform.La
 
 | 运行时资源 | 编辑器场景 |
 | --- | --- |
-| `Earth.bundle` | `Sources/Scenes/EarthSwanV49.usda` |
+| `Earth.bundle` | `Sources/Scenes/EarthSwanV51.usda` |
 | `Clouds.bundle` | `Sources/Scenes/CloudsV41.usda` |
 | `SunEffects.bundle` | `Sources/Scenes/SunEffectsV36.usda` |
 
-源 USD 的贴图引用已改为相对路径；运行时 bundle 和原图字节保持 V50 已验证版本。重导出时保留原始 8K 图，不启用自动降采样。太阳和云层还有运行时参数，详见 `HomeStage.kt` 与 `ClockScene.kt`。
+源 USD 的贴图引用已改为相对路径；V51 仅更换昼间颜色图，其余三个地表纹理的编译数据与 V50 完全一致。重导出时保留原始 8K 图，不启用自动降采样。太阳和云层还有运行时参数，详见 `HomeStage.kt` 与 `ClockScene.kt`。
 
-## 验证状态
+## V51 试验说明
+
+V51 / 0.51.0 是用户 AI 昼间颜色图试验版：使用本机原始 8192×4096 PNG，SHA256 e034b66dfefab2171d49ecbf8ac68606e0902397203447eea56b60ec6a2932eb。只替换 Day 图；模型网格、法线、夜灯、高光、云层及交互保持。原 day_8k.jpg 与 V50 版本保留，未采用会话中的 2K 附件副本。
+
+V51 构建成功并已在模拟器验证资源加载、开场和画面；尚未安装到真机。下方 84 项单元测试及真机状态是 V50 基线记录，本次没有重复运行未变更逻辑的测试。
+
+## V50 基线验证状态
 
 - V50：84 项单元测试通过。
 - 模拟器检查北京 / 天津双城、切换城市、8 个邻近地点同时显示，未出现标签面板相互覆盖。
