@@ -57,6 +57,11 @@ import kotlin.math.exp
 
 @Stable
 internal class ClockState {
+    var mode by mutableStateOf(EarthMode.WORLD_TIME)
+    val temperature=TemperatureState()
+    private var temperatureDragHours=0f
+    fun switchMode(next:EarthMode){touchUi();mode=next;timeToolsOpen=false}
+    fun weatherLabel(city:ClockCity,compact:Boolean=false)=if(mode==EarthMode.TEMPERATURE)temperature.label(city) else (weather[city.id]?:CityWeatherState()).label(now,compact)
     var catalog by mutableStateOf<CityCatalog?>(null)
     var weather by mutableStateOf<Map<String,CityWeatherState>>(emptyMap())
     var cities by mutableStateOf<List<ClockCity>>(emptyList())
@@ -85,7 +90,8 @@ internal class ClockState {
     fun toggleTimeTools(){touchUi();timeToolsOpen=!timeToolsOpen;citiesOpen=false}
     var focusRequest=0
     var resumeRequest=0
-    val instant get()=(previewBase?:now).plusMillis((offsetMinutes*60000).toLong())
+    val clockInstant get()=(previewBase?:now).plusMillis((offsetMinutes*60000).toLong())
+    val instant get()=if(mode==EarthMode.TEMPERATURE)temperature.displayed?.validTime?:clockInstant else clockInstant
     val preview get()=previewBase!=null
     val rulerOrigin get()=rulerCenter?:instant
     val nowMarkerMinutes get()=Duration.between(rulerOrigin,now).toMillis()/60000f
@@ -95,11 +101,13 @@ internal class ClockState {
     fun beginTimeDrag(){
         onTimeScrub?.invoke(true);manualInteraction()
         touchUi()
+        if(mode==EarthMode.TEMPERATURE){temperatureDragHours=temperature.index.toFloat();return}
         if(rulerCenter==null)rulerCenter=instant
         previewBase=instant;offsetMinutes=0f
     }
     fun dragTimeBy(minutes:Float){
         if(!minutes.isFinite())return
+        if(mode==EarthMode.TEMPERATURE){temperatureDragHours=(temperatureDragHours+minutes/60f).coerceIn(0f,(temperature.manifest?.frames?.lastIndex?:0).toFloat());temperature.select(kotlin.math.round(temperatureDragHours).toInt());return}
         setOffset(offsetMinutes+minutes)
         val center=rulerCenter?:instant
         val cursor=Duration.between(center,instant).toMillis()/60000.0
@@ -107,7 +115,7 @@ internal class ClockState {
         val excess=cursor-cursor.coerceIn(-170.0,170.0)
         if(excess!=0.0)rulerCenter=center.plusMillis((excess*60000).toLong())
     }
-    fun finishTimeDrag(){onTimeScrub?.invoke(false);touchUi();if(preview){previewBase=instant;offsetMinutes=0f}}
+    fun finishTimeDrag(){onTimeScrub?.invoke(false);touchUi();if(mode==EarthMode.WORLD_TIME&&preview){previewBase=instant;offsetMinutes=0f}}
     fun live(){touchUi();previewBase=null;offsetMinutes=0f;rulerCenter=null}
     fun shiftDay(days:Long){
         touchUi()
@@ -151,14 +159,14 @@ internal fun ClockTheme(content:@Composable ()->Unit){
     }
 }
 @Composable
-private fun uiText(size:Int=16,weight:FontWeight=FontWeight.Normal)=
+internal fun uiText(size:Int=16,weight:FontWeight=FontWeight.Normal)=
     PicoTheme.typography.bodyLarge.copy(fontFamily=FontFamily.SansSerif,
         fontSize=size.sp,lineHeight=(size+4).sp,fontWeight=weight,color=Color.White)
 
 private val LocalInsideGlass=staticCompositionLocalOf { false }
 
 @Composable
-private fun Glass(modifier:Modifier=Modifier,content:@Composable ColumnScope.()->Unit){
+internal fun Glass(modifier:Modifier=Modifier,content:@Composable ColumnScope.()->Unit){
     CompositionLocalProvider(LocalInsideGlass provides true) {
         Column(modifier.clip(RoundedCornerShape(20.dp)).backgroundMaterial().padding(14.dp),
             verticalArrangement=Arrangement.spacedBy(10.dp),content=content)
@@ -166,7 +174,7 @@ private fun Glass(modifier:Modifier=Modifier,content:@Composable ColumnScope.()-
 }
 
 @Composable
-private fun GlassAction(onClick:()->Unit,modifier:Modifier=Modifier,enabled:Boolean=true,
+internal fun GlassAction(onClick:()->Unit,modifier:Modifier=Modifier,enabled:Boolean=true,
     shape:RoundedCornerShape=CircleShape,horizontalPadding:Dp=14.dp,content:@Composable RowScope.()->Unit){
     val interaction=remember{MutableInteractionSource()}
     val hovered by interaction.collectIsHoveredAsState()
@@ -236,7 +244,7 @@ internal fun CityPanel(state:ClockState,context:Context){
                         Text(city.time(state.instant),style=uiText(18,FontWeight.Medium).copy(fontFeatureSettings="tnum"),
                             modifier=Modifier.width(68.dp).alignByBaseline(),textAlign=TextAlign.End,maxLines=1)
                     }
-                    Text((state.weather[city.id]?:CityWeatherState()).label(state.now),style=uiText(12),
+                    Text(state.weatherLabel(city),style=uiText(12),
                         color=PicoTheme.colorScheme.labelSecondary,maxLines=1,overflow=TextOverflow.Ellipsis)
                   }
                 }
@@ -246,11 +254,11 @@ internal fun CityPanel(state:ClockState,context:Context){
             Modifier.fillMaxWidth().height(40.dp).semantics{contentDescription="添加城市"},state.catalog!=null){
             Text("＋",style=uiText(20))
         }
-        Text("天气 Open-Meteo · CC BY 4.0",style=uiText(10),color=PicoTheme.colorScheme.labelSecondary,
+        Text(if(state.mode==EarthMode.TEMPERATURE)"气温预报 NOAA GFS · 2 m" else "天气 Open-Meteo · CC BY 4.0",style=uiText(10),color=PicoTheme.colorScheme.labelSecondary,
             modifier=Modifier.fillMaxWidth().disableSpatialHoverEffect(true).clickable(
                 interactionSource=remember{MutableInteractionSource()},indication=null) {
                 context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW,
-                    android.net.Uri.parse("https://open-meteo.com/en/licence")))
+                    android.net.Uri.parse(if(state.mode==EarthMode.TEMPERATURE)"https://www.nco.ncep.noaa.gov/pmb/products/gfs/nomads/" else "https://open-meteo.com/en/licence")))
             },textAlign=TextAlign.Center)
     }
 }
@@ -285,7 +293,8 @@ internal fun TimePanel(state:ClockState){
         Column(Modifier.width(656.dp).height(162.dp),horizontalAlignment=Alignment.CenterHorizontally){
             // Fixed slot above the ruler: entering preview never moves the controls.
             Box(Modifier.fillMaxWidth().height(32.dp),contentAlignment=Alignment.Center){
-                if(state.preview)GlassAction({state.live()},Modifier.height(28.dp)){Text("回到现在",style=uiText(13))}
+                if(state.mode==EarthMode.TEMPERATURE)GlassAction({state.touchUi();state.temperature.now(state.now)},Modifier.height(28.dp)){Text("现在 · 最近预报时次",style=uiText(13))}
+                else if(state.preview)GlassAction({state.live()},Modifier.height(28.dp)){Text("回到现在",style=uiText(13))}
                 else if(state.clockNotice.isNotBlank())Text(state.clockNotice,style=uiText(12))
             }
             Row(Modifier.fillMaxWidth().height(64.dp),verticalAlignment=Alignment.CenterVertically,
@@ -294,17 +303,17 @@ internal fun TimePanel(state:ClockState){
                 // One visible ruler, one gesture owner. No transparent Slider or separate input overlay.
                 Box(Modifier.weight(1f).height(48.dp).clip(CircleShape).backgroundMaterial()
                     .background(Color.White.copy(alpha=if(hovered||dragging).12f else 0f))
-                    .hoverable(interaction).spatialHoverEffect(SpatialHoverStyle.Highlight).semantics{contentDescription="六小时时间滑块，蓝色表示现在，白色表示预览时间，左右拖动选择"}
+                    .hoverable(interaction).spatialHoverEffect(SpatialHoverStyle.Highlight).semantics{contentDescription=if(state.mode==EarthMode.TEMPERATURE)"逐小时气温预报时间轴，左右拖动选择已加载时刻" else "六小时时间滑块，蓝色表示现在，白色表示预览时间，左右拖动选择"}
                     .pointerInput(state.ready){
                         if(state.ready)detectDragGestures(context=context,targetedToEntity=null,
                             onDragStart={dragging=true;state.uiManipulating=true;state.beginTimeDrag()},
                             onDragEnd={dragging=false;state.uiManipulating=false;state.finishTimeDrag()},
                             onDragCancel={dragging=false;state.uiManipulating=false;state.finishTimeDrag()}){change,delta->
                                 change.consume()
-                                state.dragTimeBy(delta.x/density.density*(360f/528f))
+                                state.dragTimeBy(delta.x/density.density*(if(state.mode==EarthMode.TEMPERATURE)(state.temperature.manifest?.frames?.lastIndex?:0)*60f/528f else 360f/528f))
                             }
                     }){
-                    TimeRulerDrawing(state,dragging)
+                    if(state.mode==EarthMode.TEMPERATURE)TemperatureRuler(state) else TimeRulerDrawing(state,dragging)
                 }
                 ToolbarIcon("时间选项",false){state.toggleTimeTools()}
             }
@@ -479,6 +488,7 @@ private fun DateWheel(label:String,value:Int,range:IntRange,state:ClockState,onV
 
 @Composable
 internal fun TimeOptionsPanel(state:ClockState){
+    if(state.mode==EarthMode.TEMPERATURE){TemperatureOptions(state);return}
     var chosen by remember(state.timeToolsOpen){mutableStateOf(state.instant.atZone(ZoneId.systemDefault()).toLocalDate())}
     DisposableEffect(Unit){onDispose{state.uiManipulating=false}}
     Glass(Modifier.width(300.dp)){
@@ -514,7 +524,7 @@ internal fun CityPinCard(city:ClockCity?,state:ClockState,labelOnRight:Boolean){
         GlassAction({state.focus(city)},Modifier.widthIn(min=88.dp,max=156.dp).height(CityLabelLayout.CHIP_HEIGHT_DP.dp),state.ready){
             Column(horizontalAlignment=Alignment.CenterHorizontally){
                 Text(city.name,style=uiText(16),color=PicoTheme.colorScheme.labelPrimary,maxLines=1,overflow=TextOverflow.Ellipsis)
-                Text((state.weather[city.id]?:CityWeatherState()).label(state.now,compact=!state.preview),
+                Text(state.weatherLabel(city,compact=!state.preview),
                     style=uiText(11),color=PicoTheme.colorScheme.labelSecondary,maxLines=1,overflow=TextOverflow.Ellipsis)
             }
         }

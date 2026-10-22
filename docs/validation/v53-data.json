@@ -1,0 +1,204 @@
+{
+  "id": "20261022T00Z-f007-032-8e363d150fb6",
+  "source": "NOAA GFS",
+  "runTime": "2026-10-22T00:00:00Z",
+  "first": "2026-10-22T07:00:00Z",
+  "last": "2026-10-23T08:00:00Z",
+  "frames": 26,
+  "nodesPerFrame": 1038240,
+  "hashesAndSizes": true,
+  "numericTextureRoundtrip": true,
+  "longitudeGutters": true,
+  "poleGutters": true,
+  "independentPoints": [
+    {
+      "place": "Beijing",
+      "validTime": "2026-10-22T07:00:00Z",
+      "latitude": 39.75,
+      "longitude": 116.5,
+      "independentC": 15.977000000000032,
+      "gridC": 15.98,
+      "absErrorC": 0.0029999999999681393
+    },
+    {
+      "place": "NewYork",
+      "validTime": "2026-10-22T07:00:00Z",
+      "latitude": 40.75,
+      "longitude": -74,
+      "independentC": 11.737000000000023,
+      "gridC": 11.74,
+      "absErrorC": 0.002999999999977021
+    },
+    {
+      "place": "Sydney",
+      "validTime": "2026-10-22T07:00:00Z",
+      "latitude": -33.75,
+      "longitude": 151.25,
+      "independentC": 18.40700000000004,
+      "gridC": 18.41,
+      "absErrorC": 0.002999999999961034
+    },
+    {
+      "place": "Greenwich",
+      "validTime": "2026-10-22T07:00:00Z",
+      "latitude": 0,
+      "longitude": 0,
+      "independentC": 26.087000000000046,
+      "gridC": 26.09,
+      "absErrorC": 0.0029999999999539284
+    },
+    {
+      "place": "DateLine",
+      "validTime": "2026-10-22T07:00:00Z",
+      "latitude": 0,
+      "longitude": -180,
+      "independentC": 28.697000000000003,
+      "gridC": 28.7,
+      "absErrorC": 0.002999999999996561
+    },
+    {
+      "place": "NorthPole",
+      "validTime": "2026-10-22T07:00:00Z",
+      "latitude": 90,
+      "longitude": 0,
+      "independentC": -19.82299999999998,
+      "gridC": -19.82,
+      "absErrorC": 0.0029999999999787974
+    },
+    {
+      "place": "SouthPole",
+      "validTime": "2026-10-22T07:00:00Z",
+      "latitude": -90,
+      "longitude": 0,
+      "independentC": -32.962999999999965,
+      "gridC": -32.96,
+      "absErrorC": 0.0029999999999645866
+    },
+    {
+      "place": "Beijing",
+      "validTime": "2026-10-22T20:00:00Z",
+      "latitude": 39.75,
+      "longitude": 116.5,
+      "independentC": 9.973000000000013,
+      "gridC": 9.97,
+      "absErrorC": 0.003000000000012548
+    },
+    {
+      "place": "NewYork",
+      "validTime": "2026-10-22T20:00:00Z",
+      "latitude": 40.75,
+      "longitude": -74,
+      "independentC": 19.173000000000002,
+      "gridC": 19.17,
+      "absErrorC": 0.0030000000000001137
+    },
+    {
+      "place": "Sydney",
+      "validTime": "2026-10-22T20:00:00Z",
+      "latitude": -33.75,
+      "longitude": 151.25,
+      "independentC": 17.473000000000013,
+      "gridC": 17.47,
+      "absErrorC": 0.0030000000000143245
+    },
+    {
+      "place": "Greenwich",
+      "validTime": "2026-10-22T20:00:00Z",
+      "latitude": 0,
+      "longitude": 0,
+      "independentC": 26.473000000000013,
+      "gridC": 26.47,
+      "absErrorC": 0.0030000000000143245
+    },
+    {
+      "place": "DateLine",
+      "validTime": "2026-10-22T20:00:00Z",
+      "latitude": 0,
+      "longitude": -180,
+      "independentC": 28.473000000000013,
+      "gridC": 28.47,
+      "absErrorC": 0.0030000000000143245
+    },
+    {
+      "place": "NorthPole",
+      "validTime": "2026-10-22T20:00:00Z",
+      "latitude": 90,
+      "longitude": 0,
+      "independentC": -14.726999999999975,
+      "gridC": -14.73,
+      "absErrorC": 0.0030000000000249827
+    },
+    {
+      "place": "SouthPole",
+      "validTime": "2026-10-22T20:00:00Z",
+      "latitude": -90,
+      "longitude": 0,
+      "independentC": -33.726999999999975,
+      "gridC": -33.73,
+      "absErrorC": 0.00300000000002143
+    },
+    {
+      "place": "Beijing",
+      "validTime": "2026-10-23T08:00:00Z",
+      "latitude": 39.75,
+      "longitude": 116.5,
+      "independentC": 16.319000000000017,
+      "gridC": 16.32,
+      "absErrorC": 0.0009999999999834586
+    },
+    {
+      "place": "NewYork",
+      "validTime": "2026-10-23T08:00:00Z",
+      "latitude": 40.75,
+      "longitude": -74,
+      "independentC": 10.528999999999996,
+      "gridC": 10.53,
+      "absErrorC": 0.0010000000000029985
+    },
+    {
+      "place": "Sydney",
+      "validTime": "2026-10-23T08:00:00Z",
+      "latitude": -33.75,
+      "longitude": 151.25,
+      "independentC": 18.71900000000005,
+      "gridC": 18.72,
+      "absErrorC": 0.0009999999999479314
+    },
+    {
+      "place": "Greenwich",
+      "validTime": "2026-10-23T08:00:00Z",
+      "latitude": 0,
+      "longitude": 0,
+      "independentC": 26.069000000000017,
+      "gridC": 26.07,
+      "absErrorC": 0.0009999999999834586
+    },
+    {
+      "place": "DateLine",
+      "validTime": "2026-10-23T08:00:00Z",
+      "latitude": 0,
+      "longitude": -180,
+      "independentC": 28.65900000000005,
+      "gridC": 28.66,
+      "absErrorC": 0.0009999999999514841
+    },
+    {
+      "place": "NorthPole",
+      "validTime": "2026-10-23T08:00:00Z",
+      "latitude": 90,
+      "longitude": 0,
+      "independentC": -10.58099999999996,
+      "gridC": -10.58,
+      "absErrorC": 0.000999999999960366
+    },
+    {
+      "place": "SouthPole",
+      "validTime": "2026-10-23T08:00:00Z",
+      "latitude": -90,
+      "longitude": 0,
+      "independentC": -40.88099999999997,
+      "gridC": -40.88,
+      "absErrorC": 0.0009999999999692477
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+10-22 15:22:05.161  3195  3210 I TemperatureAcceptance: HOURLY_VISIBLE; valid=2026-10-22T08:00:00Z
+10-22 15:23:11.328  3195  3210 I TemperatureAcceptance: PASS; switches=52; medianMs=201; maxMs=268; maxLiveTextures=2; nativeHeap=[76740400, 76589312]; worldTimeAndCitiesRestored=true
+10-22 15:28:51.077  4144  4160 I TemperatureAcceptance: HTTP_DOWNLOAD_PASS; frames=26; receivedAt=2026-10-22T07:28:51.341Z

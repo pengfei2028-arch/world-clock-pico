@@ -1,0 +1,6 @@
+com.wupengfei.worldclock.TemperatureIntegrationTest:.
+com.wupengfei.worldclock.TemperatureCacheTest:.
+
+Time: 82.372
+
+OK (2 tests)

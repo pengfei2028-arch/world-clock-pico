@@ -1,0 +1,10 @@
+[Unit]
+Description=Read-only temperature package server
+After=network.target
+[Service]
+User=worldclock
+WorkingDirectory=/opt/world-clock-pico/temperature_pipeline
+ExecStart=/opt/world-clock-pico/.venv/bin/python serve.py --root /var/lib/worldclock-temperature --host 127.0.0.1 --port 8765
+Restart=on-failure
+[Install]
+WantedBy=multi-user.target

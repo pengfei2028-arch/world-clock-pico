@@ -1,0 +1,5 @@
+--------- beginning of main
+10-22 15:36:06.697  4964  4979 I TemperatureAcceptance: HOURLY_VISIBLE; valid=2026-10-22T09:00:00Z
+10-22 15:37:13.129  4964  4979 I TemperatureAcceptance: WORLD_VISUAL_REVIEW
+10-22 15:37:28.130  4964  4979 I TemperatureAcceptance: PASS; switches=52; medianMs=213; maxMs=266; maxLiveTextures=2; nativeHeap=[81530688, 81426672]; worldTimeAndCitiesRestored=true
+10-22 15:37:30.151  4964  4979 I TemperatureAcceptance: HTTP_DOWNLOAD_PASS; frames=26; receivedAt=2026-10-22T07:37:30.414Z

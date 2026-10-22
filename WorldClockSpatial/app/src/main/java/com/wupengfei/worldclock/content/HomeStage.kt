@@ -29,6 +29,7 @@ private class EarthResources {
     var bundle: AssetBundle? = null
     var effectsBundle: AssetBundle? = null
     var cloudsBundle: AssetBundle? = null
+    var temperatureRenderer: TemperatureRenderer? by mutableStateOf(null)
     var interactionReady = false
     var handToStage: ((Vector3) -> Vector3)? = null
     var headInStage: (() -> Vector3)? = null
@@ -41,6 +42,7 @@ private class EarthResources {
         frameSubscription?.cancel()
         frameSubscription = null
         handToStage = null; headInStage = null; viewRotationInStage = null
+        temperatureRenderer?.close();temperatureRenderer=null
         entities.forEach { it.destroy() }
         entities.clear()
         textures.forEach { it.close() }
@@ -71,6 +73,38 @@ fun HomeStage() {
     val entrance = remember { GlobeEntrance() }
     val context = LocalContext.current
     val clock = remember { ClockState() }
+    DisposableEffect(clock){
+        if(com.wupengfei.worldclock.BuildConfig.DEBUG)TemperatureTestAccess.state=clock
+        onDispose{if(TemperatureTestAccess.state===clock){TemperatureTestAccess.state=null;TemperatureTestAccess.renderer=null}}
+    }
+    val temperatureRepository=remember { TemperatureRepository(context) }
+    LaunchedEffect(Unit) {
+        try { val m=temperatureRepository.initial();clock.temperature.manifest=m;clock.temperature.now(ClockTimeSource.read().instant)
+            clock.temperature.status=if(temperatureRepository.baseUrl.isBlank())"内置真实样例 · 自动更新待配置" else "缓存数据"
+        }catch(e:CancellationException){throw e}catch(e:Exception){clock.temperature.status="气温数据不可用";Log.e("WorldClockTemperature","Initial data",e)}
+    }
+    LaunchedEffect(clock.temperature.refreshRequest) {
+        while(isActive && clock.temperature.manifest==null)delay(200)
+        while(isActive){
+            val previous=clock.temperature.manifest
+            if(previous!=null && temperatureRepository.baseUrl.isNotBlank())try {
+                val next=temperatureRepository.refresh(previous)
+                val time=clock.temperature.requested?.validTime?:clock.now
+                clock.temperature.manifest=next
+                clock.temperature.index=next.nearest(if(clock.temperature.autoNow)clock.now else time)
+                clock.temperature.status="缓存已校验"
+            }catch(e:CancellationException){throw e}catch(e:Exception){clock.temperature.status="更新失败 · 保留原数据";Log.w("WorldClockTemperature","Refresh",e)}
+            delay(3_600_000)
+        }
+    }
+    LaunchedEffect(clock.mode,clock.temperature.manifest,clock.temperature.index,resources.temperatureRenderer){
+        val m=clock.temperature.manifest;val renderer=resources.temperatureRenderer
+        if(clock.mode==EarthMode.TEMPERATURE&&m!=null&&renderer!=null){
+            clock.temperature.loading=true
+            try { delay(70);val (frame,grid)=temperatureRepository.frame(m,clock.temperature.index);renderer.prepare(m,frame,grid) }
+            catch(e:CancellationException){throw e}catch(e:Exception){clock.temperature.loading=false;clock.temperature.status="载入失败 · 保留上一帧";Log.e("WorldClockTemperature","Frame load",e)}
+        }
+    }
     LaunchedEffect(Unit) {
         try {
             val catalog=withContext(Dispatchers.IO) {
@@ -87,6 +121,7 @@ fun HomeStage() {
         while(isActive){
             val reading=ClockTimeSource.read();clock.now=reading.instant
             clock.clockNotice=if(reading.corrected) "设备时间有误，已按网络时间校准" else ""
+            if(clock.mode==EarthMode.TEMPERATURE&&clock.temperature.autoNow)clock.temperature.now(reading.instant)
             delay(1000)
         }
     }
@@ -162,6 +197,8 @@ fun HomeStage() {
             }
         },
         attachments = {
+            AttachmentPanel("temperature_info",alignment=AttachmentPanelComponent.Alignment.TOP_CENTER) { ClockTheme { TemperatureInfo(clock) } }
+            AttachmentPanel("module",alignment=AttachmentPanelComponent.Alignment.BOTTOM_CENTER) { ClockTheme { ModulePanel(clock) } }
             AttachmentPanel("cities",alignment=AttachmentPanelComponent.Alignment.BOTTOM_LEFT) { ClockTheme { CityPanel(clock,context) } }
             AttachmentPanel("timeline",alignment=AttachmentPanelComponent.Alignment.TOP_CENTER) { ClockTheme { TimePanel(clock) } }
             AttachmentPanel("time_tools",alignment=AttachmentPanelComponent.Alignment.BOTTOM_RIGHT) { ClockTheme { TimeOptionsPanel(clock) } }
@@ -294,6 +331,7 @@ fun HomeStage() {
                 Log.i("WorldClockEarth", "V42 view-plane manual rotation; gain 336deg/m; drag capped 70deg/s; release dwell 3s then gentle pole return; independent shimmer clock")
                 bindLinearDataMaps(earth)
                 check(correctedMaterials == 1)
+                try { resources.temperatureRenderer=TemperatureRenderer.create(earth,clock.temperature);if(com.wupengfei.worldclock.BuildConfig.DEBUG)TemperatureTestAccess.renderer=resources.temperatureRenderer } catch(e:Exception){clock.temperature.status="气温材质加载失败";Log.e("WorldClockTemperature","Material load failed",e)}
                 Log.i("WorldClockEarth", "V52 user AI 8192x4096 specular map bound RAW+LINEAR; original normal unchanged; V51 Earth bundle and AI day texture preserved")
                 // Keep the imported axial tilt hierarchy. Only scale and translate its parent.
                 earth.components[TransformComponent::class.java]?.apply {
@@ -466,6 +504,7 @@ fun HomeStage() {
                 // A fixed 33ms delay limited the old animation to ~29 updates/sec on 90Hz SWAN.
                 resources.frameSubscription = content.subscribe(SceneEvents.Update::class.java) { event ->
                     val now = nowSeconds()
+                    resources.temperatureRenderer?.update(clock.mode)
                     maxGapSeconds = max(maxGapSeconds, now - previousFrame)
                     previousFrame = now
                     val wasRestoringTilt = motion.restoringTilt
@@ -506,7 +545,7 @@ fun HomeStage() {
                     motion.tick(if(resources.interactionReady) event.deltaTime.toDouble() else idleDelta, now)
                     if(wasFocused&&!motion.focusLocked){clock.selectedId=null;Log.i("WorldClockEarth","V33 city focus released after 5s idle")}
                     // Clouds stay fully transparent for the entire VST reveal and globe approach.
-                    val revealClouds=cloudVisibility.canReveal(entrance.finished) && motion.cloudsMayShow(now)
+                    val revealClouds=clock.mode==EarthMode.WORLD_TIME && cloudVisibility.canReveal(entrance.finished) && motion.cloudsMayShow(now)
                     if(revealClouds!=cloudsVisible){
                         cloudsVisible=revealClouds
                         Log.i("WorldClockClouds","V47 fade "+(if(revealClouds)"in" else "out for interaction")+"; openingElapsed="+entrance.elapsed+"; openingFinished="+entrance.finished+"; held="+motion.dragging+"; focus="+motion.focusLocked)

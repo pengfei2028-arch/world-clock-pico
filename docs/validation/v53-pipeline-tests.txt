@@ -1,0 +1,8 @@
+test_cycle_is_selected_from_published_inventory (test_pipeline.PipelineTest.test_cycle_is_selected_from_published_inventory) ... ok
+test_failure_does_not_publish (test_pipeline.PipelineTest.test_failure_does_not_publish) ... ok
+test_numeric_encoding_missing_and_seams (test_pipeline.PipelineTest.test_numeric_encoding_missing_and_seams) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.160s
+
+OK

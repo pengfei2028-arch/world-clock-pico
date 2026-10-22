@@ -25,3 +25,9 @@ google-services.json
 Thumbs.db
 .DS_Store
 
+
+# Global temperature tooling local outputs
+.venv/
+temperature_output/
+**/__pycache__/
+*.pyc

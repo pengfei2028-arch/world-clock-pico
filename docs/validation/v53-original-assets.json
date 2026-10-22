@@ -1,0 +1,126 @@
+{
+  "count": 24,
+  "allUnchanged": true,
+  "assets": [
+    {
+      "path": "WorldClockEditor/Sources/Textures/clouds_8k.jpg",
+      "bytes": 11619184,
+      "sha256": "c792eca228989d36ebb45d3ea6ff1198be5e21a25d70d2fbcb2124ffd14ba7f5"
+    },
+    {
+      "path": "WorldClockEditor/Sources/Textures/day_8k.jpg",
+      "bytes": 4344161,
+      "sha256": "a7030a53a7db9dcaba98eaa0c788be932d4487ab220e2ac99dd80d1bf62fdb3e"
+    },
+    {
+      "path": "WorldClockEditor/Sources/Textures/day_ai_v51_8k.png",
+      "bytes": 38847354,
+      "sha256": "e034b66dfefab2171d49ecbf8ac68606e0902397203447eea56b60ec6a2932eb"
+    },
+    {
+      "path": "WorldClockEditor/Sources/Textures/night_8k.jpg",
+      "bytes": 3144468,
+      "sha256": "9894e83a585a22c1c425e7ca4f987a9ba625bf08ecee45d3c9dcacae3c2ad5f7"
+    },
+    {
+      "path": "WorldClockEditor/Sources/Textures/normal_8k.jpg",
+      "bytes": 1114669,
+      "sha256": "18c2b7826673621af2b23a0ad42842852840d0fa3cc29c23a525f797a69dd0f0"
+    },
+    {
+      "path": "WorldClockEditor/Sources/Textures/specular_8k.png",
+      "bytes": 795617,
+      "sha256": "393b63e63691adce7c6afefd1984e889ac7b4a310301ae1e4bc651bd87c7ac7a"
+    },
+    {
+      "path": "WorldClockEditor/Sources/Textures/specular_ai_v52_8k.png",
+      "bytes": 6437474,
+      "sha256": "171e20f9c6df227fc960acca2ca82043daaa18de12a9de7b320c4291b2e2cd35"
+    },
+    {
+      "path": "WorldClockSpatial/app/src/main/assets/Clouds.bundle",
+      "bytes": 47734838,
+      "sha256": "00249f3e659181183f0db970c50f9783b58fe477a30693320b6f9b227bc319d5"
+    },
+    {
+      "path": "WorldClockSpatial/app/src/main/assets/DistantStars.glb",
+      "bytes": 9724,
+      "sha256": "0d723b34cf1fd83d1a7634b926247055222234003e1d5cdf1c8a94785ddfb2f9"
+    },
+    {
+      "path": "WorldClockSpatial/app/src/main/assets/Earth.bundle",
+      "bytes": 39843407,
+      "sha256": "5bd6c4d201a6741879d14805104df058df9c450299d4424d0202b839d0370847"
+    },
+    {
+      "path": "WorldClockSpatial/app/src/main/assets/ForwardVeil.glb",
+      "bytes": 646156,
+      "sha256": "196e50a22ff2fad0ab9db87c5531b0078c77a337112189688db43c0f40a57d81"
+    },
+    {
+      "path": "WorldClockSpatial/app/src/main/assets/ForwardVeilAlpha.png",
+      "bytes": 681,
+      "sha256": "3f89370e4cd99fb8b4c49306b5418a58abfa81f85eb352bcf2abae9a21970493"
+    },
+    {
+      "path": "WorldClockSpatial/app/src/main/assets/StarPointAlpha.png",
+      "bytes": 3116,
+      "sha256": "1429972365042405e2f9cec7a45a4a199ba487eeca6ea64ba5dc9f407597049c"
+    },
+    {
+      "path": "WorldClockSpatial/app/src/main/assets/SunEffects.bundle",
+      "bytes": 53647,
+      "sha256": "ae3f69ba7bf1f028fe0a82f8bdf22070570fba1fc501009133e59a3335c0b05e"
+    },
+    {
+      "path": "WorldClockSpatial/app/src/main/assets/box.usdz",
+      "bytes": 217200,
+      "sha256": "1036270ab9c96b0194233177b3407694dd1a831a8a663873fcb172d88da6df75"
+    },
+    {
+      "path": "WorldClockSpatial/app/src/main/assets/cities/NOTICE.txt",
+      "bytes": 621,
+      "sha256": "9bf1e3973ad662d89206224988fcf27995c8856a9e94ba36f1affba233b236c4"
+    },
+    {
+      "path": "WorldClockSpatial/app/src/main/assets/cities/TZDATA_LICENSE.txt",
+      "bytes": 625,
+      "sha256": "df58f69ea88683035d720b5375bcef0cf5aeaa98a1d098d572e0992c378deb46"
+    },
+    {
+      "path": "WorldClockSpatial/app/src/main/assets/cities/catalog.tsv",
+      "bytes": 3010625,
+      "sha256": "0dc80414a1c6863a15ffd2bc908fc2db00f5948c310557202a31aadac6e80527"
+    },
+    {
+      "path": "WorldClockSpatial/app/src/main/assets/cities/pin_positions.tsv",
+      "bytes": 384726,
+      "sha256": "7532befdefc1d445ba983d414c1af20ef70c127c377b929813ecbeb31d83a6b3"
+    },
+    {
+      "path": "WorldClockSpatial/app/src/main/assets/cities/timezones.tsv",
+      "bytes": 617991,
+      "sha256": "bc11645d7f8714319a251ed09f62f04b7d5ce0a8ca610ba2c14dd01155da13f2"
+    },
+    {
+      "path": "WorldClockSpatial/app/src/main/assets/cloud_data/clouds_8k.jpg",
+      "bytes": 11619184,
+      "sha256": "c792eca228989d36ebb45d3ea6ff1198be5e21a25d70d2fbcb2124ffd14ba7f5"
+    },
+    {
+      "path": "WorldClockSpatial/app/src/main/assets/earth_data/normal_8k.jpg",
+      "bytes": 1114669,
+      "sha256": "18c2b7826673621af2b23a0ad42842852840d0fa3cc29c23a525f797a69dd0f0"
+    },
+    {
+      "path": "WorldClockSpatial/app/src/main/assets/earth_data/specular_8k.png",
+      "bytes": 795617,
+      "sha256": "393b63e63691adce7c6afefd1984e889ac7b4a310301ae1e4bc651bd87c7ac7a"
+    },
+    {
+      "path": "WorldClockSpatial/app/src/main/assets/earth_data/specular_ai_v52_8k.png",
+      "bytes": 6437474,
+      "sha256": "171e20f9c6df227fc960acca2ca82043daaa18de12a9de7b320c4291b2e2cd35"
+    }
+  ]
+}

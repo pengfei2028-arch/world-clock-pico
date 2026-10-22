@@ -1,0 +1,10 @@
+[Unit]
+Description=Build NOAA GFS 2m air temperature packages
+After=network-online.target
+Wants=network-online.target
+[Service]
+Type=oneshot
+User=worldclock
+WorkingDirectory=/opt/world-clock-pico/temperature_pipeline
+ExecStart=/opt/world-clock-pico/.venv/bin/python build_gfs.py --output /var/lib/worldclock-temperature --wgrib2 /usr/local/bin/wgrib2
+TimeoutStartSec=45min

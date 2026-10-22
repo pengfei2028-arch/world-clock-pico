@@ -1,0 +1,9 @@
+[Unit]
+Description=Check published GFS forecasts hourly
+[Timer]
+OnCalendar=*-*-* *:10:00 UTC
+Persistent=true
+RandomizedDelaySec=120
+Unit=worldclock-temperature.service
+[Install]
+WantedBy=timers.target
