@@ -1,0 +1,38 @@
+{
+  "fileKey": "dcAVPtoJZ6gLaHjxSk57wj",
+  "reviewNodeId": "2:34",
+  "offFrameId": "3:18",
+  "onFrameId": "3:87",
+  "iconNodeId": "2:58",
+  "buttonSetId": "2:89",
+  "buttonVariants": [
+    "2:71",
+    "2:77",
+    "2:83"
+  ],
+  "frameDimensions": [
+    1000,
+    300
+  ],
+  "rulerDimensions": [
+    528,
+    48
+  ],
+  "roundButtonDimensions": [
+    48,
+    48
+  ],
+  "iconDimensions": [
+    20,
+    20
+  ],
+  "legendWidth": 528,
+  "transition": {
+    "type": "SMART_ANIMATE",
+    "durationSeconds": 0.6
+  },
+  "status": "Historical pre-approval design snapshot; superseded by approved-v57.json and V57 runtime implementation",
+  "visualValidation": "Reviewed final screenshot after correcting auto-layout button width; circles and ruler/legend alignment pass.",
+  "prototypeValidation": "Bidirectional click reactions and opacity 0/1 inspected; not manually played.",
+  "assetProvenance": "Custom editable thermometer. Matches existing project toolbar. PICO library search succeeded but desktop import timed out."
+}

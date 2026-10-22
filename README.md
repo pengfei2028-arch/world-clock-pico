@@ -1,6 +1,17 @@
 # 世界时钟 · World Clock for PICO
 
-基于 **PICO Spatial SDK 6.1.9、Kotlin 和 Compose** 的 MR 地球与世界时间应用。当前主分支为 **V52 / 0.52.0**，包含用户提供的 AI 8K 颜色图与高光图；`v0.50.0` 保留原贴图基线，`v0.51.0` 保留仅替换颜色图的版本。本工程不是 Unity 项目。
+基于 **PICO Spatial SDK 6.1.9、Kotlin 和 Compose** 的 MR 地球、世界时间与全球气温应用。当前版本为 **V57 / 0.57.0**，使用用户提供的 AI 8K 颜色图与高光图。`v0.52.0` 保留加入气温模块前的版本，`release/v0.57.0` 分支保留本次用户确认稳定的版本。本工程不是 Unity 项目。
+
+## V57 共用时间滑条与全球气温
+
+- 时间尺右侧圆形温度计切换气温模式，两种模式共用原有六小时时间尺，各自保存时间状态。
+- 独立气温球壳与上方对齐的色阶条同步渐显、渐隐；沿用 PICO 官方材质、主题、字体与 hover。
+- 真实 NOAA GFS 全球 2 m 空气温度网格、固定色阶、同源城市读数；默认气温叠加强度 100%，0°C 为深蓝，25°C 以上以 3°C 分档。
+- 原高清地球资产保持独立；气温原始网格、小时预报和数据处理脚本一并保存。
+
+2026-10-22 用户反馈模拟器体验正常，并确认本版稳定、授权上传。构建及 98 项单元测试通过；自动集成用例第一次因测试线程错误中断，修正源码已保存，尚无重跑通过记录。用户手动体验与自动验收分别记录，未据此宣称真机性能或视觉已验收。线上数据服务尚待部署，当前样例保留真实数据时间和过期状态。
+
+详见 [V57 实现与验收](docs/global-temperature-v57.md)、[Figma 设计参数](docs/designs/shared-timeline/README.md) 和 [数据处理与部署](temperature_pipeline/README.md)。
 
 ## V52 高光图试验
 
@@ -27,6 +38,8 @@ APK 构建与资源一致性检查通过；已在 SWAN 覆盖安装并启动 0.5
 | `WorldClockEditor/` | 当前地球、云层和太阳的 Spatial Editor 场景及源资源 |
 | `WorldClockEditor/Sources/Textures/` | 完整原始 8K 贴图 |
 | `docs/` | 版本说明、资源校验清单及模拟器效果图 |
+| `temperature_pipeline/` | GFS 数据获取、校验、数值网格转换及部署示例 |
+| `tools/` | 材质生成、本机构建与模拟器验证入口 |
 
 收录当前运行时资源、对应编辑器源文件和保留的 V49 / V51 / V52 地球版本。更早版本的中间导出、缓存、机器配置、签名密钥和旧 APK 不在仓库内。
 
@@ -62,6 +75,7 @@ adb -s <设备序列号> shell am start -n com.wupengfei.worldclock/.platform.La
 | `Earth.bundle` | `Sources/Scenes/EarthSwanV51.usda` |
 | `Clouds.bundle` | `Sources/Scenes/CloudsV41.usda` |
 | `SunEffects.bundle` | `Sources/Scenes/SunEffectsV36.usda` |
+| `Temperature.bundle` | `Sources/Scenes/TemperatureV56.usda` |
 
 源 USD 的贴图引用已改为相对路径；V51 仅更换昼间颜色图，其余三个地表纹理的编译数据与 V50 完全一致。重导出时保留原始 8K 图，不启用自动降采样。太阳和云层还有运行时参数，详见 `HomeStage.kt` 与 `ClockScene.kt`。
 
@@ -88,9 +102,9 @@ V51 构建成功，已在模拟器验证资源加载、开场和画面，并曾�
 
 
 
-## V53 全球气温开发分支
+## 全球气温数据与历史实现
 
-当前 feature/global-temperature-v53 包含真实 NOAA GFS 2 m 全球气温、模式切换、逐小时预报、固定色阶及同源城市查询。原 V52 标签保留。
+V53 至 V57 的气温开发记录随当前版本保留，包含真实 NOAA GFS 2 m 全球气温、模式切换、逐小时预报、固定色阶及同源城市查询。原 V52 标签保留。
 
 - [操作与实现说明](docs/global-temperature-v53.md)
 - [本地处理与部署](temperature_pipeline/README.md)

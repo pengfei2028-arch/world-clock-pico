@@ -11,7 +11,6 @@ import kotlin.math.*
 internal class ClockScene(private val content: SpatialViewContent,attachments: SpatialViewAttachments,
     private val state: ClockState,private val geographic: Entity,private val origin: Entity,
     private val eye: Vector3,owned: MutableList<Entity>,private val sunEffect: Entity,private val uiDensity:Float) {
-    private val modulePanel=attachments.entity("module")
     private val citiesPanel=attachments.entity("cities")
     private val timelinePanel=attachments.entity("timeline")
     private val toolsPanel=attachments.entity("time_tools")
@@ -76,7 +75,7 @@ internal class ClockScene(private val content: SpatialViewContent,attachments: S
         }
         android.util.Log.i("WorldClockSun","V42 compact profile: core unchanged; bloom .35/-150; halo .045/-32; angular size fixed")
         android.util.Log.i("WorldClockSun","V36 material parameters="+sunMaterials.first().getParameterNames().joinToString())
-        listOfNotNull(modulePanel,citiesPanel,timelinePanel,toolsPanel).forEach{
+        listOfNotNull(citiesPanel,timelinePanel,toolsPanel).forEach{
             transform(it).apply{setScaleVector(Vector3(3.5f,3.5f,3.5f));setQuaternion(Quat(0f,0f,0f,1f))}
         }
     }
@@ -97,12 +96,11 @@ internal class ClockScene(private val content: SpatialViewContent,attachments: S
         state.toolbarDrag.advance(seconds)
         val unit=toolbarUnit
         val bar=Vector3(eye.x+state.toolbarDrag.x.toFloat()*unit,eye.y-1f-state.toolbarDrag.y.toFloat()*unit,eye.z-2.5f)
-        val timeBar=Vector3(bar.x,bar.y-(if(state.mode==EarthMode.TEMPERATURE)185f*unit else 0f),bar.z)
-        timelinePanel?.let{transform(it).setPosition(Vector3(bar.x,timeBar.y+(if(state.mode==EarthMode.TEMPERATURE)92f else 32f)*unit,bar.z))}
-        citiesPanel?.let{transform(it).setPosition(Vector3(bar.x-328f*unit,timeBar.y+44f*unit,bar.z+.015f))}
-        toolsPanel?.let{transform(it).setPosition(Vector3(bar.x+328f*unit,timeBar.y+44f*unit,bar.z+.015f))}
-        modulePanel?.let{transform(it).setPosition(Vector3(bar.x-450f*unit,bar.y+695f*unit,bar.z))}
-        show(modulePanel,ready)
+        // 32 dp panel offset keeps the original ruler/caption centered as the thermometer
+        // adds 64 dp on the right. The legend uses a permanent slot above the ruler.
+        timelinePanel?.let{transform(it).setPosition(Vector3(bar.x+32f*unit,bar.y+92f*unit,bar.z))}
+        citiesPanel?.let{transform(it).setPosition(Vector3(bar.x-328f*unit,bar.y+44f*unit,bar.z+.015f))}
+        toolsPanel?.let{transform(it).setPosition(Vector3(bar.x+392f*unit,bar.y+44f*unit,bar.z+.015f))}
         show(timelinePanel,ready);show(citiesPanel,ready&&state.citiesOpen);show(toolsPanel,ready&&state.timeToolsOpen)
         val c=vec(center);val h=vec(head)
         val sunPosition=c+vec(light)*350.0

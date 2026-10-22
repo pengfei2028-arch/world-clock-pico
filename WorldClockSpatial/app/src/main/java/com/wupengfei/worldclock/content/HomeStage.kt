@@ -197,7 +197,6 @@ fun HomeStage() {
             }
         },
         attachments = {
-            AttachmentPanel("module",alignment=AttachmentPanelComponent.Alignment.BOTTOM_CENTER) { ClockTheme { ModulePanel(clock) } }
             AttachmentPanel("cities",alignment=AttachmentPanelComponent.Alignment.BOTTOM_LEFT) { ClockTheme { CityPanel(clock,context) } }
             AttachmentPanel("timeline",alignment=AttachmentPanelComponent.Alignment.TOP_CENTER) { ClockTheme { TimePanel(clock) } }
             AttachmentPanel("time_tools",alignment=AttachmentPanelComponent.Alignment.BOTTOM_RIGHT) { ClockTheme { TimeOptionsPanel(clock) } }
@@ -503,7 +502,7 @@ fun HomeStage() {
                 // A fixed 33ms delay limited the old animation to ~29 updates/sec on 90Hz SWAN.
                 resources.frameSubscription = content.subscribe(SceneEvents.Update::class.java) { event ->
                     val now = nowSeconds()
-                    resources.temperatureRenderer?.update(clock.mode)
+                    resources.temperatureRenderer?.update(clock.mode,event.deltaTime.toDouble())
                     maxGapSeconds = max(maxGapSeconds, now - previousFrame)
                     previousFrame = now
                     val wasRestoringTilt = motion.restoringTilt

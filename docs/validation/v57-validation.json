@@ -1,0 +1,54 @@
+{
+  "status": "build and 98 unit tests passed; user accepted simulator experience as stable and authorized GitHub upload; corrected automated harness remains unverified",
+  "userAcceptance": {
+    "date": "2026-10-22",
+    "environment": "simulator explicitly reported in prior feedback",
+    "feedback": "模拟器没啥问题；挺好挺稳定的",
+    "githubUploadAuthorized": true,
+    "automatedPassInferred": false,
+    "headsetValidationInferred": false
+  },
+  "sourceSync": { "runtimeFilesCompared": 147, "allIdentical": true, "apkHashRechecked": true },
+  "build": {
+    "successful": true,
+    "durationSeconds": 29,
+    "versionCode": 57,
+    "versionName": "0.57.0",
+    "apkBytes": 202601665,
+    "apkSha256": "7108dde7b910d527421a44d76e9a71479ee1fe2ffb3d048c12efbe450a3419cf"
+  },
+  "figmaApproved": true,
+  "assets": {
+    "count": 71,
+    "allUnchanged": true,
+    "verifiedInBuiltApkAgainstV56": true
+  },
+  "icon": {
+    "widthDp": 20,
+    "heightDp": 20,
+    "paths": 3,
+    "matchesFigma": true
+  },
+  "diffCheckPassed": true,
+  "unitTests": { "suites": 18, "tests": 98, "newTests": 6, "failures": 0, "errors": 0, "skipped": 0 },
+  "simulatorIntegration": {
+    "attempts": 1,
+    "testsRun": 1,
+    "failures": 1,
+    "failure": "Test called PICO OpacityControllerComponent.getOpacity on instrumentation thread instead of Android main thread",
+    "runtimeConfirmed": ["application launched", "temperature frame committed"],
+    "testSourceFix": "SDK reads and polling predicates run via Instrumentation.runOnMainSync; fade samples include data preparation",
+    "correctedHarnessCompiled": false,
+    "correctedHarnessRerun": false,
+    "manualEntry": "tools/verify-local-v57.cmd now rebuilds the Android test APK before installation",
+    "applicationApkChangedByHarnessFix": false
+  },
+  "visualReview": {
+    "passed": false,
+    "attempt1": "Android UiAutomation capture was entirely black; not valid evidence of the PICO XR scene",
+    "nextAttempt": "Keep Android-display captures diagnostic; try installed official PICO CLI after test if available on PATH",
+    "remaining": ["default/enabled/restored layout", "fade appearance", "actual button and spatial gesture interaction"]
+  },
+  "headset": "not validated; connection state unavailable from restricted ADB",
+  "executionLimitation": "Automatic Java/ADB execution is blocked in this session; permission escalation rejected. User-run normal local build succeeded without SDK reinstallation."
+}

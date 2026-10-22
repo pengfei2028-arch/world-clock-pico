@@ -10,6 +10,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -24,13 +32,14 @@ import com.pico.spatial.ui.foundation.material.backgroundMaterial
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-@Composable internal fun ModulePanel(state:ClockState){
-    Row(Modifier.width(230.dp).height(38.dp),horizontalArrangement=Arrangement.spacedBy(6.dp)){
-        for((mode,title) in listOf(EarthMode.WORLD_TIME to "世界时间",EarthMode.TEMPERATURE to "全球气温")){
-            GlassAction({state.switchMode(mode)},Modifier.width(112.dp).fillMaxHeight().background(if(state.mode==mode)Color.White.copy(alpha=.16f)else Color.Transparent,CircleShape)){
-                Text(title,style=uiText(15),color=if(state.mode==mode)Color.White else Color.White.copy(alpha=.65f))
-            }
-        }
+/** Project tint/icon approved in Figma; the surface and highlight stay PICO native. */
+@Composable internal fun TemperatureToggle(state:ClockState){
+    val active=state.mode==EarthMode.TEMPERATURE
+    GlassAction({state.switchMode(if(active)EarthMode.WORLD_TIME else EarthMode.TEMPERATURE)},
+        Modifier.size(48.dp).semantics{contentDescription="全球气温";selected=active},state.ready,
+        containerTint=if(active)Color(0xFF745BFF).copy(alpha=.82f) else Color.Transparent){
+        androidx.compose.foundation.Image(painterResource(com.wupengfei.worldclock.R.drawable.ic_temperature),
+            contentDescription=null,modifier=Modifier.size(20.dp))
     }
 }
 /** Shares the time ruler's 528 dp bounds and uses proportional Celsius intervals. */
@@ -43,9 +52,13 @@ import java.time.format.DateTimeFormatter
         val low=-35f;val high=45f
         fun x(c:Float)=(c-low)/(high-low)*size.width
         val edges=listOf(low)+TemperaturePalette.breaks.map{it.toFloat()}+listOf(high)
-        TemperaturePalette.colors.forEachIndexed{i,c->
-            val left=x(edges[i]);val right=x(edges[i+1])
-            drawRect(Color(c),Offset(left,8.dp.toPx()),Size(right-left,12.dp.toPx()))
+        val top=8.dp.toPx();val height=10.dp.toPx()
+        val capsule=Path().apply{addRoundRect(RoundRect(0f,top,size.width,top+height,CornerRadius(height/2)))}
+        clipPath(capsule){
+            TemperaturePalette.colors.forEachIndexed{i,c->
+                val left=x(edges[i]);val right=x(edges[i+1])
+                drawRect(Color(c),Offset(left,top),Size(right-left,height))
+            }
         }
         labels.forEachIndexed{i,label->
             val center=x(TemperaturePalette.displayTicks[i].toFloat())
@@ -67,23 +80,6 @@ import java.time.format.DateTimeFormatter
             val x=left+(right-left)*state.temperature.strength
             drawLine(Color.White.copy(alpha=.8f),Offset(left,y),Offset(x,y),3.dp.toPx());drawCircle(Color.White,5.dp.toPx(),Offset(x,y))
         }
-    }
-}
-@Composable internal fun TemperatureRuler(state:ClockState){
-    val m=state.temperature.manifest
-    val tm=rememberTextMeasurer();val style=uiText(13)
-    val labels=remember(m,style){m?.frames?.map{tm.measure(DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.systemDefault()).format(it.validTime),style=style)}.orEmpty()}
-    Canvas(Modifier.fillMaxSize()){
-        if(labels.isEmpty()){drawText(tm.measure("暂无可用预报",style=style),Color.White,topLeft=Offset(14.dp.toPx(),14.dp.toPx()));return@Canvas}
-        val pad=26.dp.toPx();val span=size.width-2*pad;val last=labels.lastIndex.coerceAtLeast(1)
-        labels.forEachIndexed{i,label->val x=pad+span*i/last
-            if((i%6==0&&labels.lastIndex-i>=3)||i==labels.lastIndex)drawText(label,Color.White,topLeft=Offset(x-label.size.width/2,(size.height-label.size.height)/2))
-            else drawCircle(Color.White.copy(alpha=.5f),1.5.dp.toPx(),Offset(x,size.height/2))
-        }
-        val selected=pad+span*state.temperature.index/last
-        drawRoundRect(Color.White,Offset(selected-2.dp.toPx(),5.dp.toPx()),Size(4.dp.toPx(),size.height-10.dp.toPx()),androidx.compose.ui.geometry.CornerRadius(2.dp.toPx()))
-        val nowIndex=m?.nearest(state.now)?:0
-        if(m!=null&&state.now>=m.frames.first().validTime&&state.now<=m.frames.last().validTime){val nx=pad+span*nowIndex/last;drawCircle(Color(0xFF5B9DFF),3.dp.toPx(),Offset(nx,size.height-5.dp.toPx()))}
     }
 }
 @Composable internal fun TemperatureOptions(state:ClockState){

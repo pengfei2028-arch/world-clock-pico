@@ -1,0 +1,15 @@
+{
+  "fileKey": "dcAVPtoJZ6gLaHjxSk57wj",
+  "nodeId": "3:87",
+  "approved": true,
+  "activeTint": "#745BFF",
+  "activeAlpha": 0.82,
+  "legendEndRadiusDp": 5,
+  "legendHeightDp": 10,
+  "material": "PICO Material.Regular",
+  "hover": "PICO SpatialHoverStyle.Highlight",
+  "rulerWidthDp": 528,
+  "buttonSizeDp": 48,
+  "iconSizeDp": 20,
+  "fadeMs": 600
+}

@@ -19,6 +19,7 @@ internal class TemperatureRenderer private constructor(private val earthModel:Mo
     private val temperatureMesh=template.mesh
     private val material=template.materials[0] as ShaderGraphMaterial
     private val opacity=OpacityControllerComponent(0f)
+    private val visibility=TemperatureVisibility()
     private data class Prepared(val manifest:TemperatureManifest,val frame:TemperatureFrame,val grid:TemperatureGrid,val texture:TextureResource,val file:File) {
         fun close(){texture.close();file.delete()}
     }
@@ -64,7 +65,7 @@ internal class TemperatureRenderer private constructor(private val earthModel:Mo
             synchronized(this){if(closed)return;pending?.close();pending=Prepared(m,frame,grid,checkNotNull(tex),checkNotNull(file));tex=null;file=null}
         }finally{tex?.close();file?.delete()}
     }
-    @Synchronized fun update(mode:EarthMode){
+    @Synchronized fun update(mode:EarthMode,seconds:Double){
         if(closed)return
         tick++
         pending?.let { next ->
@@ -75,7 +76,8 @@ internal class TemperatureRenderer private constructor(private val earthModel:Mo
             Log.i("WorldClockTemperature","V56 frame committed "+next.frame.validTime+"; smoothed display; original-grid Beijing="+next.grid.sample(39.9042,116.4074))
         }
         val want=mode==EarthMode.TEMPERATURE&&current!=null
-        opacity.opacity=if(want)state.strength.coerceIn(0f,1f) else 0f
+        state.reveal=visibility.update(want,seconds)
+        opacity.opacity=state.reveal*state.strength.coerceIn(0f,1f)
         if(opacity.opacity!=lastStrength){
             lastStrength=opacity.opacity
             reflectionParameters.forEach{(key,value)->originalMaterial.setParameter(key,1f+(value-1f)*(1f-lastStrength))}
@@ -84,7 +86,7 @@ internal class TemperatureRenderer private constructor(private val earthModel:Mo
         val it=retired.iterator();while(it.hasNext()){val item=it.next();if(item.first<=tick){item.second.close();it.remove()}}
     }
     @Synchronized override fun close(){
-        closed=true;opacity.opacity=0f
+        closed=true;opacity.opacity=0f;state.reveal=0f
         reflectionParameters.forEach{(key,value)->originalMaterial.setParameter(key,value)}
         shell.destroy();owner.destroy()
         pending?.close();current?.close();retired.forEach{it.second.close()}
