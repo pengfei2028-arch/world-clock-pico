@@ -136,6 +136,17 @@ internal class GlobeMotion {
         coastSpeed = 0.0 // Do not replay stale fling after the requested 3-second dwell.
 
     }
+    /** Container handoff keeps orientation, but drops gesture/focus timers owned by the old view. */
+    fun enterDesktop() {
+        dragging=false;timelineHeld=false;focusLocked=false;restoringTilt=false
+        resumeAfter=Double.NEGATIVE_INFINITY;coastSpeed=0.0;idleSpeed=0.0
+    }
+    /** Presentation only: this never advances UTC or the temperature forecast. */
+    fun tickDesktop(seconds:Double) {
+        if(!seconds.isFinite())return
+        val dt=seconds.coerceIn(0.0,.05)
+        effectSeconds+=dt;idleDegrees=(idleDegrees+dt*.5)%360.0
+    }
     fun tick(dtSeconds: Double, now: Double, autoSpin: Boolean = true) {
         if (!dtSeconds.isFinite() || !now.isFinite()) return
         val dt = dtSeconds.coerceIn(0.0,0.05); effectSeconds += dt

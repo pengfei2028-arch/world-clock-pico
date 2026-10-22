@@ -83,8 +83,10 @@ import java.time.format.DateTimeFormatter
     }
 }
 @Composable internal fun TemperatureOptions(state:ClockState){
+    val navigator=com.pico.spatial.ui.platform.containers.LocalSpatialNavigator.current
     val t=state.temperature;val m=t.displayedManifest?:t.manifest
     Glass(Modifier.width(310.dp)){
+        GlassAction({WorldClockSession.collapse(navigator)},Modifier.fillMaxWidth().height(40.dp),state.ready&&!WorldClockSession.busy){Text("收起到桌面",style=uiText(15))}
         Text(t.kindLabel+" · NOAA GFS",style=uiText(16))
         Text("全球 0.25° · 离地 2 m 空气温度",style=uiText(12))
         TemperatureStrength(state)

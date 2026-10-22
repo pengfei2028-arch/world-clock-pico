@@ -44,6 +44,7 @@ import com.pico.spatial.ui.foundation.hover.spatialHoverEffectGroup
 import com.pico.spatial.ui.foundation.hover.SpatialHoverEffectGroup
 import com.pico.spatial.ui.foundation.hover.disableSpatialHoverEffect
 import com.pico.spatial.ui.platform.containers.closeStage
+import com.pico.spatial.ui.platform.containers.LocalSpatialNavigator
 import androidx.compose.ui.res.painterResource
 import kotlinx.coroutines.launch
 import com.pico.spatial.ui.graphics.SpatialHoverStyle
@@ -431,15 +432,16 @@ private fun TimeRulerDrawing(state:ClockState,dragging:Boolean){
 
 @Composable
 private fun CaptionCloseButton(modifier:Modifier,group:SpatialHoverEffectGroup,barHovered:Boolean){
-    val scope=rememberCoroutineScope()
-    var closing by remember{mutableStateOf(false)}
+    val navigator=LocalSpatialNavigator.current
+    val activity=LocalContext.current as? android.app.Activity
+    val closing=WorldClockSession.busy
     val interaction=remember{MutableInteractionSource()}
     val hovered by interaction.collectIsHoveredAsState()
     val closePainter=painterResource(com.pico.spatial.ui.design.R.drawable.ic_sui_close)
     Box(modifier.size(32.dp,42.dp).spatialHoverEffectGroup(group)
         .hoverable(interaction).semantics{contentDescription="关闭软件"}
         .clickable(enabled=!closing,interactionSource=interaction,indication=null){
-            if(!closing){closing=true;scope.launch{try{closeStage()}finally{closing=false}}}
+            if(!closing){WorldClockSession.closeSoftware(navigator,activity)}
         },contentAlignment=Alignment.Center){
         // Keep the icon and disc in the same drawing layer as the native reveal.
         Canvas(Modifier.size(16.dp).spatialHoverEffect{hover->
@@ -500,10 +502,12 @@ private fun DateWheel(label:String,value:Int,range:IntRange,state:ClockState,onV
 
 @Composable
 internal fun TimeOptionsPanel(state:ClockState){
+    val navigator=LocalSpatialNavigator.current
     if(state.mode==EarthMode.TEMPERATURE){TemperatureOptions(state);return}
     var chosen by remember(state.timeToolsOpen){mutableStateOf(state.instant.atZone(ZoneId.systemDefault()).toLocalDate())}
     DisposableEffect(Unit){onDispose{state.uiManipulating=false}}
     Glass(Modifier.width(300.dp)){
+        GlassAction({WorldClockSession.collapse(navigator)},Modifier.fillMaxWidth().height(40.dp),state.ready&&!WorldClockSession.busy){Text("收起到桌面",style=uiText(15))}
         Row(Modifier.fillMaxWidth().height(30.dp),verticalAlignment=Alignment.CenterVertically){
             Text("选择日期",style=uiText(16,FontWeight.Medium),modifier=Modifier.weight(1f))
             GlassAction({state.touchUi();state.timeToolsOpen=false},Modifier.size(30.dp),horizontalPadding=0.dp){Text("×",style=uiText(18))}

@@ -26,6 +26,7 @@ import kotlinx.coroutines.sync.withPermit
 import com.pico.spatial.tracking.hmd.HMDTrackingProvider
 
 private class EarthResources {
+    var closed = false; private set
     var bundle: AssetBundle? = null
     var effectsBundle: AssetBundle? = null
     var cloudsBundle: AssetBundle? = null
@@ -37,7 +38,13 @@ private class EarthResources {
     var frameSubscription: Cancellable? = null
     val entities = mutableListOf<Entity>()
     val textures = mutableListOf<TextureResource>()
+    val materials = mutableListOf<Material>()
+    fun ensureOpen(entity:Entity?=null) {
+        if(closed){entity?.destroy();throw CancellationException("Immersive renderer disposed")}
+    }
     fun close() {
+        if(closed)return
+        closed=true
         interactionReady = false
         frameSubscription?.cancel()
         frameSubscription = null
@@ -45,6 +52,7 @@ private class EarthResources {
         temperatureRenderer?.close();temperatureRenderer=null
         entities.forEach { it.destroy() }
         entities.clear()
+        materials.forEach { it.close() };materials.clear()
         textures.forEach { it.close() }
         textures.clear()
         bundle?.close()
@@ -69,17 +77,19 @@ private const val EARTH_CENTER_DROP_M = 4.1956f
 @Composable
 fun HomeStage() {
     val resources = remember { EarthResources() }
-    val motion = remember { GlobeMotion() }
-    val entrance = remember { GlobeEntrance() }
+    val motion = WorldClockSession.motion
+    val entrance = WorldClockSession.entrance
     val context = LocalContext.current
-    val clock = remember { ClockState() }
+    val clock = WorldClockSession.clock
     DisposableEffect(clock){
+        WorldClockSession.immersiveResources=true
+        clock.ready=false
         if(com.wupengfei.worldclock.BuildConfig.DEBUG)TemperatureTestAccess.state=clock
         onDispose{if(TemperatureTestAccess.state===clock){TemperatureTestAccess.state=null;TemperatureTestAccess.renderer=null}}
     }
     val temperatureRepository=remember { TemperatureRepository(context) }
     LaunchedEffect(Unit) {
-        try { val m=temperatureRepository.initial();clock.temperature.manifest=m;clock.temperature.now(ClockTimeSource.read().instant)
+        try { if(clock.temperature.manifest==null){val m=temperatureRepository.initial();clock.temperature.manifest=m;clock.temperature.now(ClockTimeSource.read().instant)}
             clock.temperature.status=if(temperatureRepository.baseUrl.isBlank())"内置真实样例 · 自动更新待配置" else "缓存数据"
         }catch(e:CancellationException){throw e}catch(e:Exception){clock.temperature.status="气温数据不可用";Log.e("WorldClockTemperature","Initial data",e)}
     }
@@ -107,7 +117,7 @@ fun HomeStage() {
     }
     LaunchedEffect(Unit) {
         try {
-            val catalog=withContext(Dispatchers.IO) {
+            if(clock.catalog==null){val catalog=withContext(Dispatchers.IO) {
                 CityCatalog.read(context.assets.open("cities/catalog.tsv").bufferedReader()).apply {
                     bindPinPositions(context.assets.open("cities/pin_positions.tsv").bufferedReader())
                     val rules=CityTimeZones.read(context.assets.open("cities/timezones.tsv").bufferedReader())
@@ -117,6 +127,7 @@ fun HomeStage() {
             clock.catalog=catalog
             val ids=context.getSharedPreferences("world_clock",0).getString("cityIds", "").orEmpty().split(',')
             clock.cities=ids.mapNotNull{catalog.city(it)}.distinctBy{it.id}.take(8)
+            }
         } catch(error: Exception) { clock.notice="城市库载入失败，请重新启动";Log.e("WorldClockEarth","City catalog failed",error) }
         while(isActive){
             val reading=ClockTimeSource.read();clock.now=reading.instant
@@ -147,7 +158,7 @@ fun HomeStage() {
             motion.setTimelineHeld(held,nowSeconds())
             Log.i("WorldClockTimeline","V43 held="+held+"; presentation="+motion.presentation+"; idleDegrees="+motion.idleDegrees)
         }
-        onDispose { clock.onTimeScrub=null;clock.toolbarHandPoint=null;clock.toolbarHandGain=null; hmd.stop(); resources.close() }
+        onDispose { clock.onTimeScrub=null;clock.toolbarHandPoint=null;clock.toolbarHandGain=null; hmd.stop(); resources.close(); clock.ready=false; WorldClockSession.immersiveResources=false }
     }
 
     SpatialView(
@@ -161,7 +172,7 @@ fun HomeStage() {
                 ) { pointers ->
                     var consumed = false
                     pointers.forEach { pointer ->
-                        if (!resources.interactionReady) return@forEach
+                        if (!resources.interactionReady || WorldClockSession.busy) return@forEach
                         val previousOwner = input.activePointerId
                         val now = nowSeconds()
                         if (previousOwner == null && pointer.isDownEvent()) {
@@ -206,6 +217,7 @@ fun HomeStage() {
         },
         initial = { content, attachments ->
             try {
+                resources.ensureOpen()
                 // The Stage is aligned to the user's facing direction on opening.
                 // Sample eye height once; the scene remains fixed when the user turns.
                 val stageOrigin = Entity()
@@ -225,6 +237,7 @@ fun HomeStage() {
                 val pose = withTimeoutOrNull(1500L) {
                     hmd.dataFlow.first().hmdPose
                 } ?: hmd.latestData.hmdPose
+                resources.ensureOpen()
                 val trackedEye = stageOrigin.convertPositionFrom(pose.position, null)
                 val eye = if (trackedEye.y.isFinite() && trackedEye.y in 0.3f..2.6f) {
                     trackedEye
@@ -249,6 +262,7 @@ fun HomeStage() {
                     setDepthWrite(false)
                     setApplyToneMapping(false)
                 }
+                resources.materials.add(veilMaterial)
                 fun replaceMeshMaterial(entity: Entity, material: Material): Int {
                     var count = 0
                     entity.components[ModelComponent::class.java]?.let { model ->
@@ -260,6 +274,7 @@ fun HomeStage() {
                     return count
                 }
                 val veil = Entity.loadSuspend("asset://ForwardVeil.glb")
+                resources.ensureOpen(veil)
                 resources.entities.add(veil)
                 val veilOpacity = OpacityControllerComponent(0f)
                 veil.components.set(veilOpacity)
@@ -274,6 +289,8 @@ fun HomeStage() {
                 check(bundle.valid) { "Earth bundle is invalid" }
                 resources.bundle = bundle
                 val earth = bundle.loadModelSuspend("EarthSwanV51")
+                resources.ensureOpen(earth)
+                resources.entities.add(earth)
                 val earthOpacity = OpacityControllerComponent(0f)
                 earth.components.set(earthOpacity)
                 // Data maps must bypass sRGB decoding. The v06 USDZ packer emitted
@@ -347,7 +364,6 @@ fun HomeStage() {
                     collisionShape = listOf(ShapeResource.createSphere(2f)),
                     physicsMaterial = PhysicsMaterialResource()))
                 disableEnvironmentFill(earth)
-                resources.entities.add(earth)
                 content.addEntity(earth)
 
                 val sun = Entity().apply {
@@ -379,6 +395,7 @@ fun HomeStage() {
                     val cloudBundle=AssetBundle.load("asset://Clouds.bundle")
                     check(cloudBundle.valid){"Cloud bundle invalid"};resources.cloudsBundle=cloudBundle
                     val clouds=cloudBundle.loadModelSuspend("CloudsV41")
+                    resources.ensureOpen(clouds)
                     // Attach a zero-opacity controller before joining the live scene.
                     // Keep the entity active throughout fades; avoid enable/material races.
                     clouds.components.set(cloudOpacity)
@@ -412,8 +429,8 @@ fun HomeStage() {
                 val localCenter=geographicEntity.convertPositionFrom(initialCenter,stageOrigin)
                 val view=GlobeVector3((localView.x-localCenter.x).toDouble(),(localView.y-localCenter.y).toDouble(),(localView.z-localCenter.z).toDouble())
                 val cueSpin=GlobeGeography.openingSpin(GlobeGeography.direction(solar.declination,solar.longitude),view)
-                val iq=GlobeQuaternion(initialRotation.x.toDouble(),initialRotation.y.toDouble(),initialRotation.z.toDouble(),initialRotation.w.toDouble())*
-                    GlobeQuaternion.axisAngle(GlobeVector3.Z,cueSpin)
+                val iq=WorldClockSession.geographicBase ?: (GlobeQuaternion(initialRotation.x.toDouble(),initialRotation.y.toDouble(),initialRotation.z.toDouble(),initialRotation.w.toDouble())*
+                    GlobeQuaternion.axisAngle(GlobeVector3.Z,cueSpin)).also { WorldClockSession.geographicBase=it }
                 initialRotation=Quat(iq.x.toFloat(),iq.y.toFloat(),iq.z.toFloat(),iq.w.toFloat())
                 geographicTransform.setQuaternion(initialRotation)
                 val earthTransform = checkNotNull(earth.components[TransformComponent::class.java])
@@ -435,6 +452,7 @@ fun HomeStage() {
                 // 40 stars: four brightness groups, 80 triangles. Most are faint; only two are prominent.
                 // Depth and brightness are project art choices, not PICO UI parameters.
                 val stars = Entity.loadSuspend("asset://DistantStars.glb")
+                resources.ensureOpen(stars)
                 val starsOpacity = OpacityControllerComponent(0f)
                 stars.components.set(starsOpacity)
                 resources.entities.add(stars)
@@ -451,6 +469,7 @@ fun HomeStage() {
                         setCullingMode(MaterialCullingMode.NONE)
                     }
                 }
+                resources.materials.addAll(starMaterials)
                 stars.components[TransformComponent::class.java]?.apply {
                     setPosition(Vector3(eye.x, eye.y - 1.5f * WORLD_SCALE, eye.z))
                     setScaleVector(Vector3(WORLD_SCALE, WORLD_SCALE, WORLD_SCALE))
@@ -474,10 +493,11 @@ fun HomeStage() {
                 val effectsBundle=AssetBundle.load("asset://SunEffects.bundle")
                 check(effectsBundle.valid){"Sun effects bundle invalid"};resources.effectsBundle=effectsBundle
                 val sunEffect=effectsBundle.loadModelSuspend("SunEffectsV36")
+                resources.ensureOpen(sunEffect)
                 val features=ClockScene(content,attachments,clock,geographicEntity,stageOrigin,eye,resources.entities,sunEffect,context.resources.displayMetrics.density)
                 Log.i("WorldClockEarth","V31 procedural Sun loaded: white core, soft halo, subtle horizontal rays; frosted PBR pins")
-                var lastFocusRequest=0
-                var lastResumeRequest=0
+                var lastFocusRequest=clock.focusRequest
+                var lastResumeRequest=clock.resumeRequest
                 var lastUiActivity=0
                 var sampleStart = nowSeconds()
                 var previousFrame = sampleStart
@@ -522,6 +542,12 @@ fun HomeStage() {
                             Log.i("WorldClockEarth", "V31 opening complete; mask 4s, globe 4s after half-open; hand interaction ready; idle 3deg/s")
                         }
                     }
+                    val visibility=WorldClockSession.immersiveVisibility
+                    earthOpacity.opacity=entrance.pose.opacity.toFloat()*visibility
+                    starsOpacity.opacity=entrance.pose.opacity.toFloat()*visibility
+                    veilOpacity.opacity=entrance.pose.veilOpacity.toFloat()*visibility
+                    val displayScale=EARTH_DISPLAY_SCALE*(.25f+.75f*visibility)
+                    earthTransform.setScaleVector(Vector3(displayScale,displayScale,displayScale))
                     if(resources.interactionReady && !motion.dragging && !motion.timelineHeld) {
                         if(clock.focusRequest!=lastFocusRequest) {
                             lastFocusRequest=clock.focusRequest
@@ -549,7 +575,7 @@ fun HomeStage() {
                         Log.i("WorldClockClouds","V47 fade "+(if(revealClouds)"in" else "out for interaction")+"; openingElapsed="+entrance.elapsed+"; openingFinished="+entrance.finished+"; held="+motion.dragging+"; focus="+motion.focusLocked)
                     }
                     val cloudAlpha=cloudVisibility.update(revealClouds,event.deltaTime.toDouble())
-                    cloudOpacity.opacity=cloudAlpha
+                    cloudOpacity.opacity=cloudAlpha*visibility
                     // Project art choice: UV noise cells (100 x 50), +/-50% local variation.
                     // Time is the third noise coordinate; every region evolves independently.
                     val seconds = motion.effectSeconds
@@ -614,9 +640,13 @@ fun HomeStage() {
                 }
                 Log.i("WorldClockEarth", "V31 Earth loaded; night emission 0.9 (5x) with spatial UV noise +/-50%; V51 user AI 8192x4096 day colour map; original 8192x4096 night/normal; V52 user AI 8192x4096 specular map; V49 approved reflection branch; diameter 48m, forward distance 60m, center 4deg lower, angular diameter about 47deg; IBL disabled")
             } catch (cancelled: CancellationException) {
+                resources.close()
                 throw cancelled
             } catch (error: Exception) {
+                resources.close()
+                WorldClockSession.immersiveResources=false
                 Log.e("WorldClockEarth", "Earth load failed", error)
+                WorldClockSession.failedToLoad(error)
             }
         }
     )
