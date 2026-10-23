@@ -39,6 +39,24 @@ private class EarthResources {
     val entities = mutableListOf<Entity>()
     val textures = mutableListOf<TextureResource>()
     val materials = mutableListOf<Material>()
+    val importedResources = linkedSetOf<Resource>()
+    // Bundle.close / Entity.destroy do not guarantee immediate native release
+    // while Kotlin frame/material references are still alive. Own every imported
+    // handle explicitly so returning from Shared never overlaps two 8K scenes.
+    fun ownModelResources(root:Entity, samplers:List<String> = emptyList()) {
+        root.components[ModelComponent::class.java]?.let { model ->
+            importedResources.add(model.mesh)
+            model.materials.forEach { material ->
+                importedResources.add(material)
+                // SDK 6.1.9 returns an empty getParameterNames() on these imported
+                // graphs. Use the known exported sampler contract, not reflection.
+                if(material is ShaderGraphMaterial)samplers.forEach { name ->
+                        importedResources.add(material.getParameter(name,TextureResource::class.java))
+                    }
+            }
+        }
+        root.getChildren().forEach { ownModelResources(it,samplers) }
+    }
     fun ensureOpen(entity:Entity?=null) {
         if(closed){entity?.destroy();throw CancellationException("Immersive renderer disposed")}
     }
@@ -52,9 +70,12 @@ private class EarthResources {
         temperatureRenderer?.close();temperatureRenderer=null
         entities.forEach { it.destroy() }
         entities.clear()
-        materials.forEach { it.close() };materials.clear()
-        textures.forEach { it.close() }
+        materials.forEach { if(it.valid)it.close() };materials.clear()
+        textures.forEach { if(it.valid)it.close() }
         textures.clear()
+        importedResources.forEach { if(it.valid)it.close() }
+        Log.i("WorldClockLifecycle","V61 explicitly released imported handles="+importedResources.size+" remainingValid="+importedResources.count{it.valid})
+        importedResources.clear()
         bundle?.close()
         bundle = null
         effectsBundle?.close();effectsBundle=null
@@ -291,6 +312,7 @@ fun HomeStage() {
                 val earth = bundle.loadModelSuspend("EarthSwanV51")
                 resources.ensureOpen(earth)
                 resources.entities.add(earth)
+                resources.ownModelResources(earth,listOf("Day_file","Night_file","NormalTex_file","SpecularTex_file"))
                 val earthOpacity = OpacityControllerComponent(0f)
                 earth.components.set(earthOpacity)
                 // Data maps must bypass sRGB decoding. The v06 USDZ packer emitted
@@ -396,6 +418,7 @@ fun HomeStage() {
                     check(cloudBundle.valid){"Cloud bundle invalid"};resources.cloudsBundle=cloudBundle
                     val clouds=cloudBundle.loadModelSuspend("CloudsV41")
                     resources.ensureOpen(clouds)
+                    resources.ownModelResources(clouds,listOf("CloudMask_file"))
                     // Attach a zero-opacity controller before joining the live scene.
                     // Keep the entity active throughout fades; avoid enable/material races.
                     clouds.components.set(cloudOpacity)
@@ -494,6 +517,7 @@ fun HomeStage() {
                 check(effectsBundle.valid){"Sun effects bundle invalid"};resources.effectsBundle=effectsBundle
                 val sunEffect=effectsBundle.loadModelSuspend("SunEffectsV36")
                 resources.ensureOpen(sunEffect)
+                resources.ownModelResources(sunEffect)
                 val features=ClockScene(content,attachments,clock,geographicEntity,stageOrigin,eye,resources.entities,sunEffect,context.resources.displayMetrics.density)
                 Log.i("WorldClockEarth","V31 procedural Sun loaded: white core, soft halo, subtle horizontal rays; frosted PBR pins")
                 var lastFocusRequest=clock.focusRequest

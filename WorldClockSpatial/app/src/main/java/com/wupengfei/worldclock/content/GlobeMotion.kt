@@ -10,6 +10,7 @@ internal class GlobeMotion {
         const val RELEASE_DWELL_SECONDS = 3.0
         const val FOCUS_DWELL_SECONDS = 5.0
         private const val IDLE_DEGREES_PER_SECOND = 3.0
+        const val DESKTOP_IDLE_DEGREES_PER_SECOND = 9.0
         private const val IDLE_BLEND_RATE = 12.0
         private const val INERTIA_DAMPING = 6.0
         // V34 project tuning: return movement itself is slow, separate from the 3s/5s dwell.
@@ -139,15 +140,13 @@ internal class GlobeMotion {
     /** Container handoff keeps orientation, but drops gesture/focus timers owned by the old view. */
     fun enterDesktop() {
         dragging=false;timelineHeld=false;focusLocked=false;restoringTilt=false
-        resumeAfter=Double.NEGATIVE_INFINITY;coastSpeed=0.0;idleSpeed=0.0
+        resumeAfter=Double.NEGATIVE_INFINITY;coastSpeed=0.0;idleSpeed=DESKTOP_IDLE_DEGREES_PER_SECOND
     }
     /** Presentation only: this never advances UTC or the temperature forecast. */
-    fun tickDesktop(seconds:Double) {
-        if(!seconds.isFinite())return
-        val dt=seconds.coerceIn(0.0,.05)
-        effectSeconds+=dt;idleDegrees=(idleDegrees+dt*.5)%360.0
-    }
-    fun tick(dtSeconds: Double, now: Double, autoSpin: Boolean = true) {
+    fun tickDesktop(seconds:Double,now:Double) =
+        tick(seconds,now,idleDegreesPerSecond=DESKTOP_IDLE_DEGREES_PER_SECOND)
+    fun tick(dtSeconds: Double, now: Double, autoSpin: Boolean = true,
+        idleDegreesPerSecond:Double=IDLE_DEGREES_PER_SECOND) {
         if (!dtSeconds.isFinite() || !now.isFinite()) return
         val dt = dtSeconds.coerceIn(0.0,0.05); effectSeconds += dt
         // Only presentation pauses. Night-light noise remains alive during every hold.
@@ -179,10 +178,13 @@ internal class GlobeMotion {
             presentation = (GlobeQuaternion.axisAngle(normalPole,coastStep)*presentation).normalized()
         }
         if (!autoSpin) { idleSpeed=0.0; return }
+        advanceIdle(dt,idleDegreesPerSecond)
+    }
+    private fun advanceIdle(dt:Double,targetSpeed:Double) {
         val idleDecay = exp(-IDLE_BLEND_RATE*dt)
-        val idleStep = IDLE_DEGREES_PER_SECOND*dt +
-            (idleSpeed-IDLE_DEGREES_PER_SECOND)*(1.0-idleDecay)/IDLE_BLEND_RATE
+        val idleStep = targetSpeed*dt +
+            (idleSpeed-targetSpeed)*(1.0-idleDecay)/IDLE_BLEND_RATE
         idleDegrees = (idleDegrees+idleStep)%360.0
-        idleSpeed = IDLE_DEGREES_PER_SECOND+(idleSpeed-IDLE_DEGREES_PER_SECOND)*idleDecay
+        idleSpeed = targetSpeed+(idleSpeed-targetSpeed)*idleDecay
     }
 }

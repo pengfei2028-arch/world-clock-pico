@@ -19,11 +19,11 @@ fun mainApp(scope: SpatialAppScope) =
         WindowContainer(
             id = WorldClockSession.DESKTOP,
             form = Form.Volumetric,
-            defaultSize = WindowContainerSize(.45f, .5f, .45f, LengthUnit.Meters),
+            defaultSize = WindowContainerSize(DesktopEarthLayout.WIDTH, DesktopEarthLayout.HEIGHT, DesktopEarthLayout.DEPTH, LengthUnit.Meters),
             enableMaterialBackground = false,
             worldScale = WorldScale.Fixed,
             volumeAlignment = VolumeAlignment.Gravity,
-            defaultVolumeBasePanelType = VolumeBasePanelType.Default,
+            defaultVolumeBasePanelType = VolumeBasePanelType.None,
             defaultCaptionBarType = CaptionBarType.Default,
         ) { PicoTheme { DesktopEarth() } }
     }

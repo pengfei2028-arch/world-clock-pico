@@ -58,9 +58,9 @@ class DesktopSpaceTest {
             if(cycle==cycles-1&&arguments.getString("leaveDesktop")=="true"){SystemClock.sleep((arguments.getString("inspectionSeconds")?.toLongOrNull()?:180L)*1000);return}
             if(cycle==0){
                 main {
-                    Session.resizeDesktop(10f);assertEquals(.35f,Session.diameter,.0001f)
+                    Session.resizeDesktop(10f);assertEquals(.8f,Session.diameter,.0001f)
                     Session.resizeDesktop(-10f);assertEquals(.18f,Session.diameter,.0001f)
-                    Session.resizeDesktop(.07f);assertEquals(.25f,Session.diameter,.0001f)
+                    Session.setDesktopDiameter(.5f);assertEquals(.5f,Session.diameter,.0001f)
                 }
                 main { Session.rejectNextExpandForTest=true;Session.expand(requireNotNull(Session.desktopNavigator)) }
                 waitFor("denied expansion rollback") {Session.desktopResources&&!Session.stageMounted&&!Session.busy&&Session.error.isNotEmpty()}

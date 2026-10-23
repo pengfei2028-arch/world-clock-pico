@@ -34,6 +34,10 @@ class SharedTimelineIntegrationTest {
    try{java.io.File(c.getExternalFilesDir(null),name+"-android.png").outputStream().use{bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)}}finally{bitmap.recycle()}
   }
   val cities=s.cities.map{it.id}
+  // Other integration cases may leave the shared session mid-fade or in
+  // temperature mode. Establish the world baseline before measuring fade-in.
+  i.runOnMainSync{s.switchMode(EarthMode.WORLD_TIME)}
+  waitFor("Initial world mode fully visible",5000){renderer.shellOpacity()==0f}
   i.runOnMainSync{s.setOffset(120f)};val world=s.clockInstant
   SystemClock.sleep(1000);capture("v57-world")
   i.runOnMainSync{s.switchMode(EarthMode.TEMPERATURE);s.temperature.select(6)}
@@ -55,10 +59,13 @@ class SharedTimelineIntegrationTest {
   assertEquals(old+1,s.temperature.index);assertNull(s.temperature.scrubTime)
   val tempIndex=s.temperature.index;val tempOrigin=s.rulerOrigin
   // Interrupt both directions; opacity must continue from the current frame.
-  repeat(3){i.runOnMainSync{s.switchMode(EarthMode.WORLD_TIME)};SystemClock.sleep(180)
+  repeat(3){i.runOnMainSync{s.switchMode(EarthMode.WORLD_TIME)}
+   waitFor("Fade-out reaches an interruptible frame",2000){renderer.shellOpacity() in .2f.. .85f}
    val partial=shellOpacity();assertTrue("Fade-out should be partial: $partial",partial>0f&&partial<1f)
-   i.runOnMainSync{s.switchMode(EarthMode.TEMPERATURE)};SystemClock.sleep(180)
-   assertTrue("Interrupted fade should brighten from $partial",shellOpacity()>partial)
+   i.runOnMainSync{s.switchMode(EarthMode.TEMPERATURE)}
+   // Re-entry can prepare a cached forecast frame asynchronously. Observe the
+   // actual reversal instead of assuming a fixed 180ms wall-clock sleep is a frame barrier.
+   waitFor("Interrupted fade should brighten from $partial",2000){renderer.shellOpacity()>partial+.01f}
   }
   waitFor("Interrupted fade completed",5000){renderer.shellOpacity()>=.999f};assertEquals(1f,shellOpacity(),.001f)
   assertEquals(tempIndex,s.temperature.index);assertEquals(tempOrigin,s.rulerOrigin)

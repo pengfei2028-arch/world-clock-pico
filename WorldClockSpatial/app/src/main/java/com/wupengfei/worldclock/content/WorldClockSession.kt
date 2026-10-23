@@ -28,7 +28,7 @@ internal object WorldClockSession {
     var desktopMounted = false
     var desktopResources = false
     var desktopFrames = 0L
-    var diameter by mutableFloatStateOf(.25f); private set
+    var diameter by mutableFloatStateOf(DesktopEarthLayout.DEFAULT_DIAMETER); private set
     var immersiveVisibility by mutableFloatStateOf(1f); private set
     var desktopVisibility by mutableFloatStateOf(1f); private set
     var loadFailure: Throwable? = null
@@ -38,7 +38,8 @@ internal object WorldClockSession {
     var desktopNavigator: SpatialNavigator? = null
     val keepTaskAlive get() = desktopRequested || busy
 
-    fun resizeDesktop(delta:Float) { if(!busy && delta.isFinite())diameter=(diameter+delta).coerceIn(.18f,.35f) }
+    fun setDesktopDiameter(value:Float) { if(!busy && value.isFinite())diameter=value.coerceIn(DesktopEarthLayout.MIN_DIAMETER,DesktopEarthLayout.MAX_DIAMETER) }
+    fun resizeDesktop(delta:Float) { if(delta.isFinite())setDesktopDiameter(diameter+delta) }
     fun onLaunch() { if(!stageMounted&&!desktopMounted&&!busy){immersiveRendering=true;desktopRendering=false;desktopRequested=false;immersiveVisibility=1f;error=""} }
     fun desktopClosed() { if(!busy&&desktopRequested){desktopRequested=false;desktopRendering=false;immersiveRendering=true} }
     fun failedToLoad(e:Throwable) { loadFailure=e;Log.e("WorldClockSpace","Scene load failed",e) }

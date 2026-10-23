@@ -1,0 +1,10 @@
+{
+    "authoredConfig": true,
+    "textureConverter": {
+        "generateMipmap": true,
+        "maxSize": 2048,
+        "textureFormat": 30,
+        "sourceColorSpace": 1539,
+        "targetColorSpace": 1539
+    }
+}
