@@ -210,7 +210,7 @@ private fun desktopNowSeconds()=android.os.SystemClock.elapsedRealtimeNanos()/1_
                 consumed
             }
         }finally{input.cancel(desktopNowSeconds())}
-    },initial={content,_->
+    },attachments={},initial={content,_->
         if(resources.closed)return@SpatialView
         try {
             val bundle=AssetBundle.load("asset://DesktopEarth.bundle")
@@ -263,6 +263,9 @@ private fun desktopNowSeconds()=android.os.SystemClock.elapsedRealtimeNanos()/1_
             earth.components.set(InteractableComponent())
             earth.components.set(CollisionComponent(listOf(shape),physics))
             content.addEntity(earth)
+            // Coordinates belong to Full Space only. Do not instantiate their mesh,
+            // card, leader or input handlers here, or modify the saved Full toggle.
+            Log.i("WorldClockCoordinates","V72 Shared coordinates absent; ownedCoordinateMeshes=0; fullEnabled=${WorldClockSession.clock.coordinates.enabled}")
             val clouds=CloudVisibility()
             var solarInstant=WorldClockSession.clock.instant
             var solar=SolarPosition.at(solarInstant)

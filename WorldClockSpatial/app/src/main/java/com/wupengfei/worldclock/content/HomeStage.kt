@@ -31,6 +31,8 @@ private class EarthResources {
     var effectsBundle: AssetBundle? = null
     var cloudsBundle: AssetBundle? = null
     var temperatureRenderer: TemperatureRenderer? by mutableStateOf(null)
+    var coordinateRenderer:CoordinateRenderer?=null
+    var coordinateHit:((Vector3)->GeoCoordinate?)?=null
     var interactionReady = false
     var handToStage: ((Vector3) -> Vector3)? = null
     var headInStage: (() -> Vector3)? = null
@@ -68,6 +70,7 @@ private class EarthResources {
         frameSubscription = null
         handToStage = null; headInStage = null; viewRotationInStage = null
         temperatureRenderer?.close();temperatureRenderer=null
+        coordinateHit=null;coordinateRenderer?.close();coordinateRenderer=null
         entities.forEach { it.destroy() }
         entities.clear()
         materials.forEach { if(it.valid)it.close() };materials.clear()
@@ -185,6 +188,7 @@ fun HomeStage() {
     SpatialView(
         modifier = Modifier.pointerInput(context) {
             val input = GlobePointerInput(motion)
+            val coordinateTap=CoordinateTap()
             var lastInputLog = Double.NEGATIVE_INFINITY
             try {
                 detectSpatialPointerEvent(
@@ -199,6 +203,10 @@ fun HomeStage() {
                         if (previousOwner == null && pointer.isDownEvent()) {
                             clock.manualInteraction()
                             resources.viewRotationInStage?.invoke()?.let { input.setViewOrientation(it) }
+                            if(clock.coordinates.enabled&&!clock.uiManipulating){
+                                val hit=pointer.position3D
+                                coordinateTap.begin(pointer.pointerId.value,resources.coordinateHit?.invoke(Vector3(hit.x,hit.y,hit.z)),now)
+                            }else coordinateTap.cancel()
                         }
                         val rawHand = pointer.inputDevicePose.rawPosition
                         val hand = resources.handToStage?.invoke(Vector3(rawHand.x, rawHand.y, rawHand.z))
@@ -206,8 +214,19 @@ fun HomeStage() {
                         // DOWN/UP remain authoritative even if tracking coordinates are unavailable.
                         fun toInputVector(v: Vector3?) = GlobeVector3(
                             v?.x?.toDouble() ?: Double.NaN, v?.y?.toDouble() ?: Double.NaN, v?.z?.toDouble() ?: Double.NaN)
+                        if(previousOwner==null||previousOwner==pointer.pointerId.value)coordinateTap.position(toInputVector(hand)-toInputVector(head))
+                        // Remember movement before UP resets the rotation input's state.
+                        if(previousOwner==pointer.pointerId.value)coordinateTap.observe(input.moving,input.rejectedSamples>0)
                         consumed = input.updateHand(pointer.pointerId.value, pointer.isDownEvent(), pointer.pressed,
                             toInputVector(hand), toInputVector(head), now) || consumed
+                        coordinateTap.observe(input.moving,input.rejectedSamples>0)
+                        if(previousOwner==pointer.pointerId.value&&!pointer.pressed){
+                            val selected=coordinateTap.end(pointer.pointerId.value,now)
+                            if(clock.coordinates.enabled&&!clock.uiManipulating&&selected!=null){
+                                clock.coordinates.select(selected);motion.readCoordinates(now)
+                                Log.i("WorldClockCoordinates","V65 Full selected lat=${selected.latitude} lon=${selected.longitude}; original mesh UV")
+                            }
+                        }
                         if (pointer.pressed && input.activePointerId == pointer.pointerId.value && now - lastInputLog >= 0.5) {
                             lastInputLog = now
                             Log.i("WorldClockEarth", "V31 hand sample: raw=$rawHand; handM=$hand; headM=$head; " +
@@ -224,6 +243,7 @@ fun HomeStage() {
                     consumed
                 }
             } finally {
+                coordinateTap.cancel()
                 input.cancel(nowSeconds())
                 Log.i("WorldClockEarth", "V31 pointer scope disposed")
             }
@@ -232,6 +252,14 @@ fun HomeStage() {
             AttachmentPanel("cities",alignment=AttachmentPanelComponent.Alignment.BOTTOM_LEFT) { ClockTheme { CityPanel(clock,context) } }
             AttachmentPanel("timeline",alignment=AttachmentPanelComponent.Alignment.TOP_CENTER) { ClockTheme { TimePanel(clock) } }
             AttachmentPanel("time_tools",alignment=AttachmentPanelComponent.Alignment.BOTTOM_RIGHT) { ClockTheme { TimeOptionsPanel(clock) } }
+            AttachmentPanel("coordinate_card",alignment=AttachmentPanelComponent.Alignment.CENTER){ClockTheme{
+                CoordinateCard(clock.coordinates.selection,Modifier.alpha(clock.coordinates.panelAlpha))
+            }}
+            for(i in CoordinateRuler.slots.indices){
+                AttachmentPanel("coordinate_ruler_$i",alignment=AttachmentPanelComponent.Alignment.CENTER){ClockTheme{
+                    CoordinateRulerLabel(clock.coordinates,i)
+                }}
+            }
             for(slot in 0 until 8) {
                 AttachmentPanel("city_card_"+slot,alignment=AttachmentPanelComponent.Alignment.CENTER) { ClockTheme { androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.alpha(clock.labelOpacity[slot])) { CityPinCard(clock.cities.getOrNull(slot),clock,clock.labelOnRight[slot]) } } }
             }
@@ -456,6 +484,13 @@ fun HomeStage() {
                     GlobeQuaternion.axisAngle(GlobeVector3.Z,cueSpin)).also { WorldClockSession.geographicBase=it }
                 initialRotation=Quat(iq.x.toFloat(),iq.y.toFloat(),iq.z.toFloat(),iq.w.toFloat())
                 geographicTransform.setQuaternion(initialRotation)
+                val coordinateRenderer=try{
+                    CoordinateRenderer.create(context,earth,clock.coordinates,rulerOrigin=stageOrigin).also{clock.coordinates.failure=""}
+                }catch(e:CancellationException){throw e}catch(e:Exception){clock.coordinates.failure="经纬图层加载失败";Log.e("WorldClockCoordinates","V67 optional layer unavailable; original Earth retained",e);null}
+                resources.coordinateRenderer=coordinateRenderer
+                if(resources.closed)coordinateRenderer?.close()
+                resources.ensureOpen()
+                resources.coordinateHit=coordinateRenderer?.let{renderer->{hit->renderer.localHit(content.convertPosition(hit,ViewCoordinateSpace.Local,renderer.surfaceEntity))}}
                 val earthTransform = checkNotNull(earth.components[TransformComponent::class.java])
                 val sunTransform = checkNotNull(sun.components[TransformComponent::class.java])
                 val initialPoleTip = geographicEntity.convertPositionTo(Vector3(0f, 0f, 1f), stageOrigin)
@@ -518,7 +553,7 @@ fun HomeStage() {
                 val sunEffect=effectsBundle.loadModelSuspend("SunEffectsV36")
                 resources.ensureOpen(sunEffect)
                 resources.ownModelResources(sunEffect)
-                val features=ClockScene(content,attachments,clock,geographicEntity,stageOrigin,eye,resources.entities,sunEffect,context.resources.displayMetrics.density)
+                val features=ClockScene(content,attachments,clock,geographicEntity,stageOrigin,eye,resources.entities,sunEffect,context.resources.displayMetrics.density,coordinateRenderer)
                 Log.i("WorldClockEarth","V31 procedural Sun loaded: white core, soft halo, subtle horizontal rays; frosted PBR pins")
                 var lastFocusRequest=clock.focusRequest
                 var lastResumeRequest=clock.resumeRequest
@@ -637,6 +672,7 @@ fun HomeStage() {
                     val worldTip = stageOrigin.convertPositionTo(light, null)
                     val worldLight = Vector3(worldTip.x-worldOrigin.x, worldTip.y-worldOrigin.y, worldTip.z-worldOrigin.z)
                     earthMaterials.forEach { it.setParameter("SunDot_in2", worldLight) }
+                    coordinateRenderer?.update(event.deltaTime.toDouble(),visibility)
                     features.update(resources.interactionReady,center,resources.headInStage?.invoke()?:eye,light,earthOpacity.opacity,entrance.pose.veilProgress.toFloat(),veilOpacity.opacity)
                     if (!motion.dragging && wasRestoringTilt && !motion.restoringTilt) {
                         Log.i("WorldClockEarth", "V31 tilt restored; axisErrorDegrees=" + normalAxisErrorDegrees() +

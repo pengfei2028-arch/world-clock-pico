@@ -67,6 +67,11 @@ internal class GlobeMotion {
     fun noteUiActivity(now: Double) {
         if(focusLocked && focusResumeAt.isFinite() && now.isFinite())focusResumeAt=now+FOCUS_DWELL_SECONDS
     }
+    /** A point selection pauses the existing return/idle policy long enough to read it. */
+    fun readCoordinates(now:Double) {
+        if(!now.isFinite()||dragging||timelineHeld)return
+        focusLocked=false;scheduleReturn(now);resumeAfter=now+CoordinateStyle.READ_DWELL_SECONDS;idleSpeed=0.0
+    }
     fun resumeIdle(now: Double) {
         if (dragging || timelineHeld) return
         focusLocked=false

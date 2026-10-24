@@ -60,6 +60,8 @@ import kotlin.math.exp
 internal class ClockState {
     var mode by mutableStateOf(EarthMode.WORLD_TIME)
     val temperature=TemperatureState()
+    val coordinates=CoordinateState()
+    fun toggleCoordinates(){touchUi();coordinates.toggle(selected)}
     fun switchMode(next:EarthMode){touchUi();mode=next;timeToolsOpen=false}
     fun weatherLabel(city:ClockCity,compact:Boolean=false)=if(mode==EarthMode.TEMPERATURE)temperature.label(city) else (weather[city.id]?:CityWeatherState()).label(now,compact)
     var catalog by mutableStateOf<CityCatalog?>(null)
@@ -132,7 +134,7 @@ internal class ClockState {
     }
     fun setDate(text:String):Boolean=try{chooseDate(LocalDate.parse(text));true}catch(_:Exception){false}
     fun manualInteraction(){selectedId=null;focusRequest++}
-    fun focus(city:ClockCity){touchUi();selectedId=city.id;focusRequest++;citiesOpen=false;timeToolsOpen=false}
+    fun focus(city:ClockCity){touchUi();selectedId=city.id;coordinates.selectCity(city);focusRequest++;citiesOpen=false;timeToolsOpen=false}
     fun add(city:ClockCity,context:Context){
         if(cities.none{it.id==city.id}){
             if(cities.size>=8){notice="最多添加 8 座城市";return}
@@ -507,6 +509,7 @@ internal fun TimeOptionsPanel(state:ClockState){
     var chosen by remember(state.timeToolsOpen){mutableStateOf(state.instant.atZone(ZoneId.systemDefault()).toLocalDate())}
     DisposableEffect(Unit){onDispose{state.uiManipulating=false}}
     Glass(Modifier.width(300.dp)){
+        CoordinateToggle(state)
         GlassAction({WorldClockSession.collapse(navigator)},Modifier.fillMaxWidth().height(40.dp),state.ready&&!WorldClockSession.busy){Text("收起到桌面",style=uiText(15))}
         Row(Modifier.fillMaxWidth().height(30.dp),verticalAlignment=Alignment.CenterVertically){
             Text("选择日期",style=uiText(16,FontWeight.Medium),modifier=Modifier.weight(1f))
@@ -527,11 +530,14 @@ internal fun TimeOptionsPanel(state:ClockState){
 @Composable
 internal fun CityPinCard(city:ClockCity?,state:ClockState,labelOnRight:Boolean){
     if(city==null){Spacer(Modifier.size(1.dp));return}
+    if(state.coordinates.reveal>.001f&&state.coordinates.selection?.cityId==city.id){
+        CoordinateCard(state.coordinates.selection,Modifier.alpha(state.coordinates.reveal));return
+    }
     val lineColor=PicoTheme.colorScheme.labelPrimary.copy(alpha=.65f)
     Row(Modifier.width(CityLabelLayout.WIDTH_DP.dp).height(CityLabelLayout.HEIGHT_DP.dp),verticalAlignment=Alignment.Bottom){
         Box(Modifier.weight(1f).fillMaxHeight().drawBehind{
             val y=CityLabelLayout.LINE_Y_DP.dp.toPx()
-            drawLine(lineColor,Offset(0f,y),Offset(size.width,y),strokeWidth=1.2.dp.toPx())
+            drawLine(lineColor,Offset(0f,y),Offset(size.width,y),strokeWidth=CoordinateStyle.UI_LINE_DP.dp.toPx())
         }){
             Text(city.date(state.instant)+"  "+city.time(state.instant),style=uiText(14),
                 color=PicoTheme.colorScheme.labelPrimary,modifier=Modifier.align(Alignment.TopCenter).padding(horizontal=12.dp),

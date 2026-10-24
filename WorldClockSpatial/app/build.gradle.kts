@@ -12,8 +12,8 @@ android {
         applicationId = "com.wupengfei.worldclock"
         minSdk = 35
         targetSdk = 35
-        versionCode = 63
-        versionName = "0.63.0"
+        versionCode = 72
+        versionName = "0.72.0"
         buildConfigField("String", "TEMPERATURE_BASE_URL", "\"${providers.gradleProperty("temperatureBaseUrl").getOrElse("")}\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

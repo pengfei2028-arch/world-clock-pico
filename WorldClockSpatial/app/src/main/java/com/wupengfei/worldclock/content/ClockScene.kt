@@ -8,12 +8,17 @@ import com.pico.spatial.core.math.*
 import kotlin.math.*
 
 /** Project geometry/placement choices; panels themselves use PICO design components. */
-internal class ClockScene(private val content: SpatialViewContent,attachments: SpatialViewAttachments,
+internal class ClockScene(private val content: SpatialViewContent,private val attachments: SpatialViewAttachments,
     private val state: ClockState,private val geographic: Entity,private val origin: Entity,
-    private val eye: Vector3,owned: MutableList<Entity>,private val sunEffect: Entity,private val uiDensity:Float) {
+    private val eye: Vector3,owned: MutableList<Entity>,private val sunEffect: Entity,private val uiDensity:Float,
+    private val coordinates:CoordinateRenderer?) {
     private val citiesPanel=attachments.entity("cities")
     private val timelinePanel=attachments.entity("timeline")
     private val toolsPanel=attachments.entity("time_tools")
+    private val coordinatePanel=attachments.entity("coordinate_card")
+    private val coordinateLabels=CoordinateRuler.slots.indices.map{attachments.entity("coordinate_ruler_$it")}.toMutableList()
+    private var labelLookupSeconds=1.0
+    private val coordinateVisibility=PinVisibility()
     private val mounted=mutableSetOf<Entity>()
     private val toolbarUnit=content.convertSize(Vector3(uiDensity,0f,0f),ViewCoordinateSpace.Local,origin).x*3.5f
     private val sunMaterials=mutableListOf<ShaderGraphMaterial>()
@@ -43,7 +48,9 @@ internal class ClockScene(private val content: SpatialViewContent,attachments: S
     }
     private val stemMesh=MeshResource.createCylinder(height=1f,radius=0.07f)
     private val headMesh=MeshResource.createSphere(0.16f)
-    private val lineMesh=MeshResource.createCylinder(height=1f,radius=0.025f)
+    private val lineMesh=MeshResource.createCylinder(height=1f,radius=CoordinateStyle.LEADER_RADIUS)
+    private val coordinateLeader=model(lineMesh,leaderMaterial,"CoordinateLeader",content,owned)
+    private val coordinateLeaderAlpha=OpacityControllerComponent(0f).also{coordinateLeader.components.set(it)}
     private fun model(mesh: MeshResource,material: Material,name: String,content: SpatialViewContent,owned: MutableList<Entity>): Entity = Entity().apply {
         setName(name);components.set(ModelComponent(mesh,material));owned.add(this);content.addEntity(this);enabled=false
     }
@@ -159,7 +166,15 @@ internal class ClockScene(private val content: SpatialViewContent,attachments: S
             if(state.labelOnRight[i]!=layout.labelOnRight)state.labelOnRight[i]=layout.labelOnRight
             frames.add(LabelFrame(i,city,top,pinAlpha,layout))
         }
-        val candidates=frames.filter{it.alpha>0.001f}.map{CityLabelCandidate(it.city.id,it.layout)}
+        val selection=state.coordinates.selection
+        val selectedTip=coordinates?.selectedPosition(origin)
+        val selectedNormal=selectedTip?.let{(it-c).normalized()}
+        val pointAlpha=coordinateVisibility.update(if(ready&&selectedTip!=null&&selectedNormal!=null)
+            PinVisibility.atLimb(selectedNormal.dot((h-selectedTip).normalized())) else 0f,seconds)*state.coordinates.reveal*globeOpacity
+        val generic=selection!=null&&selection.cityId==null&&selectedTip!=null&&pointAlpha>.001f
+        val pointLayout=if(generic)CityLabelLayout.place(c,selectedTip!!,metresPerDp) else null
+        val candidates=frames.filter{it.alpha>0.001f}.map{CityLabelCandidate(it.city.id,it.layout)}+
+            listOfNotNull(pointLayout?.let{CityLabelCandidate("coordinate-point",it)})
         // Reserve the globe-height band. Respect unusually large platform UI scales too.
         val halfBand=max(26.0,candidates.sumOf{it.layout.halfHeight}+6.0*metresPerDp*max(0,candidates.size-1)+metresPerDp)
         val arranged=labelAvoidance.update(candidates,metresPerDp,c.y-halfBand,c.y+halfBand,seconds)
@@ -182,8 +197,44 @@ internal class ClockScene(private val content: SpatialViewContent,attachments: S
                 segment(pin.line,frame.top,elbow)
             }
         }
+        val placed=arranged["coordinate-point"]
+        if(generic&&placed!=null){
+            // Geography drives placement, so head micro-motion cannot jitter the card.
+            // Keep the solver's exact non-overlap result; only orientation faces the reader.
+            state.coordinates.panelAlpha=pointAlpha;show(coordinatePanel,true)
+            coordinatePanel?.let{transform(it).apply{
+                setPosition(sdk(placed.center));setScaleVector(Vector3(CityLabelLayout.SCALE,CityLabelLayout.SCALE,CityLabelLayout.SCALE))
+                setQuaternion(facing(sdk(placed.center),head))
+            }}
+            val end=placed.elbow;val d=end-selectedTip!!
+            coordinateLeader.enabled=true;coordinateLeaderAlpha.opacity=pointAlpha
+            transform(coordinateLeader).apply{setPosition(sdk((end+selectedTip)*.5));setScaleVector(Vector3(1f,sqrt(d.dot(d)).toFloat(),1f));setQuaternion(quat(GlobeQuaternion.align(GlobeVector3.Y,d)))}
+        }else{
+            show(coordinatePanel,false);coordinateLeader.enabled=false;state.coordinates.panelAlpha=0f
+        }
+        // Fixed geographic children: neither head pose nor city-card placement moves text.
+        val rulerPlacements=if(ready)coordinates?.updateRuler(seconds) else null
+        labelLookupSeconds+=seconds
+        if(coordinates!=null&&rulerPlacements!=null&&labelLookupSeconds>=.5){
+            labelLookupSeconds=0.0
+            coordinateLabels.indices.forEach{i->
+                if(coordinateLabels[i]==null)coordinateLabels[i]=attachments.entity("coordinate_ruler_$i")
+                coordinateLabels[i]?.let{coordinates.bindRulerLabel(it,i)}
+            }
+        }
+        CoordinateRuler.displayOrder.forEach{i->
+            val label=coordinateLabels[i]
+            if(rulerPlacements==null||label==null){
+                label?.enabled=false;state.coordinates.rulerAlpha[i]=0f;return@forEach
+            }
+            val a=state.coordinates.reveal*globeOpacity
+            state.coordinates.rulerAlpha[i]=a;label.enabled=a>.001f
+        }
         if(auditNow-lastLabelAudit>=5000){
             lastLabelAudit=auditNow
+            if(coordinates!=null&&state.coordinates.enabled){
+                android.util.Log.i("WorldClockCoordinates","V72 bound labels: resolved=${coordinateLabels.count{it!=null}}; enabled=${coordinateLabels.count{it?.enabled==true}}; references=${CoordinateRuler.displayOrder.filter{CoordinateRuler.slots[it].reference&&coordinateLabels[it]?.enabled==true}.joinToString{CoordinateRuler.slots[it].title}}; maxLocalAnchorError=${coordinates.rulerAnchorError()}; zNormalDot=${coordinates.labelFacingDot()}; upDot=${coordinates.labelUpDot()}; maxRoll=${coordinates.maximumTextRoll()}; textLeaders=0; ${coordinates.referenceWorldPositions()}")
+            }
             val cards=arranged.values.toList()
             var overlaps=0
             for(i in cards.indices)for(j in i+1 until cards.size){val a=cards[i];val b=cards[j]
