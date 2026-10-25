@@ -25,6 +25,7 @@ internal class ClockScene(private val content: SpatialViewContent,private val at
     private val sunMaterials=mutableListOf<ShaderGraphMaterial>()
     private var lastSunAudit=0L
     private val labelAvoidance=CityLabelAvoidance()
+    private val distanceLabelAvoidance=DistanceLabelLayout()
     private var lastLabelAudit=0L
     private fun show(e:Entity?,visible:Boolean){
         if(e==null)return
@@ -50,6 +51,8 @@ internal class ClockScene(private val content: SpatialViewContent,private val at
     private val stemMesh=MeshResource.createCylinder(height=1f,radius=0.07f)
     private val headMesh=MeshResource.createSphere(0.16f)
     private val lineMesh=MeshResource.createCylinder(height=1f,radius=CoordinateStyle.LEADER_RADIUS)
+    private val distanceFrame=coordinates?.let{EntityTransformPath(it.surfaceEntity,origin)}
+    private val distanceCityLocals=mutableMapOf<String,GlobeVector3>()
     private val coordinateLeader=model(lineMesh,leaderMaterial,"CoordinateLeader",content,owned)
     private val coordinateLeaderAlpha=OpacityControllerComponent(0f).also{coordinateLeader.components.set(it)}
     private fun model(mesh: MeshResource,material: Material,name: String,content: SpatialViewContent,owned: MutableList<Entity>): Entity = Entity().apply {
@@ -104,11 +107,11 @@ internal class ClockScene(private val content: SpatialViewContent,private val at
         state.toolbarDrag.advance(seconds)
         val unit=toolbarUnit
         val bar=Vector3(eye.x+state.toolbarDrag.x.toFloat()*unit,eye.y-1f-state.toolbarDrag.y.toFloat()*unit,eye.z-2.5f)
-        // Two 48dp controls and two 16dp gaps on either side. The shared ruler,
-        // caption and thermometer keep their previous world positions.
-        timelinePanel?.let{transform(it).setPosition(Vector3(bar.x,bar.y+92f*unit,bar.z))}
+        // V83 ruler button is inserted before temperature. Offset the wider Dock
+        // by 32dp so the existing time ruler, left controls and caption stay put.
+        timelinePanel?.let{transform(it).setPosition(Vector3(bar.x+32f*unit,bar.y+92f*unit,bar.z))}
         citiesPanel?.let{transform(it).setPosition(Vector3(bar.x-392f*unit,bar.y+44f*unit,bar.z+.015f))}
-        toolsPanel?.let{transform(it).setPosition(Vector3(bar.x+392f*unit,bar.y+44f*unit,bar.z+.015f))}
+        toolsPanel?.let{transform(it).setPosition(Vector3(bar.x+456f*unit,bar.y+44f*unit,bar.z+.015f))}
         show(timelinePanel,ready);show(citiesPanel,ready&&state.citiesOpen);show(toolsPanel,ready&&state.timeToolsOpen)
         val q=state.earthquakes
         val quakeVisible=ready&&state.mode==EarthMode.EARTHQUAKE&&q.panelOpen&&!state.citiesOpen&&!state.timeToolsOpen
@@ -155,6 +158,7 @@ internal class ClockScene(private val content: SpatialViewContent,private val at
         data class LabelFrame(val slot:Int,val city:ClockCity,val top:GlobeVector3,
             val alpha:Float,val layout:CityLabelLayout)
         val frames=mutableListOf<LabelFrame>()
+        val distanceTransform=if(state.distance.enabled)distanceFrame?.frame()else null
         pins.indices.forEach{i->
             val pin=pins[i];val city=state.cities.getOrNull(i)
             if(pin.cityId!=city?.id){pin.cityId=city?.id;pin.visibility=PinVisibility()}
@@ -163,7 +167,8 @@ internal class ClockScene(private val content: SpatialViewContent,private val at
                 if(state.labelOpacity[i]!=0f)state.labelOpacity[i]=0f
                 return@forEach
             }
-            val n=cityDirection(city,center);val surface=c+n*24.0;val top=c+n*24.9
+            val distanceTip=distanceTransform?.point(distanceCityLocals.getOrPut(city.id){checkNotNull(coordinates).mapping.point(city.latitude,city.longitude).normalized()*(2*DistanceStyle.SURFACE_SCALE)})
+            val n=distanceTip?.let{(it-c).normalized()}?:cityDirection(city,center);val surface=c+n*24.0;val top=distanceTip?:c+n*24.9
             val limb=PinVisibility.atLimb(n.dot((h-surface).normalized()))
             val pinAlpha=pin.visibility.update(limb,seconds)
             val visible=pinAlpha>0.001f
@@ -171,6 +176,15 @@ internal class ClockScene(private val content: SpatialViewContent,private val at
             pin.stem.enabled=visible;pin.head.enabled=visible
             transform(pin.stem).apply{setPosition(sdk(c+n*24.45));setScaleVector(Vector3(1f,.9f,1f));setQuaternion(quat(GlobeQuaternion.align(GlobeVector3.Y,n)))}
             transform(pin.head).setPosition(sdk(top))
+            if(state.distance.enabled){
+                pin.stem.enabled=false;pin.line.enabled=false
+                val ray=top-h;val z=state.distance.readoutAnchor?.z?:c.z+27.84
+                val k=if(abs(ray.z)<1e-6)1.0 else ((z-h.z)/ray.z).coerceIn(.01,1.0)
+                val anchor=h+ray*k+GlobeVector3(-56*metresPerDp,0.0,0.0)
+                frames.add(LabelFrame(i,city,top,pinAlpha,CityLabelLayout(anchor,anchor,true,
+                    DistanceStyle.CITY_WIDTH*metresPerDp/2,DistanceStyle.CITY_HEIGHT*metresPerDp/2)))
+                return@forEach
+            }
             // Every label remains in the same upright stage XY plane. The entire plane
             // lies beyond the globe's frontmost point, so no edge can cut into the sphere.
             val layout=CityLabelLayout.place(c,top,metresPerDp)
@@ -182,13 +196,19 @@ internal class ClockScene(private val content: SpatialViewContent,private val at
         val selectedNormal=selectedTip?.let{(it-c).normalized()}
         val pointAlpha=coordinateVisibility.update(if(ready&&selectedTip!=null&&selectedNormal!=null)
             PinVisibility.atLimb(selectedNormal.dot((h-selectedTip).normalized())) else 0f,seconds)*state.coordinates.reveal*globeOpacity
-        val generic=state.mode!=EarthMode.EARTHQUAKE&&selection!=null&&selection.cityId==null&&selectedTip!=null&&pointAlpha>.001f
+        val generic=!state.distance.enabled&&state.mode!=EarthMode.EARTHQUAKE&&selection!=null&&selection.cityId==null&&selectedTip!=null&&pointAlpha>.001f
         val pointLayout=if(generic)CityLabelLayout.place(c,selectedTip!!,metresPerDp) else null
         val candidates=frames.filter{it.alpha>0.001f}.map{CityLabelCandidate(it.city.id,it.layout)}+
             listOfNotNull(pointLayout?.let{CityLabelCandidate("coordinate-point",it)})
         // Reserve the globe-height band. Respect unusually large platform UI scales too.
-        val halfBand=max(26.0,candidates.sumOf{it.layout.halfHeight}+6.0*metresPerDp*max(0,candidates.size-1)+metresPerDp)
-        val arranged=labelAvoidance.update(candidates,metresPerDp,c.y-halfBand,c.y+halfBand,seconds)
+        val reservedHeight=if(state.distance.enabled&&state.distance.readoutAnchor!=null)
+            (DistanceStyle.PANEL_HEIGHT/2.0+6.0)*metresPerDp else 0.0
+        val halfBand=max(26.0,candidates.sumOf{it.layout.halfHeight}+6.0*metresPerDp*max(0,candidates.size-1)+metresPerDp+reservedHeight)
+        val arranged=if(state.distance.enabled)distanceLabelAvoidance.update(candidates,state.distance.readoutAnchor,
+            metresPerDp,c.y-halfBand,c.y+halfBand,seconds) else {
+            distanceLabelAvoidance.update(emptyList(),null,metresPerDp,c.y-halfBand,c.y+halfBand,seconds)
+            labelAvoidance.update(candidates,metresPerDp,c.y-halfBand,c.y+halfBand,seconds)
+        }
         frames.forEach{frame->
             val i=frame.slot;val pin=pins[i]
             val layout=arranged[frame.city.id]?:frame.layout
@@ -198,14 +218,14 @@ internal class ClockScene(private val content: SpatialViewContent,private val at
             // Compose attachments need view-layer alpha; model opacity does not fade their UI.
             if(abs(state.labelOpacity[i]-labelAlpha)>.002f)state.labelOpacity[i]=labelAlpha
             pin.lineAlpha.opacity=labelAlpha
-            show(pin.card,show);pin.line.enabled=show
+            show(pin.card,show);pin.line.enabled=show&&!state.distance.enabled
             if(show){
                 pin.card?.let{transform(it).apply{setPosition(sdk(layout.center));setScaleVector(Vector3(CityLabelLayout.SCALE,CityLabelLayout.SCALE,CityLabelLayout.SCALE));setQuaternion(Quat(0f,0f,0f,1f))}}
                 val elbow=layout.elbow
                 fun segment(e:Entity,a:GlobeVector3,b:GlobeVector3){val d=b-a
                     transform(e).apply{setPosition(sdk((a+b)*0.5));setScaleVector(Vector3(1f,sqrt(d.dot(d)).toFloat(),1f));setQuaternion(quat(GlobeQuaternion.align(GlobeVector3.Y,d)))}
                 }
-                segment(pin.line,frame.top,elbow)
+                if(!state.distance.enabled)segment(pin.line,frame.top,elbow)
             }
         }
         val placed=arranged["coordinate-point"]

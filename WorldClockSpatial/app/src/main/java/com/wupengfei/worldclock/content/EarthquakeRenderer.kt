@@ -35,12 +35,8 @@ internal class EarthquakeRenderer private constructor(
     private val locals=mutableMapOf<String,GlobeVector3>()
     private val tokens=mutableMapOf<String,Int>()
     private val births=mutableMapOf<String,Double>()
-    private data class WaveSlot(var event:QuakeEvent?=null,var alpha:Double=0.0)
-    private val waveSlots=List(QuakeStyle.MAX_RIPPLE_GROUPS){WaveSlot()}
-    private val previousGains=FloatArray(QuakeStyle.MAX_RIPPLE_GROUPS){-1f}
     private var groups=listOf<QuakeCluster>()
     private var previousGroups=mapOf<String,String>()
-    private val waveSchedule=QuakeWaveSchedule()
     private var rippleEvents=emptyList<QuakeEvent>()
     private var coverageDirty=true
     private var groupTimer=1.0
@@ -49,6 +45,7 @@ internal class EarthquakeRenderer private constructor(
     private var lastSelected:String?=null
     private var selectedSeed=0.0
     private var lastVisibleIds=emptySet<String>()
+    private var lastEvents:List<QuakeEvent>?=null
     private var elapsed=0.0
     private var fade=0f
     private var closed=false
@@ -76,7 +73,9 @@ internal class EarthquakeRenderer private constructor(
         shader.setParameter("Cycles_in2",QuakeStyle.RING_SECONDS.toFloat())
         shader.setParameter("WaveStrength_bg",QuakeStyle.WAVE_NORMAL_ALPHA)
         shader.setParameter("WaveStrength_fg",QuakeStyle.WAVE_SELECTED_ALPHA)
-        repeat(QuakeStyle.MAX_RIPPLE_GROUPS){shader.setParameter("Gain${it}_in2",0f)}
+        check(QuakeStyle.WAVE_SELECTED_DEGREES+QuakeStyle.WAVE_LINE_EDGE_DEGREES<QuakeStyle.WAVE_PATCH_DEGREES)
+        Log.i("WorldClockQuakes","V89 rippleRangeScale=1.6 selectedRadiusDeg=9.6 normalM7RadiusDeg=5.6 patchHalfAngleDeg=10.4 rings=3 cycleSeconds=2.4; visualMarkerNotImpactArea")
+        repeat(QuakeStyle.MAX_RIPPLE_GROUPS){shader.setParameter("Gain${it}_in2",if(it==0)1f else 0f)}
         repeat(3){
             shader.setParameter("Ring${it}Offset_in2",(1-it*QuakeStyle.RING_STAGGER/QuakeStyle.RING_SECONDS).toFloat())
             shader.setParameter("Ring${it}Radius_in2",(QuakeStyle.WAVE_START_DEGREES/QuakeStyle.WAVE_PATCH_DEGREES).toFloat())
@@ -144,13 +143,14 @@ internal class EarthquakeRenderer private constructor(
         batches.forEach{it.update()}
         if(!active&&fade==0f){
             if(hadContent){request(points,emptyList());request(waves,emptyList());digits.request(emptyList<String>()){QuakeDecalGeometry()}
-                locals.clear();births.clear();tokens.clear();groups=emptyList();previousGroups=emptyMap();lastVisibleIds=emptySet();hadContent=false;coverageDirty=true;waveSchedule.reset();rippleEvents=emptyList()
+                locals.clear();births.clear();tokens.clear();groups=emptyList();previousGroups=emptyMap();lastVisibleIds=emptySet();lastEvents=null;hadContent=false;coverageDirty=true;rippleEvents=emptyList()
                 Log.i("WorldClockQuakes","V76 inactive: fixed batch handles retained; no event entities or animation updates")}
-            waveSlots.forEach{it.event=null;it.alpha=0.0};state.clusterGroups=emptyList();return
+            state.clusterGroups=emptyList();return
         }
         hadContent=true;refreshFrame()
-        if(lastRevision!=state.revision){lastRevision=state.revision;locals.clear();groupTimer=1.0;coverageDirty=true;waveSchedule.reset()}
-        val events=state.visible;val ids=events.map{it.id}.toSet()
+        if(lastRevision!=state.revision){lastRevision=state.revision;locals.clear();groupTimer=1.0;coverageDirty=true}
+        val events=state.visible;val ids=if(events===lastEvents)lastVisibleIds else events.map{it.id}.toSet()
+        lastEvents=events
         if(ids!=lastVisibleIds){
             groupTimer=1.0;coverageDirty=true;(births.keys-ids).forEach{births.remove(it)}
             (ids-lastVisibleIds).forEach{births[it]=if(state.playing)elapsed else -1.0};lastVisibleIds=ids
@@ -176,33 +176,19 @@ internal class EarthquakeRenderer private constructor(
             groupTimer=0.0
             val frontGroups=groups.filter{front(it.representative)}
             state.clusterGroups=frontGroups.filter{it.events.size>1}.map{it.events}
-            // Keep the selected surface patch alive even while occluded by the globe.
-            val pinned=state.selected?.takeIf{it.id in ids}
-            val eligible=(listOfNotNull(pinned)+frontGroups.map{it.representative}).distinctBy{it.id}
-            rippleEvents=waveSchedule.choose(elapsed,eligible,state.selectedId,
-                eligible.filter{state.recent(it)}.map{it.id}.toSet())
+            val reference=if(state.replay)state.replayTime?:clock.now else clock.now
+            rippleEvents=QuakeWaveSchedule.choose(events,reference,state.selectedId)
+            request(waves,rippleEvents.map{e->Decal(local(e),Math.toRadians(QuakeWaveSchedule.patchDegrees(e,e.id==state.selectedId)),true,0,
+                if(e.id==state.selectedId)selectedSeed else seed(e),-1.0,token(e),QuakeRules.magnitudeBand(e.magnitude))})
         }
-        waveSlots.forEachIndexed{i,slot->
-            if(slot.event?.id?.let{it !in ids}==true){slot.event=null;slot.alpha=0.0}
-            val next=rippleEvents.getOrNull(i)
-            if(next!=null&&next.id==state.selectedId){slot.event=next;slot.alpha=1.0}
-            else if(slot.event?.id==state.selectedId){slot.event=null;slot.alpha=0.0} // No duplicate old slot.
-            else if(slot.event?.id!=next?.id){slot.alpha=max(0.0,slot.alpha-dt/.16);if(slot.alpha==0.0)slot.event=next}
-            else{slot.event=next;slot.alpha=min(1.0,slot.alpha+dt/.20)}
-        }
-        request(waves,waveSlots.mapIndexedNotNull{i,slot->slot.event?.let{e->Decal(local(e),Math.toRadians(QuakeStyle.WAVE_PATCH_DEGREES),true,i,if(e.id==state.selectedId)selectedSeed else seed(e),-1.0,token(e),QuakeRules.magnitudeBand(e.magnitude))}})
         shader.setParameter("Animation_in2",elapsed.toFloat())
         val selected=state.selected
         val selection=selected?.let{token(it).toFloat()}?:-1f
         if(shaderSelection!=selection){shaderSelection=selection;shader.setParameter("SelectionDelta_in2",selection)
             Log.i("WorldClockQuakes","V78 selection=${selected?.id} token=$selection accent=${if(selected!=null)"#745BFF" else "magnitude"}")}
-        waveSlots.forEachIndexed{i,slot->
-            val gain=slot.alpha.toFloat()
-            if(previousGains[i]!=gain){previousGains[i]=gain;shader.setParameter("Gain${i}_in2",gain)}
-        }
         state.selectedFront=selected==null||front(selected)
         auditTimer+=dt
-        if(auditTimer>=5){auditTimer=0.0;Log.i("WorldClockQuakes","V77 active=$active filtered=${state.filtered.size} visible=${events.size} globalDecals=${groups.size} frontDecals=${groups.count{front(it.representative)}} clusters=${state.clusterGroups.size} waves=${rippleEvents.size} waveIds=${rippleEvents.joinToString { it.id }} fixedBatches=3 meshHandles=${batches.sumOf{it.liveMeshes()}} triangles=${batches.sumOf{it.triangles}} meshCommits=${batches.map{it.commits}} nativeQuakePanels=1 waveTextures=0 selected=${selected?.id} playing=${state.playing}")}
+        if(auditTimer>=5){auditTimer=0.0;Log.i("WorldClockQuakes","V84 active=$active filtered=${state.filtered.size} visible=${events.size} globalDecals=${groups.size} frontDecals=${groups.count{front(it.representative)}} clusters=${state.clusterGroups.size} waves=${rippleEvents.size} frontWaves=${rippleEvents.count{front(it)}} rule=24h_M4plus_OR_7d_M6plus noSlotCap=true animationSeconds=$elapsed fixedBatches=3 meshHandles=${batches.sumOf{it.liveMeshes()}} triangles=${batches.sumOf{it.triangles}} meshCommits=${batches.map{it.commits}} nativeQuakePanels=1 waveTextures=0 selected=${selected?.id} playing=${state.playing}")}
     }
     private var shaderSelection=-1f
     override fun close(){

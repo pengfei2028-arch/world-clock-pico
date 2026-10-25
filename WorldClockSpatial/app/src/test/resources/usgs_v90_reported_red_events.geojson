@@ -1,0 +1,181 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "generated": 1792925396000,
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&eventtype=earthquake&minmagnitude=4&starttime=2026-10-18T10:49:00Z&endtime=2026-10-25T10:49:00Z&orderby=time-asc",
+    "title": "USGS Earthquakes",
+    "status": 200,
+    "api": "2.8.2",
+    "count": 4
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "mag": 7,
+        "place": "191 km ENE of Nagqu, China",
+        "time": 1792679620353,
+        "updated": 1792823296586,
+        "tz": null,
+        "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000u43g",
+        "detail": "https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us6000u43g&format=geojson",
+        "felt": 8,
+        "cdi": 7.4,
+        "mmi": 8.202,
+        "alert": "orange",
+        "status": "reviewed",
+        "tsunami": 0,
+        "sig": 1006,
+        "net": "us",
+        "code": "6000u43g",
+        "ids": ",us6000u43g,usauto6000u43g,attnbcg6,",
+        "sources": ",us,usauto,at,",
+        "types": ",dyfi,finite-fault,general-text,ground-failure,internal-moment-tensor,internal-origin,losspager,moment-tensor,origin,phase-data,shakemap,",
+        "nst": 131,
+        "dmin": 8.956,
+        "rms": 1.01,
+        "gap": 21,
+        "magType": "mww",
+        "type": "earthquake",
+        "title": "M 7.0 - 191 km ENE of Nagqu, China"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          93.7797,
+          32.3805,
+          18
+        ]
+      },
+      "id": "us6000u43g"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "mag": 7,
+        "place": "Bonin Islands, Japan region",
+        "time": 1792807740000,
+        "updated": 1792895122235,
+        "tz": null,
+        "url": "https://earthquake.usgs.gov/earthquakes/eventpage/pt26298050",
+        "detail": "https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=pt26298050&format=geojson",
+        "felt": null,
+        "cdi": null,
+        "mmi": null,
+        "alert": null,
+        "status": "REVIEWED",
+        "tsunami": 0,
+        "sig": 754,
+        "net": "pt",
+        "code": "26298050",
+        "ids": ",pt26298050,",
+        "sources": ",pt,",
+        "types": ",origin,",
+        "nst": 10,
+        "dmin": null,
+        "rms": null,
+        "gap": null,
+        "magType": "Mi",
+        "type": "earthquake",
+        "title": "M 7.0 - Bonin Islands, Japan region"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          139.9,
+          28,
+          473
+        ]
+      },
+      "id": "pt26298050"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "mag": 7,
+        "place": "Bonin Islands, Japan region",
+        "time": 1792807740000,
+        "updated": 1792895183900,
+        "tz": null,
+        "url": "https://earthquake.usgs.gov/earthquakes/eventpage/pt26297050",
+        "detail": "https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=pt26297050&format=geojson",
+        "felt": null,
+        "cdi": null,
+        "mmi": null,
+        "alert": null,
+        "status": "REVIEWED",
+        "tsunami": 0,
+        "sig": 754,
+        "net": "pt",
+        "code": "26297050",
+        "ids": ",pt26297050,",
+        "sources": ",pt,",
+        "types": ",origin,",
+        "nst": 10,
+        "dmin": null,
+        "rms": null,
+        "gap": null,
+        "magType": "Mi",
+        "type": "earthquake",
+        "title": "M 7.0 - Bonin Islands, Japan region"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          139.9,
+          28,
+          473
+        ]
+      },
+      "id": "pt26297050"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "mag": 6.5,
+        "place": "Bonin Islands, Japan region",
+        "time": 1792894163818,
+        "updated": 1792910912040,
+        "tz": null,
+        "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000u4r9",
+        "detail": "https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us6000u4r9&format=geojson",
+        "felt": null,
+        "cdi": null,
+        "mmi": 0,
+        "alert": "green",
+        "status": "reviewed",
+        "tsunami": 1,
+        "sig": 650,
+        "net": "us",
+        "code": "6000u4r9",
+        "ids": ",attnfxzn,usauto6000u4r9,us6000u4r9,",
+        "sources": ",at,usauto,us,",
+        "types": ",impact-link,internal-moment-tensor,internal-origin,losspager,moment-tensor,origin,phase-data,shakemap,",
+        "nst": 124,
+        "dmin": 7.706,
+        "rms": 0.8,
+        "gap": 24,
+        "magType": "mww",
+        "type": "earthquake",
+        "title": "M 6.5 - Bonin Islands, Japan region"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          139.6184,
+          27.7953,
+          492.376
+        ]
+      },
+      "id": "us6000u4r9"
+    }
+  ],
+  "bbox": [
+    -179.9252,
+    -62.4088,
+    10,
+    179.9107,
+    72.1141,
+    624.829
+  ]
+}

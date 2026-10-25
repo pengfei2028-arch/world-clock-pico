@@ -5,7 +5,9 @@ import java.time.Instant
 
 @Stable internal class EarthquakeState {
     var period by mutableStateOf(QuakePeriod.WEEK);private set
-    var minimum by mutableDoubleStateOf(4.0);private set
+    var minimum by mutableDoubleStateOf(QuakeRules.CATALOG_MINIMUM);private set
+    var sortOrder by mutableStateOf(QuakeSort.MAGNITUDE);private set
+    fun chooseSort(value:QuakeSort){sortOrder=value}
     var catalog by mutableStateOf<QuakeCatalog?>(null);private set
     var pending by mutableStateOf<QuakeCatalog?>(null);private set
     var loading by mutableStateOf(false)
@@ -31,10 +33,13 @@ import java.time.Instant
     var clusterGroups by mutableStateOf<List<List<QuakeEvent>>>(emptyList())
     var filtered by mutableStateOf<List<QuakeEvent>>(emptyList());private set
     val selected get()=filtered.firstOrNull{it.id==selectedId}
-    val group get()=filtered.filter{it.id in groupIds}.sortedWith(compareByDescending<QuakeEvent>{it.magnitude?:0.0}.thenByDescending{it.occurredAt})
+    val group get()=QuakeRules.sortedEvents(visible.filter{it.id in groupIds},sortOrder)
     val visible get()=QuakeRules.visible(filtered,if(replay)replayTime else null)
+    // The list and globe share the SAME displayed snapshot, period, minimum and replay cursor.
+    // A refresh pending during playback must not leak newer records into this list.
+    val listed get()=QuakeRules.sortedEvents(visible,sortOrder)
     fun choosePeriod(value:QuakePeriod){if(value==period)return;period=value;catalog=null;pending=null;filtered=emptyList();overview();clearSelection();revision++;status="正在加载地震目录"}
-    fun chooseMinimum(value:Double){if(value !in listOf(4.0,5.0,7.0))return;minimum=value;refilter();clearSelection()}
+    fun chooseMinimum(value:Double){if(value !in listOf(4.0,5.0,6.0,7.0))return;minimum=value;refilter();clearSelection()}
     fun accept(value:QuakeCatalog){
         if(value.period!=period)return
         if(replay){pending=value;return}
@@ -48,13 +53,9 @@ import java.time.Instant
     private fun refilter(){filtered=catalog?.filtered(minimum).orEmpty();revision++
         if(selectedId!=null&&selected==null){selectedId=null;status="所选事件已修订、撤回或不符合筛选"}
         groupIds=groupIds.filter{id->filtered.any{it.id==id}};groupPage=groupPage.coerceAtMost(((groupIds.size-1)/4).coerceAtLeast(0))}
-    fun recentRegions(now:Instant)=QuakeRules.recentRegions(pending?:catalog,now)
-    fun selectRecent(id:String,now:Instant):Boolean {
-        val event=recentRegions(now).firstOrNull{it.id==id}?:run{status="事件已过期或记录已更新，请刷新列表";return false}
-        overview() // Apply a newer snapshot before looking up the stable ID.
-        if(minimum>(event.magnitude?:0.0)){minimum=5.0;refilter()}
-        val current=filtered.firstOrNull{it.id==id}?:run{status="事件记录已更新，请刷新列表";return false}
-        select(current,focus=true);return true
+    fun selectListed(id:String):Boolean {
+        val event=visible.firstOrNull{it.id==id}?:run{status="该事件已不在当前显示范围内，请重新选择";return false}
+        select(event,focus=true);return true
     }
     fun closePanel(){panelOpen=false;clearSelection()}
     fun clearSelection(){selectedId=null;groupIds=emptyList();groupPage=0;selectionUsesCityFocus=false}

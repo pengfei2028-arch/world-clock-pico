@@ -7,6 +7,7 @@ import java.util.Locale
 internal enum class QuakePeriod(val days:Long,val label:String,val feed:String) {
     DAY(1,"24 小时","day"),WEEK(7,"7 天","week"),MONTH(30,"30 天","month")
 }
+internal enum class QuakeSort(val label:String) { MAGNITUDE("按震级"), TIME("按时间") }
 internal data class QuakeEvent(val id:String,val aliases:Set<String>,val place:String,
     val occurredAt:Instant,val updatedAt:Instant?,val latitude:Double,val longitude:Double,
     val depthKm:Double?,val magnitude:Double?,val magnitudeType:String?,val url:String) {
@@ -14,15 +15,22 @@ internal data class QuakeEvent(val id:String,val aliases:Set<String>,val place:S
     val magnitudeText get()=magnitude?.let{String.format(Locale.ROOT,"%.1f",it)}?:"暂无"
 }
 internal data class QuakeCatalog(val period:QuakePeriod,val generatedAt:Instant,val fetchedAt:Instant,
-    val events:List<QuakeEvent>,val partial:Boolean=false,val skipped:Int=0) {
-    val end get()=generatedAt
+    val events:List<QuakeEvent>,val partial:Boolean=false,val skipped:Int=0,val windowEnd:Instant=generatedAt) {
+    val end get()=windowEnd
     val start get()=end.minusSeconds(period.days*86400)
-    fun filtered(minimum:Double)=events.filter{it.magnitude!=null&&it.magnitude>=minimum&&it.occurredAt>=start&&it.occurredAt<=end}
+    fun filtered(minimum:Double)=events.filter{(it.magnitude!=null&&it.magnitude>=maxOf(QuakeRules.CATALOG_MINIMUM,minimum))&&it.occurredAt>=start&&it.occurredAt<=end}
 }
 internal object QuakeRules {
-    fun recentRegions(catalog:QuakeCatalog?,now:Instant):List<QuakeEvent> = catalog?.events.orEmpty()
-        .filter{it.magnitude?.let{m->m.isFinite()&&m>5.0}==true&&it.occurredAt>=now.minusSeconds(86400)&&it.occurredAt<=now}
-        .sortedWith(compareByDescending<QuakeEvent>{it.occurredAt}.thenBy{it.id})
+    const val CATALOG_MINIMUM=4.0
+    fun sortedEvents(events:List<QuakeEvent>,order:QuakeSort):List<QuakeEvent> {
+        val magnitude:(QuakeEvent)->Double={it.magnitude?.takeIf(Double::isFinite)?:Double.NEGATIVE_INFINITY}
+        return events.sortedWith(when(order){
+            QuakeSort.MAGNITUDE->compareByDescending(magnitude).thenByDescending{it.occurredAt}.thenBy{it.id}
+            QuakeSort.TIME->compareByDescending<QuakeEvent>{it.occurredAt}.thenByDescending(magnitude).thenBy{it.id}
+        })
+    }
+    fun sourceUrl(event:QuakeEvent):String?=event.id.takeIf{it.matches(Regex("[A-Za-z0-9_-]{1,128}"))}
+        ?.let{"https://earthquake.usgs.gov/earthquakes/eventpage/$it"}
     private val distancePrefix=Regex("^\\d+(?:\\.\\d+)?\\s*km\\s+[NSEW]{1,3}\\s+of\\s+",RegexOption.IGNORE_CASE)
     fun regionName(place:String)=place.replace(Regex("\\s+")," ").trim().replace(distancePrefix,"").ifBlank{"地点暂无"}
     // Complete snapshots replace the window, including removals and ID reassignment.
@@ -51,10 +59,12 @@ internal object QuakeRules {
 internal object QuakeStyle {
     const val RING_SECONDS=2.4
     const val RING_STAGGER=.8
-    const val WAVE_PATCH_DEGREES=6.5
+    // V89 visual emphasis only, never a physical propagation/impact radius.
+    const val WAVE_RANGE_SCALE=1.6
+    const val WAVE_PATCH_DEGREES=6.5*WAVE_RANGE_SCALE
     const val WAVE_START_DEGREES=.3
-    const val WAVE_NORMAL_DEGREES=3.5
-    const val WAVE_SELECTED_DEGREES=6.0
+    const val WAVE_NORMAL_DEGREES=3.5*WAVE_RANGE_SCALE
+    const val WAVE_SELECTED_DEGREES=6.0*WAVE_RANGE_SCALE
     const val WAVE_LINE_CORE_DEGREES=.052
     const val WAVE_LINE_EDGE_DEGREES=.1495
     const val WAVE_NORMAL_ALPHA=.22f
@@ -62,9 +72,7 @@ internal object QuakeStyle {
     const val RADIUS_SCALE=1.012 // above existing 1.00765 cloud shell
     const val REPLAY_SECONDS=60.0
     const val FADE_SECONDS=.6
-    const val MAX_RIPPLE_GROUPS=6
-    const val WAVE_ROUND_SECONDS=9.6 // Four full 2.4 s cycles per selection round.
-    const val WAVE_SEPARATION_DEGREES=8.0
+    const val MAX_RIPPLE_GROUPS=6 // Existing shader ABI only; no event animation cap in V83.
     const val MAX_CLUSTER_LABELS=8
     const val CLUSTER_DP=24.0
     const val CLUSTER_RELEASE_DP=32.0

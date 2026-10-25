@@ -41,34 +41,51 @@ internal object QuakeJson {
             skipped>0||meta.optInt("count",features.length())!=features.length(),skipped)
     }
 }
+/** Server-side M4 floor reduces transfer/storage, unlike hiding small records after download. */
+internal object QuakeQuery {
+    fun endpoint(period:QuakePeriod,end:Instant):String {
+        val start=end.minusSeconds(period.days*86400)
+        return "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&eventtype=earthquake"+
+            "&minmagnitude=4&starttime=$start&endtime=$end&orderby=time-asc"
+    }
+    fun admitted(catalog:QuakeCatalog)=catalog.copy(events=catalog.events.filter{(it.magnitude?:Double.NEGATIVE_INFINITY)>=QuakeRules.CATALOG_MINIMUM})
+}
 internal class EarthquakeRepository(context:Context) {
-    private val directory=File(context.filesDir,"earthquake-v1").apply{mkdirs()}
+    private val directory=File(context.filesDir,"earthquake-v3-m4").apply{mkdirs()}
+    private val oldDirectories=listOf("earthquake-v2-all","earthquake-v1").map{File(context.filesDir,it)}
     private fun file(period:QuakePeriod)=AtomicFile(File(directory,period.feed+".json"))
     suspend fun cached(period:QuakePeriod):QuakeCatalog?=withContext(Dispatchers.IO) {
-        runCatching {val saved=JSONObject(file(period).openRead().bufferedReader().use{it.readText()})
-            QuakeJson.parse(saved.getString("feed"),period,Instant.parse(saved.getString("fetchedAt"))).takeIf{!it.partial}
-        }.getOrNull()
+        // Preserve a usable older snapshot offline, but never admit its sub-M4 records.
+        val candidates=listOf(file(period))+oldDirectories.map{AtomicFile(File(it,period.feed+".json"))}
+        candidates.firstNotNullOfOrNull{cache->runCatching {
+            val saved=JSONObject(cache.openRead().bufferedReader().use{it.readText()})
+            val parsed=QuakeJson.parse(saved.getString("feed"),period,Instant.parse(saved.getString("fetchedAt")))
+            val end=saved.optString("windowEnd").takeIf{it.isNotBlank()}?.let(Instant::parse)?:parsed.end
+            QuakeQuery.admitted(parsed.copy(windowEnd=end)).takeIf{!it.partial}
+        }.getOrNull()}
     }
     suspend fun refresh(period:QuakePeriod):QuakeCatalog=withContext(Dispatchers.IO) {
-        // >=2.5 includes all records needed by the approved >=4 / >=5 / >=7 filters.
-        val endpoint="https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_"+period.feed+".geojson"
-        val connection=URL(endpoint).openConnection() as HttpURLConnection
+        val end=ClockTimeSource.read().instant.truncatedTo(java.time.temporal.ChronoUnit.MINUTES)
+        val connection=URL(QuakeQuery.endpoint(period,end)).openConnection() as HttpURLConnection
         try {
             connection.connectTimeout=15000;connection.readTimeout=20000
             connection.setRequestProperty("Accept","application/geo+json, application/json")
-            connection.setRequestProperty("User-Agent","EarthObserver-PICO/0.73")
-            require(connection.responseCode==200){"USGS HTTP "+connection.responseCode}
-            val bytes=connection.inputStream.use{input->
+            connection.setRequestProperty("User-Agent","EarthObserver-PICO/0.84")
+            val code=connection.responseCode
+            require(code==200||code==204){"USGS HTTP $code"}
+            val fetched=ClockTimeSource.read().instant
+            val raw=if(code==204)JSONObject().put("type","FeatureCollection")
+                .put("metadata",JSONObject().put("generated",fetched.toEpochMilli()).put("status",200).put("count",0))
+                .put("features",org.json.JSONArray()).toString() else connection.inputStream.use{input->
                 val output=java.io.ByteArrayOutputStream();val buffer=ByteArray(16384)
                 while(true){currentCoroutineContext().ensureActive();val n=input.read(buffer);if(n<0)break
                     require(output.size()+n<=16*1024*1024){"目录下载超过限制"};output.write(buffer,0,n)}
-                output.toByteArray()
+                output.toString(Charsets.UTF_8.name())
             }
-            val raw=bytes.toString(Charsets.UTF_8);val fetched=ClockTimeSource.read().instant
-            val catalog=QuakeJson.parse(raw,period,fetched);currentCoroutineContext().ensureActive()
-            require(!catalog.partial){"目录校验未通过，保留上次数据"}
+            val catalog=QuakeQuery.admitted(QuakeJson.parse(raw,period,fetched).copy(windowEnd=end))
+            currentCoroutineContext().ensureActive();require(!catalog.partial){"目录校验未通过，保留上次数据"}
             val cache=file(period);val stream=cache.startWrite()
-            try {stream.write(JSONObject().put("fetchedAt",fetched.toString()).put("feed",raw).toString().toByteArray());cache.finishWrite(stream)}
+            try {stream.write(JSONObject().put("fetchedAt",fetched.toString()).put("windowEnd",end.toString()).put("feed",raw).toString().toByteArray());cache.finishWrite(stream)}
             catch(e:Throwable){cache.failWrite(stream);throw e}
             catalog
         }finally{connection.disconnect()}

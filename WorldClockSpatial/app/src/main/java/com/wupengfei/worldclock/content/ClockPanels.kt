@@ -63,11 +63,19 @@ internal class ClockState {
     val temperature=TemperatureState()
     val earthquakes=EarthquakeState()
     val coordinates=CoordinateState()
+    val distance=DistanceState()
+    val timeModeActive get()=mode==EarthMode.WORLD_TIME&&!distance.enabled
+    fun toggleDistance(){
+        if(!distance.enabled&&mode!=EarthMode.WORLD_TIME)switchMode(EarthMode.WORLD_TIME)
+        useFeature();selectedId=null;focusRequest++;distance.toggle(cities)
+    }
     fun toggleCoordinates(){useFeature();coordinates.toggle(selected)}
     fun switchMode(next:EarthMode){
         useFeature()
+        // A clock click must exit distance even when its lighting clock already uses WORLD_TIME.
+        distance.disable()
         if(next==mode)return
-        if(next==EarthMode.EARTHQUAKE){earthquakes.returnMode=mode;earthquakes.panelOpen=true}
+        if(next==EarthMode.EARTHQUAKE){distance.disable();earthquakes.returnMode=mode;earthquakes.panelOpen=true}
         if(mode==EarthMode.EARTHQUAKE){earthquakes.pause();earthquakes.clearSelection()}
         mode=next;timeToolsOpen=false;citiesOpen=false
     }
@@ -105,7 +113,7 @@ internal class ClockState {
         earthquakes.closePanel();panelEpoch++
     }
     fun useFeature(){touchUi();dismissPanels()}
-    fun toggleCities(){val open=!citiesOpen;useFeature();citiesOpen=open}
+    fun toggleCities(){val open=!citiesOpen;switchMode(EarthMode.WORLD_TIME);citiesOpen=open}
     fun toggleTimeTools(){val open=!timeToolsOpen;useFeature();timeToolsOpen=open}
     fun toggleEarthquakePanel(){
         if(mode!=EarthMode.EARTHQUAKE){switchMode(EarthMode.EARTHQUAKE);return}
@@ -128,6 +136,7 @@ internal class ClockState {
     val selected get()=cities.firstOrNull{it.id==selectedId}
     fun setOffset(value:Float){touchUi();if(previewBase==null)previewBase=now;offsetMinutes=value}
     fun beginTimeDrag(){
+        if(distance.enabled)switchMode(EarthMode.WORLD_TIME)
         onTimeScrub?.invoke(true);manualInteraction()
         touchUi()
         if(mode==EarthMode.EARTHQUAKE){
@@ -166,7 +175,12 @@ internal class ClockState {
     }
     fun setDate(text:String):Boolean=try{chooseDate(LocalDate.parse(text));true}catch(_:Exception){false}
     fun manualInteraction(){dismissPanels();if(mode!=EarthMode.EARTHQUAKE){selectedId=null;focusRequest++}}
-    fun focus(city:ClockCity){if(mode==EarthMode.EARTHQUAKE)switchMode(EarthMode.WORLD_TIME);useFeature();selectedId=city.id;coordinates.selectCity(city);focusRequest++}
+    fun focus(city:ClockCity){
+        if(mode==EarthMode.EARTHQUAKE)switchMode(EarthMode.WORLD_TIME)
+        useFeature()
+        if(distance.enabled){distance.pick(city);return}
+        selectedId=city.id;coordinates.selectCity(city);focusRequest++
+    }
     fun add(city:ClockCity,context:Context){
         if(cities.none{it.id==city.id}){
             if(cities.size>=8){notice="最多添加 8 座城市";return}
@@ -175,7 +189,7 @@ internal class ClockState {
         focus(city);searching=false;query="";notice=""
     }
     fun remove(city:ClockCity,context:Context){
-        touchUi();cities=cities.filterNot{it.id==city.id}
+        touchUi();cities=cities.filterNot{it.id==city.id};distance.reconcile(cities)
         if(selectedId==city.id){selectedId=null;resumeRequest++}
         save(context)
     }
@@ -340,23 +354,23 @@ internal fun TimePanel(state:ClockState){
     DisposableEffect(Unit){onDispose{state.onTimeScrub?.invoke(false);state.uiManipulating=false}}
     val captionHoverGroup=remember{SpatialHoverEffectGroup.obtain()}
     CompositionLocalProvider(LocalViewConfiguration provides pickup){
-        Column(Modifier.width(784.dp).height(222.dp),horizontalAlignment=Alignment.CenterHorizontally){
+        Column(Modifier.width(848.dp).height(222.dp),horizontalAlignment=Alignment.CenterHorizontally){
             // Fixed slot above the ruler: entering preview never moves the controls.
-            Box(Modifier.width(528.dp).height(32.dp),contentAlignment=Alignment.Center){
-                if(state.mode==EarthMode.EARTHQUAKE)QuakeCaption(state)
+            Box(Modifier.offset(x=(-32).dp).width(528.dp).height(32.dp),contentAlignment=Alignment.Center){
+                if(state.distance.enabled)Text(state.distance.hint(state.cities),style=uiText(13))
+                else if(state.mode==EarthMode.EARTHQUAKE)QuakeCaption(state)
                 else if(state.mode==EarthMode.TEMPERATURE){
                     if(state.temperature.manifest==null)Text("气温数据不可用",style=uiText(12))
                     else if(!state.temperature.autoNow)GlassAction({state.useFeature();state.temperature.now(state.now)},Modifier.height(28.dp)){Text("现在",style=uiText(13))}
                 } else if(state.preview)GlassAction({state.live()},Modifier.height(28.dp)){Text("回到现在",style=uiText(13))}
                 else if(state.clockNotice.isNotBlank())Text(state.clockNotice,style=uiText(12))
             }
-            TemperatureLegend(Modifier.width(528.dp)
+            TemperatureLegend(Modifier.offset(x=(-32).dp).width(528.dp)
                 .graphicsLayer{alpha=state.temperature.reveal})
             Spacer(Modifier.height(12.dp))
             Row(Modifier.fillMaxWidth().height(64.dp),verticalAlignment=Alignment.CenterVertically,
                 horizontalArrangement=Arrangement.spacedBy(16.dp)){
-                ToolbarIcon("时钟 · 城市菜单",true,state.mode==EarthMode.WORLD_TIME){
-                    if(state.mode!=EarthMode.WORLD_TIME)state.switchMode(EarthMode.WORLD_TIME)
+                ToolbarIcon("时钟 · 城市菜单",true,state.timeModeActive){
                     state.toggleCities()
                 }
                 EarthquakeToggle(state)
@@ -380,11 +394,12 @@ internal fun TimePanel(state:ClockState){
                         CompositionLocalProvider(LocalInsideGlass provides true){QuakeTimeline(state)}
                     }
                 }
+                DistanceToggle(state)
                 TemperatureToggle(state)
                 ToolbarIcon("时间选项",false){state.toggleTimeTools()}
             }
             Spacer(Modifier.height(16.dp))
-            Box(Modifier.width(656.dp).height(42.dp)){
+            Box(Modifier.offset(x=(-32).dp).width(656.dp).height(42.dp)){
             // System-like caption proportions; no WindowContainer is inserted into this Mixed Stage.
             val handleInteraction=remember{MutableInteractionSource()}
             val handleHover by handleInteraction.collectIsHoveredAsState()
@@ -408,14 +423,19 @@ internal fun TimePanel(state:ClockState){
                                         owner=p.pointerId.value;state.uiManipulating=true;state.touchUi()
                                         val gain=if(spatial)state.toolbarHandGain?.invoke(raw.x,raw.y,raw.z)?:1.0 else 1.0
                                         state.toolbarDrag.begin(point.x.toDouble(),point.y.toDouble(),p.uptimeMillis/1000.0,gain)
-                                        android.util.Log.i("WorldClockToolbar","V43 begin fixedStage="+spatial+"; depthGain="+gain)
+                                        android.util.Log.i("WorldClockToolbar","V88 begin fixedStage="+spatial+"; depthGain="+gain+"; adaptiveResponse=8..24ms")
                                     }
                                 }
                                 if(owner==p.pointerId.value){
                                     consumed=true
                                     if(!p.pressed){
+                                        val raw=p.inputDevicePose.rawPosition
+                                        val point=if(spatial&&(raw.x==0f&&raw.y==0f&&raw.z==0f))null
+                                            else if(spatial)state.toolbarHandPoint?.invoke(raw.x,raw.y,raw.z)
+                                            else Offset(p.x/density.density,p.y/density.density)
+                                        point?.let{state.toolbarDrag.sample(it.x.toDouble(),it.y.toDouble(),p.uptimeMillis/1000.0)}
                                         state.toolbarDrag.end();owner=null;state.uiManipulating=false;state.touchUi()
-                                        android.util.Log.i("WorldClockToolbar","V42 release x="+state.toolbarDrag.x+"; y="+state.toolbarDrag.y)
+                                        android.util.Log.i("WorldClockToolbar","V88 release x="+state.toolbarDrag.x+"; y="+state.toolbarDrag.y)
                                     }else{
                                         val raw=p.inputDevicePose.rawPosition
                                         val point=if(spatial)state.toolbarHandPoint?.invoke(raw.x,raw.y,raw.z)
@@ -594,6 +614,14 @@ internal fun TimeOptionsPanel(state:ClockState){
 @Composable
 internal fun CityPinCard(city:ClockCity?,state:ClockState,labelOnRight:Boolean){
     if(city==null){Spacer(Modifier.size(1.dp));return}
+    if(state.distance.enabled){
+        val active=city.id==state.distance.firstId||city.id==state.distance.secondId
+        GlassAction({state.focus(city)},Modifier.width(DistanceStyle.CITY_WIDTH.dp).height(DistanceStyle.CITY_HEIGHT.dp),state.ready,
+            containerTint=if(active)Color(AppSelectionStyle.COLOR_ARGB).copy(alpha=.52f)else Color.Transparent){
+            Text(city.name,style=uiText(16),maxLines=1,overflow=TextOverflow.Ellipsis)
+        }
+        return
+    }
     if(state.coordinates.reveal>.001f&&state.coordinates.selection?.cityId==city.id){
         CoordinateCard(state.coordinates.selection,Modifier.alpha(state.coordinates.reveal));return
     }

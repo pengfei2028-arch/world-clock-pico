@@ -8,13 +8,14 @@ class QuakeDecalTest {
     @Test fun patchesFollowGreatCircleDistanceAtPolesSeamsAndBothHemispheres(){
         for(lat in listOf(-90.0,-89.9,-35.0,0.0,39.9,89.9,90.0))for(lon in listOf(-180.0,-179.99,0.0,116.4,179.99,180.0)){
             val center=GlobeGeography.direction(lat,lon).normalized()*2.024
-            val geometry=QuakeDecalGeometry().apply{patch(center,Math.toRadians(6.5),true,1,.25,-1.0,42)}
+            val maxAngle=Math.toRadians(QuakeStyle.WAVE_PATCH_DEGREES)
+            val geometry=QuakeDecalGeometry().apply{patch(center,maxAngle,true,1,.25,-1.0,42)}
             for(i in geometry.positions.indices){
                 val p=geometry.positions[i];val uv=geometry.uv[i]
                 assertTrue(p.x.isFinite()&&p.y.isFinite()&&p.z.isFinite())
                 assertEquals(2.024,sqrt(p.dot(p)),1e-10)
                 val angle=acos(p.normalized().dot(center.normalized()).coerceIn(-1.0,1.0))
-                assertEquals(hypot(uv.first,uv.second)*Math.toRadians(6.5),angle,3e-8)
+                assertEquals(hypot(uv.first,uv.second)*maxAngle,angle,3e-8)
             }
             for(t in geometry.indices.chunked(3)){
                 val a=geometry.positions[t[0]];val b=geometry.positions[t[1]];val c=geometry.positions[t[2]]

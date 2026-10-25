@@ -34,9 +34,11 @@ private class EarthResources {
     var temperatureRenderer: TemperatureRenderer? by mutableStateOf(null)
     var coordinateRenderer:CoordinateRenderer?=null
     var earthquakeRenderer:EarthquakeRenderer?=null
+    var distanceRenderer:DistanceRenderer?=null
     var coordinateHit:((Vector3)->GeoCoordinate?)?=null
     var interactionReady = false
     var handToStage: ((Vector3) -> Vector3)? = null
+    var pointerToStage: ((Vector3) -> Vector3)? = null
     var headInStage: (() -> Vector3)? = null
     var viewRotationInStage: (() -> GlobeQuaternion)? = null
     var frameSubscription: Cancellable? = null
@@ -49,13 +51,13 @@ private class EarthResources {
     // handle explicitly so returning from Shared never overlaps two 8K scenes.
     fun ownModelResources(root:Entity, samplers:List<String> = emptyList()) {
         root.components[ModelComponent::class.java]?.let { model ->
-            importedResources.add(model.mesh)
+            importedResources.add(model.mesh);model.mesh.toGlobal()
             model.materials.forEach { material ->
-                importedResources.add(material)
+                importedResources.add(material);material.toGlobal()
                 // SDK 6.1.9 returns an empty getParameterNames() on these imported
                 // graphs. Use the known exported sampler contract, not reflection.
                 if(material is ShaderGraphMaterial)samplers.forEach { name ->
-                        importedResources.add(material.getParameter(name,TextureResource::class.java))
+                        material.getParameter(name,TextureResource::class.java).also{it.toGlobal();importedResources.add(it)}
                     }
             }
         }
@@ -70,9 +72,10 @@ private class EarthResources {
         interactionReady = false
         frameSubscription?.cancel()
         frameSubscription = null
-        handToStage = null; headInStage = null; viewRotationInStage = null
+        handToStage = null; pointerToStage=null; headInStage = null; viewRotationInStage = null
         temperatureRenderer?.close();temperatureRenderer=null
         earthquakeRenderer?.close();earthquakeRenderer=null
+        distanceRenderer?.close();distanceRenderer=null
         coordinateHit=null;coordinateRenderer?.close();coordinateRenderer=null
         entities.forEach { it.destroy() }
         entities.clear()
@@ -225,6 +228,9 @@ private fun ImmersiveHomeStage() {
         modifier = Modifier.pointerInput(context) {
             val input = GlobePointerInput(motion)
             val coordinateTap=CoordinateTap()
+            val rayInput=GlobeRayInput()
+            val emulatorRay=android.os.Build.HARDWARE in setOf("ranchu","goldfish")||
+                android.os.Build.DEVICE.contains("emulator",ignoreCase=true)
             var lastInputLog = Double.NEGATIVE_INFINITY
             try {
                 detectSpatialPointerEvent(
@@ -238,8 +244,10 @@ private fun ImmersiveHomeStage() {
                         val now = nowSeconds()
                         if (previousOwner == null && pointer.isDownEvent()) {
                             clock.manualInteraction()
-                            resources.viewRotationInStage?.invoke()?.let { input.setViewOrientation(it) }
-                            if((clock.coordinates.enabled||clock.mode==EarthMode.EARTHQUAKE)&&!clock.uiManipulating){
+                            val view=resources.viewRotationInStage?.invoke()?:GlobeQuaternion.IDENTITY
+                            input.setViewOrientation(view)
+                            if(emulatorRay)resources.headInStage?.invoke()?.let{rayInput.begin(CoordinateRenderer.vec(it),view)}
+                            if((clock.distance.enabled||clock.coordinates.enabled||clock.mode==EarthMode.EARTHQUAKE)&&!clock.uiManipulating){
                                 val hit=pointer.position3D
                                 coordinateTap.begin(pointer.pointerId.value,resources.coordinateHit?.invoke(Vector3(hit.x,hit.y,hit.z)),now)
                             }else coordinateTap.cancel()
@@ -250,16 +258,21 @@ private fun ImmersiveHomeStage() {
                         // DOWN/UP remain authoritative even if tracking coordinates are unavailable.
                         fun toInputVector(v: Vector3?) = GlobeVector3(
                             v?.x?.toDouble() ?: Double.NaN, v?.y?.toDouble() ?: Double.NaN, v?.z?.toDouble() ?: Double.NaN)
-                        if(previousOwner==null||previousOwner==pointer.pointerId.value)coordinateTap.position(toInputVector(hand)-toInputVector(head))
+                        val gesturePoint=if(emulatorRay){
+                            val hit=pointer.position3D
+                            rayInput.relative(toInputVector(resources.pointerToStage?.invoke(Vector3(hit.x,hit.y,hit.z))))
+                        }else toInputVector(hand)-toInputVector(head)
+                        if(previousOwner==null||previousOwner==pointer.pointerId.value)coordinateTap.position(gesturePoint)
                         // Remember movement before UP resets the rotation input's state.
                         if(previousOwner==pointer.pointerId.value)coordinateTap.observe(input.moving,input.rejectedSamples>0)
                         consumed = input.updateHand(pointer.pointerId.value, pointer.isDownEvent(), pointer.pressed,
-                            toInputVector(hand), toInputVector(head), now) || consumed
+                            gesturePoint, GlobeVector3.ZERO, now) || consumed
                         coordinateTap.observe(input.moving,input.rejectedSamples>0)
                         if(previousOwner==pointer.pointerId.value&&!pointer.pressed){
                             val selected=coordinateTap.end(pointer.pointerId.value,now)
-                            if((clock.coordinates.enabled||clock.mode==EarthMode.EARTHQUAKE)&&!clock.uiManipulating&&selected!=null){
-                                if(clock.mode==EarthMode.EARTHQUAKE)resources.earthquakeRenderer?.selectAt(selected)
+                            if((clock.distance.enabled||clock.coordinates.enabled||clock.mode==EarthMode.EARTHQUAKE)&&!clock.uiManipulating&&selected!=null){
+                                if(clock.distance.enabled)resources.distanceRenderer?.selectAt(selected)
+                                else if(clock.mode==EarthMode.EARTHQUAKE)resources.earthquakeRenderer?.selectAt(selected)
                                 else clock.coordinates.select(selected)
                                 motion.readCoordinates(now)
                                 Log.i("WorldClockCoordinates","V65 Full selected lat=${selected.latitude} lon=${selected.longitude}; original mesh UV")
@@ -268,6 +281,7 @@ private fun ImmersiveHomeStage() {
                         if (pointer.pressed && input.activePointerId == pointer.pointerId.value && now - lastInputLog >= 0.5) {
                             lastInputLog = now
                             Log.i("WorldClockEarth", "V31 hand sample: raw=$rawHand; handM=$hand; headM=$head; " +
+                                "source="+(if(emulatorRay)"emulatorRay" else "trackedHand")+"; gesturePoint=$gesturePoint; "+
                                 "moving=" + input.moving + "; rejected=" + input.rejectedSamples +
                                 "; orientation=" + motion.presentation + "; tiltError=" + motion.tiltErrorDegrees)
                         }
@@ -291,6 +305,7 @@ private fun ImmersiveHomeStage() {
             AttachmentPanel("timeline",alignment=AttachmentPanelComponent.Alignment.TOP_CENTER) { ClockTheme { TimePanel(clock) } }
             AttachmentPanel("time_tools",alignment=AttachmentPanelComponent.Alignment.BOTTOM_RIGHT) { ClockTheme { TimeOptionsPanel(clock) } }
             if(quakePanelAllocated)AttachmentPanel("quake_panel",alignment=AttachmentPanelComponent.Alignment.BOTTOM_CENTER){ClockTheme{EarthquakePanel(clock)}}
+            AttachmentPanel("distance_card",alignment=AttachmentPanelComponent.Alignment.CENTER){ClockTheme{DistanceReadout(clock)}}
             AttachmentPanel("coordinate_card",alignment=AttachmentPanelComponent.Alignment.CENTER){ClockTheme{
                 CoordinateCard(clock.coordinates.selection,Modifier.alpha(clock.coordinates.panelAlpha))
             }}
@@ -312,6 +327,7 @@ private fun ImmersiveHomeStage() {
                 resources.entities.add(stageOrigin)
                 content.addEntity(stageOrigin)
                 resources.handToStage = { raw -> content.convertPosition(raw, ViewCoordinateSpace.Global, stageOrigin) }
+                resources.pointerToStage = { hit -> content.convertPosition(hit, ViewCoordinateSpace.Local, stageOrigin) }
                 val toolbarUnit=content.convertSize(Vector3(context.resources.displayMetrics.density,0f,0f),ViewCoordinateSpace.Local,stageOrigin).x*3.5f
                 clock.toolbarHandPoint={x,y,z->
                     val point=content.convertPosition(Vector3(x,y,z),ViewCoordinateSpace.Global,stageOrigin)
@@ -383,29 +399,28 @@ private fun ImmersiveHomeStage() {
                 resources.ownModelResources(earth,listOf("Day_file","Night_file","NormalTex_file","SpecularTex_file"))
                 val earthOpacity = OpacityControllerComponent(0f)
                 earth.components.set(earthOpacity)
-                // Data maps must bypass sRGB decoding. The v06 USDZ packer emitted
-                // SRGB8_A8 for these two samplers despite MaterialX colorspace=raw.
-                // V52: load the original normal and user AI specular 8192x4096 files through the SDK's explicit
-                // RAW + LINEAR path. Day/night remain sRGB color textures.
+                // Normal remains the original 8K RAW + LINEAR source. V85 packages the
+                // original AI specular R samples directly as 8K RAW R8. Day/night unchanged.
                 val linearDataOptions = TextureCreateOption().apply {
                     colorSpace = TextureColorSpace.RAW
                     textureEncoding = TextureEncoding.LINEAR
                 }
-                // The bundle's SRGB normal/specular samplers are never used after
-                // RAW replacements. Detach and release them BEFORE allocating replacements:
-                // keeping both 8K copies alive can exceed the platform resource budget.
+                // The normal bundle slot is a 1x1 placeholder, so startup never loads a
+                // discarded 8K normal before allocating the final RAW original.
                 val stagingBitmap=android.graphics.Bitmap.createBitmap(1,1,android.graphics.Bitmap.Config.ARGB_8888)
                 stagingBitmap.eraseColor(android.graphics.Color.rgb(128,128,255))
                 val stagingTexture=try{TextureResource.create(stagingBitmap)}finally{stagingBitmap.recycle()}
                 resources.textures.add(stagingTexture)
                 val redundantTextures=linkedSetOf<TextureResource>()
                 val retainedColorTextures=linkedSetOf<TextureResource>()
+                val retainedSpecularTextures=linkedSetOf<TextureResource>()
                 fun detachUnusedDataMaps(e:Entity){
                     e.components[ModelComponent::class.java]?.materials?.forEach{material->
                         val m=material as ShaderGraphMaterial
                         retainedColorTextures.add(m.getParameter("Day_file",TextureResource::class.java))
                         retainedColorTextures.add(m.getParameter("Night_file",TextureResource::class.java))
-                        for(name in listOf("NormalTex_file","SpecularTex_file")){
+                        retainedSpecularTextures.add(m.getParameter("SpecularTex_file",TextureResource::class.java))
+                        for(name in listOf("NormalTex_file")){
                             redundantTextures.add(m.getParameter(name,TextureResource::class.java))
                             m.setParameter(name,stagingTexture)
                         }
@@ -415,16 +430,23 @@ private fun ImmersiveHomeStage() {
                 detachUnusedDataMaps(earth)
                 val released=redundantTextures.filter{it !in retainedColorTextures}
                 released.forEach{if(it.valid)it.close();resources.importedResources.remove(it)}
+                // Resource.close alone does not drop the bundle's strong cache.
+                // SDK documents close() as preserving resources still in use. The
+                // imported mesh/material/color textures now have explicit ownership.
+                bundle.close();resources.bundle=null
+                Log.i("WorldClockResources","V84 Earth bundle cache dropped before RAW allocations; retained resources owned explicitly")
                 Log.i("WorldClockResources","V74 released unused bundle data maps before RAW load: count="+released.size+" remainingValid="+released.count{it.valid})
                 // Allow native release requests to reach the resource service before the next 8K allocation.
-                delay(80)
+                delay(160)
                 resources.ensureOpen()
                 val normalData = TextureResource.load("earth_data/normal_8k.jpg",
                     LoadType.FROM_ASSETS, linearDataOptions)
                 resources.textures.add(normalData)
-                val specularData = TextureResource.load("earth_data/specular_ai_v52_8k.png",
-                    LoadType.FROM_ASSETS, linearDataOptions)
-                resources.textures.add(specularData)
+                // The existing AI high-light map is now packed RAW R8 in the bundle.
+                // MaterialX ND_image_float samples R, so all 8K source samples remain exact.
+                check(retainedSpecularTextures.size==1)
+                val specularData=retainedSpecularTextures.single()
+                check(specularData.valid)
                 var correctedMaterials = 0
                 val earthMaterials = mutableListOf<ShaderGraphMaterial>()
                 fun bindLinearDataMaps(entity: Entity) {
@@ -440,6 +462,11 @@ private fun ImmersiveHomeStage() {
                             material.setParameter("SpecularTex_file", specularData)
                             material.setParameter("NightMask_Remap_inlow", DayNightLighting.nightStartDot)
                             material.setParameter("NightMask_Remap_inhigh", DayNightLighting.nightFullDot)
+                            material.setParameter("TwilightWidth_in1", DayNightLighting.twilightWidthDot)
+                            material.setParameter("TwilightGain_in2", DayNightLighting.twilightGain)
+                            check(abs(material.getParameter<Float>("TwilightWidth_in1")-DayNightLighting.twilightWidthDot)<0.00001f)
+                            check(abs(material.getParameter<Float>("TwilightGain_in2")-DayNightLighting.twilightGain)<0.00001f)
+                            Log.i("WorldClockEarth","V88 compact twilight +/-24deg; original day-color lift; original 8K/sun/specular/night retained")
                             check(abs(material.getParameter<Float>("NightMask_Remap_inlow")-DayNightLighting.nightStartDot)<0.00001f)
                             material.setParameter("NightDim_in2", NIGHT_STRENGTH)
                             check(abs(material.getParameter<Float>("NightDim_in2") - NIGHT_STRENGTH) < 0.0001f)
@@ -465,9 +492,9 @@ private fun ImmersiveHomeStage() {
                 bindLinearDataMaps(earth)
                 check(correctedMaterials == 1)
                 stagingTexture.close();resources.textures.remove(stagingTexture)
-                Log.i("WorldClockResources","V74 RAW maps ready at original 8192x4096; replaced imports released; startupQuakePanels=0")
+                Log.i("WorldClockResources","V85 original 8K RAW normal and R8 specular ready; no unused high-resolution import; startupQuakePanels=0")
                 try { resources.temperatureRenderer=TemperatureRenderer.create(earth,clock.temperature,java.io.File(context.cacheDir,"temperature-display-v56"));if(com.wupengfei.worldclock.BuildConfig.DEBUG)TemperatureTestAccess.renderer=resources.temperatureRenderer } catch(e:Exception){clock.temperature.status="气温材质加载失败";Log.e("WorldClockTemperature","Material load failed",e)}
-                Log.i("WorldClockEarth", "V52 user AI 8192x4096 specular map bound RAW+LINEAR; original normal unchanged; V51 Earth bundle and AI day texture preserved")
+                Log.i("WorldClockEarth", "V85 user AI 8192x4096 specular red samples preserved RAW R8; original RAW normal and ASTC day/night unchanged")
                 // Keep the imported axial tilt hierarchy. Only scale and translate its parent.
                 earth.components[TransformComponent::class.java]?.apply {
                     setPosition(Vector3(eye.x, eye.y - EARTH_CENTER_DROP_M, eye.z - 6f * WORLD_SCALE))
@@ -516,36 +543,18 @@ private fun ImmersiveHomeStage() {
                     check(cloudBundle.valid){"Cloud bundle invalid"};resources.cloudsBundle=cloudBundle
                     val clouds=cloudBundle.loadModelSuspend("CloudsV41")
                     resources.ensureOpen(clouds)
+                    resources.entities.add(clouds) // also own the unattached model if RAW loading fails
                     resources.ownModelResources(clouds,listOf("CloudMask_file"))
                     // Attach a zero-opacity controller before joining the live scene.
                     // Keep the entity active throughout fades; avoid enable/material races.
                     clouds.components.set(cloudOpacity)
-                    // The imported mask is replaced by the RAW original. Release the unused
-                    // 8K copy before allocating its replacement, as for normal/specular maps.
-                    val cloudStagingBitmap=android.graphics.Bitmap.createBitmap(1,1,android.graphics.Bitmap.Config.ARGB_8888)
-                    val cloudStaging=try{TextureResource.create(cloudStagingBitmap)}finally{cloudStagingBitmap.recycle()}
-                    resources.textures.add(cloudStaging)
-                    val redundantCloudMasks=linkedSetOf<TextureResource>()
-                    fun detachCloudMask(e:Entity){
-                        e.components[ModelComponent::class.java]?.materials?.forEach{base->
-                            val material=base as ShaderGraphMaterial
-                            redundantCloudMasks.add(material.getParameter("CloudMask_file",TextureResource::class.java))
-                            material.setParameter("CloudMask_file",cloudStaging)
-                        }
-                        e.getChildren().forEach{detachCloudMask(it)}
-                    }
-                    detachCloudMask(clouds)
-                    redundantCloudMasks.forEach{if(it.valid)it.close();resources.importedResources.remove(it)}
-                    Log.i("WorldClockResources","V76 released redundant 8K cloud mask: count="+redundantCloudMasks.size+" remainingValid="+redundantCloudMasks.count{it.valid})
-                    delay(80);resources.ensureOpen()
-                    val mask=TextureResource.load("cloud_data/clouds_8k.jpg",LoadType.FROM_ASSETS,
-                        TextureCreateOption().apply{colorSpace=TextureColorSpace.RAW;textureEncoding=TextureEncoding.LINEAR})
-                    resources.textures.add(mask)
+                    // V85: use the existing 8K RAW cloud mask directly. Its original
+                    // red channel and every mip are packed losslessly as R8; no second copy.
                     var cloudMaterials=0
                     fun bindCloud(e:Entity){
                         e.components[ModelComponent::class.java]?.materials?.forEach { base ->
-                            val material=base as ShaderGraphMaterial
-                            material.setParameter("CloudMask_file",mask)
+                            val material=base as? ShaderGraphMaterial?:error("Cloud material did not load")
+                            check(material.getParameter("CloudMask_file",TextureResource::class.java).valid)
                             material.setParameter("CloudDensity_in2",.65f)
                             check(abs(material.getParameter<Float>("CloudDensity_in2")-.65f)<.0001f)
                             cloudMaterials++
@@ -553,7 +562,8 @@ private fun ImmersiveHomeStage() {
                         e.getChildren().forEach{bindCloud(it)}
                     }
                     bindCloud(clouds);check(cloudMaterials==1)
-                    if(cloudStaging.valid)cloudStaging.close();resources.textures.remove(cloudStaging)
+                    cloudBundle.close();resources.cloudsBundle=null
+                    Log.i("WorldClockResources","V85 cloud and AI specular remain 8192x4096 with 13 mips; RAW R8 scalar maps save 256MiB; duplicate normal import is 1x1 placeholder; no runtime cloud/specular reload")
                     disableEnvironmentFill(clouds)
                     clouds.setName("SourceCloudLayer_V41")
                     check(geographicEntity.addChild(clouds)){"Cannot attach source cloud layer"}
@@ -649,6 +659,12 @@ private fun ImmersiveHomeStage() {
                     catch(e:CancellationException){throw e}
                     catch(e:Exception){clock.earthquakes.renderFailure="地震图层加载失败，请重新打开应用";Log.e("WorldClockQuakes","Renderer initialization",e);null}
                 }
+                resources.ensureOpen()
+                resources.distanceRenderer=coordinateRenderer?.let{
+                    try{DistanceRenderer(it,stageOrigin,content,attachments,clock)}
+                    catch(e:Exception){clock.distance.failure="距离图层加载失败，请重新打开应用";Log.e("WorldClockDistance","Optional renderer initialization",e);null}
+                }
+                var lastDistanceRead=-1
                 var lastQuakeFocus=clock.earthquakes.focusRequest
                 var quakeFocusAudit:String?=null
                 var quakeFocusAuditAfter=0.0
@@ -738,6 +754,9 @@ private fun ImmersiveHomeStage() {
                         }}
                     }
                     if(quakeActive&&!quake.selectionUsesCityFocus&&(quake.selected!=null||quake.groupIds.isNotEmpty())&&!motion.focusing)motion.readCoordinates(now)
+                    if(clock.distance.enabled&&lastDistanceRead!=clock.distance.readRequest&&!motion.dragging&&!motion.timelineHeld){
+                        lastDistanceRead=clock.distance.readRequest;motion.readCoordinates(now)
+                    }
                     val wasFocused=motion.focusLocked
                     // Preview freezes UTC, never the independent presentation orbit.
                     motion.tick(if(resources.interactionReady) event.deltaTime.toDouble() else idleDelta, now)
@@ -807,6 +826,7 @@ private fun ImmersiveHomeStage() {
                             }
                         }
                     }
+                    resources.distanceRenderer?.update(event.deltaTime.toDouble(),resources.headInStage?.invoke()?:eye,visibility,resources.interactionReady)
                     features.update(resources.interactionReady,center,resources.headInStage?.invoke()?:eye,light,earthOpacity.opacity,entrance.pose.veilProgress.toFloat(),veilOpacity.opacity)
                     if (!motion.dragging && wasRestoringTilt && !motion.restoringTilt) {
                         Log.i("WorldClockEarth", "V31 tilt restored; axisErrorDegrees=" + normalAxisErrorDegrees() +
