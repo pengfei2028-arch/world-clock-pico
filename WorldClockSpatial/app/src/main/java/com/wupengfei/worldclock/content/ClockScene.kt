@@ -15,6 +15,7 @@ internal class ClockScene(private val content: SpatialViewContent,private val at
     private val citiesPanel=attachments.entity("cities")
     private val timelinePanel=attachments.entity("timeline")
     private val toolsPanel=attachments.entity("time_tools")
+    private var quakePanel:Entity?=null
     private val coordinatePanel=attachments.entity("coordinate_card")
     private val coordinateLabels=CoordinateRuler.slots.indices.map{attachments.entity("coordinate_ruler_$it")}.toMutableList()
     private var labelLookupSeconds=1.0
@@ -103,12 +104,22 @@ internal class ClockScene(private val content: SpatialViewContent,private val at
         state.toolbarDrag.advance(seconds)
         val unit=toolbarUnit
         val bar=Vector3(eye.x+state.toolbarDrag.x.toFloat()*unit,eye.y-1f-state.toolbarDrag.y.toFloat()*unit,eye.z-2.5f)
-        // 32 dp panel offset keeps the original ruler/caption centered as the thermometer
-        // adds 64 dp on the right. The legend uses a permanent slot above the ruler.
-        timelinePanel?.let{transform(it).setPosition(Vector3(bar.x+32f*unit,bar.y+92f*unit,bar.z))}
-        citiesPanel?.let{transform(it).setPosition(Vector3(bar.x-328f*unit,bar.y+44f*unit,bar.z+.015f))}
+        // Two 48dp controls and two 16dp gaps on either side. The shared ruler,
+        // caption and thermometer keep their previous world positions.
+        timelinePanel?.let{transform(it).setPosition(Vector3(bar.x,bar.y+92f*unit,bar.z))}
+        citiesPanel?.let{transform(it).setPosition(Vector3(bar.x-392f*unit,bar.y+44f*unit,bar.z+.015f))}
         toolsPanel?.let{transform(it).setPosition(Vector3(bar.x+392f*unit,bar.y+44f*unit,bar.z+.015f))}
         show(timelinePanel,ready);show(citiesPanel,ready&&state.citiesOpen);show(toolsPanel,ready&&state.timeToolsOpen)
+        val q=state.earthquakes
+        val quakeVisible=ready&&state.mode==EarthMode.EARTHQUAKE&&q.panelOpen&&!state.citiesOpen&&!state.timeToolsOpen
+        val panelStep=(seconds/.18).toFloat()
+        q.panelReveal=if(quakeVisible)min(1f,q.panelReveal+panelStep) else max(0f,q.panelReveal-panelStep)
+        if(quakePanel==null)quakePanel=attachments.entity("quake_panel")
+        quakePanel?.let{transform(it).apply{
+            setScaleVector(Vector3(3.5f,3.5f,3.5f));setQuaternion(Quat(0f,0f,0f,1f))
+            setPosition(Vector3(bar.x+QuakeStyle.PANEL_ICON_X_DP*unit,bar.y+QuakeStyle.PANEL_BOTTOM_Y_DP*unit,bar.z+.015f))
+        }}
+        show(quakePanel,q.panelReveal>.001f)
         val c=vec(center);val h=vec(head)
         val sunPosition=c+vec(light)*350.0
         sunEffect.enabled=globeOpacity>0.001f && veilOpacity>0.001f
@@ -147,7 +158,7 @@ internal class ClockScene(private val content: SpatialViewContent,private val at
         pins.indices.forEach{i->
             val pin=pins[i];val city=state.cities.getOrNull(i)
             if(pin.cityId!=city?.id){pin.cityId=city?.id;pin.visibility=PinVisibility()}
-            if(!ready||city==null){
+            if(!ready||city==null||state.mode==EarthMode.EARTHQUAKE){
                 pin.stem.enabled=false;pin.head.enabled=false;pin.line.enabled=false;show(pin.card,false)
                 if(state.labelOpacity[i]!=0f)state.labelOpacity[i]=0f
                 return@forEach
@@ -171,7 +182,7 @@ internal class ClockScene(private val content: SpatialViewContent,private val at
         val selectedNormal=selectedTip?.let{(it-c).normalized()}
         val pointAlpha=coordinateVisibility.update(if(ready&&selectedTip!=null&&selectedNormal!=null)
             PinVisibility.atLimb(selectedNormal.dot((h-selectedTip).normalized())) else 0f,seconds)*state.coordinates.reveal*globeOpacity
-        val generic=selection!=null&&selection.cityId==null&&selectedTip!=null&&pointAlpha>.001f
+        val generic=state.mode!=EarthMode.EARTHQUAKE&&selection!=null&&selection.cityId==null&&selectedTip!=null&&pointAlpha>.001f
         val pointLayout=if(generic)CityLabelLayout.place(c,selectedTip!!,metresPerDp) else null
         val candidates=frames.filter{it.alpha>0.001f}.map{CityLabelCandidate(it.city.id,it.layout)}+
             listOfNotNull(pointLayout?.let{CityLabelCandidate("coordinate-point",it)})

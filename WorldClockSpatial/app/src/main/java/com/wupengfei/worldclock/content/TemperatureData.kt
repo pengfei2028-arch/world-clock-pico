@@ -6,7 +6,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.zip.GZIPInputStream
 
-internal enum class EarthMode { WORLD_TIME, TEMPERATURE }
+internal enum class EarthMode { WORLD_TIME, TEMPERATURE, EARTHQUAKE }
 internal data class TemperatureFrame(val validTime:Instant,val lead:Int,val grid:String,val texture:String,
     val gridSha:String,val textureSha:String,val gridBytes:Int,val textureBytes:Int)
 internal data class TemperatureManifest(val id:String,val runTime:Instant,val fetchedAt:Instant,val frames:List<TemperatureFrame>,val directory:java.io.File,val receivedAt:Instant?=null) {

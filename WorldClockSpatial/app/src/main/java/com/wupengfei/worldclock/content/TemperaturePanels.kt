@@ -37,7 +37,7 @@ import java.time.format.DateTimeFormatter
     val active=state.mode==EarthMode.TEMPERATURE
     GlassAction({state.switchMode(if(active)EarthMode.WORLD_TIME else EarthMode.TEMPERATURE)},
         Modifier.size(48.dp).semantics{contentDescription="全球气温";selected=active},state.ready,
-        containerTint=if(active)Color(0xFF745BFF).copy(alpha=.82f) else Color.Transparent){
+        containerTint=if(active)Color(AppSelectionStyle.COLOR_ARGB).copy(alpha=AppSelectionStyle.CONTAINER_ALPHA) else Color.Transparent){
         androidx.compose.foundation.Image(painterResource(com.wupengfei.worldclock.R.drawable.ic_temperature),
             contentDescription=null,modifier=Modifier.size(20.dp))
     }

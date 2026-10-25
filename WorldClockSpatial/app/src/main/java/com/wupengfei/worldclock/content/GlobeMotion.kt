@@ -57,6 +57,19 @@ internal class GlobeMotion {
             else atan2(toward.dot(from.cross(to)),from.dot(to))*180.0/PI
         focusTo(GlobeQuaternion.axisAngle(toward,roll)*centered)
     }
+    /** Absolute target in the rotating Earth's own frame. Never combines a scene-read
+     * world direction (which can lag pending scene writes) with the current animation pose. */
+    fun focusLocalPoint(direction:GlobeVector3,towardUser:GlobeVector3) {
+        val toward=towardUser.normalized()
+        if(direction.normalized()==GlobeVector3.ZERO||toward==GlobeVector3.ZERO)return
+        val centered=GlobeQuaternion.align(direction,toward)
+        val pole=centered.rotate(normalPole)
+        val from=(pole-toward*pole.dot(toward)).normalized()
+        val to=(normalPole-toward*normalPole.dot(toward)).normalized()
+        val roll=if(from==GlobeVector3.ZERO||to==GlobeVector3.ZERO)0.0
+            else atan2(toward.dot(from.cross(to)),from.dot(to))*180.0/PI
+        focusTo(GlobeQuaternion.axisAngle(toward,roll)*centered)
+    }
     fun focusTo(target: GlobeQuaternion) {
         if (dragging || timelineHeld) return
         focusFrom=presentation; focusTarget=target.normalized(); focusElapsed=0.0

@@ -22,6 +22,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.*
@@ -60,9 +61,16 @@ import kotlin.math.exp
 internal class ClockState {
     var mode by mutableStateOf(EarthMode.WORLD_TIME)
     val temperature=TemperatureState()
+    val earthquakes=EarthquakeState()
     val coordinates=CoordinateState()
-    fun toggleCoordinates(){touchUi();coordinates.toggle(selected)}
-    fun switchMode(next:EarthMode){touchUi();mode=next;timeToolsOpen=false}
+    fun toggleCoordinates(){useFeature();coordinates.toggle(selected)}
+    fun switchMode(next:EarthMode){
+        useFeature()
+        if(next==mode)return
+        if(next==EarthMode.EARTHQUAKE){earthquakes.returnMode=mode;earthquakes.panelOpen=true}
+        if(mode==EarthMode.EARTHQUAKE){earthquakes.pause();earthquakes.clearSelection()}
+        mode=next;timeToolsOpen=false;citiesOpen=false
+    }
     fun weatherLabel(city:ClockCity,compact:Boolean=false)=if(mode==EarthMode.TEMPERATURE)temperature.label(city) else (weather[city.id]?:CityWeatherState()).label(now,compact)
     var catalog by mutableStateOf<CityCatalog?>(null)
     var weather by mutableStateOf<Map<String,CityWeatherState>>(emptyMap())
@@ -73,6 +81,8 @@ internal class ClockState {
     var notice by mutableStateOf("")
     var clockNotice by mutableStateOf("")
     var ready by mutableStateOf(false)
+    var startupFailure by mutableStateOf("")
+    var immersiveRetry by mutableIntStateOf(0)
     var now by mutableStateOf(Instant.now())
     var previewBase by mutableStateOf<Instant?>(null)
     var offsetMinutes by mutableFloatStateOf(0f)
@@ -87,13 +97,29 @@ internal class ClockState {
     var onTimeScrub:((Boolean)->Unit)?=null
     var uiManipulating by mutableStateOf(false)
     var uiActivity=0
+    var panelEpoch by mutableIntStateOf(0);private set
     fun touchUi(){uiActivity++}
-    fun toggleCities(){touchUi();citiesOpen=!citiesOpen;timeToolsOpen=false}
-    fun toggleTimeTools(){touchUi();timeToolsOpen=!timeToolsOpen;citiesOpen=false}
+    /** Called for a different feature, never for controls/scrolling inside its own page. */
+    fun dismissPanels(){
+        citiesOpen=false;timeToolsOpen=false;searching=false;query="";notice=""
+        earthquakes.closePanel();panelEpoch++
+    }
+    fun useFeature(){touchUi();dismissPanels()}
+    fun toggleCities(){val open=!citiesOpen;useFeature();citiesOpen=open}
+    fun toggleTimeTools(){val open=!timeToolsOpen;useFeature();timeToolsOpen=open}
+    fun toggleEarthquakePanel(){
+        if(mode!=EarthMode.EARTHQUAKE){switchMode(EarthMode.EARTHQUAKE);return}
+        val open=!earthquakes.panelOpen||citiesOpen||timeToolsOpen
+        useFeature();earthquakes.panelOpen=open
+    }
     var focusRequest=0
     var resumeRequest=0
     val clockInstant get()=(previewBase?:now).plusMillis((offsetMinutes*60000).toLong())
-    val instant get()=if(mode==EarthMode.TEMPERATURE)temperature.displayed?.validTime?:clockInstant else clockInstant
+    val instant get()=when(mode){
+        EarthMode.TEMPERATURE->temperature.displayed?.validTime?:clockInstant
+        EarthMode.EARTHQUAKE->earthquakes.replayTime?:clockInstant
+        else->clockInstant
+    }
     val preview get()=previewBase!=null
     val rulerOrigin get()=if(mode==EarthMode.TEMPERATURE)temperature.rulerCenter?:temperature.requested?.validTime?:instant else rulerCenter?:instant
     val nowMarkerMinutes get()=Duration.between(rulerOrigin,now).toMillis()/60000f
@@ -104,12 +130,18 @@ internal class ClockState {
     fun beginTimeDrag(){
         onTimeScrub?.invoke(true);manualInteraction()
         touchUi()
+        if(mode==EarthMode.EARTHQUAKE){
+            earthquakes.catalog?.let{earthquakes.scrub(QuakeRules.fraction(earthquakes.replayTime?:it.start,it.start,it.end))};return
+        }
         if(mode==EarthMode.TEMPERATURE){temperature.beginDrag();return}
         if(rulerCenter==null)rulerCenter=instant
         previewBase=instant;offsetMinutes=0f
     }
     fun dragTimeBy(minutes:Float){
         if(!minutes.isFinite())return
+        if(mode==EarthMode.EARTHQUAKE){
+            earthquakes.catalog?.let{earthquakes.scrub(QuakeRules.fraction(earthquakes.replayTime?:it.start,it.start,it.end)+minutes/360.0*528/456)};return
+        }
         if(mode==EarthMode.TEMPERATURE){temperature.dragBy(minutes);return}
         setOffset(offsetMinutes+minutes)
         val center=rulerCenter?:instant
@@ -119,7 +151,7 @@ internal class ClockState {
         if(excess!=0.0)rulerCenter=center.plusMillis((excess*60000).toLong())
     }
     fun finishTimeDrag(){onTimeScrub?.invoke(false);touchUi();temperature.scrubTime=null;if(mode==EarthMode.WORLD_TIME&&preview){previewBase=instant;offsetMinutes=0f}}
-    fun live(){touchUi();previewBase=null;offsetMinutes=0f;rulerCenter=null}
+    fun live(){useFeature();previewBase=null;offsetMinutes=0f;rulerCenter=null}
     fun shiftDay(days:Long){
         touchUi()
         previewBase=instant.atZone(ZoneId.systemDefault()).plusDays(days).toInstant()
@@ -133,8 +165,8 @@ internal class ClockState {
         offsetMinutes=0f;rulerCenter=previewBase
     }
     fun setDate(text:String):Boolean=try{chooseDate(LocalDate.parse(text));true}catch(_:Exception){false}
-    fun manualInteraction(){selectedId=null;focusRequest++}
-    fun focus(city:ClockCity){touchUi();selectedId=city.id;coordinates.selectCity(city);focusRequest++;citiesOpen=false;timeToolsOpen=false}
+    fun manualInteraction(){dismissPanels();if(mode!=EarthMode.EARTHQUAKE){selectedId=null;focusRequest++}}
+    fun focus(city:ClockCity){if(mode==EarthMode.EARTHQUAKE)switchMode(EarthMode.WORLD_TIME);useFeature();selectedId=city.id;coordinates.selectCity(city);focusRequest++}
     fun add(city:ClockCity,context:Context){
         if(cities.none{it.id==city.id}){
             if(cities.size>=8){notice="最多添加 8 座城市";return}
@@ -195,7 +227,7 @@ internal fun GlassAction(onClick:()->Unit,modifier:Modifier=Modifier,enabled:Boo
 
 @Composable
 internal fun CityPanel(state:ClockState,context:Context){
-    var manage by remember{mutableStateOf(false)}
+    var manage by remember(state.panelEpoch){mutableStateOf(false)}
     if(state.searching){
         Glass(Modifier.width(264.dp)){
             Row(Modifier.fillMaxWidth().height(32.dp),verticalAlignment=Alignment.CenterVertically){
@@ -269,20 +301,33 @@ internal fun CityPanel(state:ClockState,context:Context){
 }
 
 @Composable
-private fun ToolbarIcon(label:String,plus:Boolean,onClick:()->Unit){
-    GlassAction(onClick,Modifier.size(48.dp).semantics{contentDescription=label}){
-        Canvas(Modifier.size(20.dp)){
-            val c=Color.White
-            if(plus){
-                drawLine(c,Offset(size.width*.5f,size.height*.15f),Offset(size.width*.5f,size.height*.85f),2.dp.toPx())
-                drawLine(c,Offset(size.width*.15f,size.height*.5f),Offset(size.width*.85f,size.height*.5f),2.dp.toPx())
-            }else for(i in 0..2)drawCircle(c,1.5.dp.toPx(),Offset(size.width*(.2f+.3f*i),size.height*.5f))
+private fun ToolbarIcon(label:String,plus:Boolean,active:Boolean=false,onClick:()->Unit){
+    GlassAction(onClick,Modifier.size(48.dp).semantics{contentDescription=label;selected=active},
+        containerTint=if(active)Color(AppSelectionStyle.COLOR_ARGB).copy(alpha=AppSelectionStyle.CONTAINER_ALPHA) else Color.Transparent){
+        if(plus)androidx.compose.foundation.Image(painterResource(com.wupengfei.worldclock.R.drawable.ic_pico_clock),null,Modifier.size(20.dp))
+        else Canvas(Modifier.size(20.dp)){
+            for(i in 0..2)drawCircle(Color.White,1.5.dp.toPx(),Offset(size.width*(.2f+.3f*i),size.height*.5f))
+        }
+    }
+}
+
+@Composable
+private fun StartupFailurePanel(state:ClockState){
+    val navigator=LocalSpatialNavigator.current
+    val activity=LocalContext.current as? android.app.Activity
+    Glass(Modifier.width(340.dp)){
+        Text("暂时无法加载地球",style=uiText(20,FontWeight.Medium))
+        Text(state.startupFailure,style=uiText(15))
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(10.dp)){
+            GlassAction({state.startupFailure="";state.immersiveRetry++},Modifier.weight(1f).height(44.dp)){Text("重试",style=uiText(16))}
+            GlassAction({WorldClockSession.closeSoftware(navigator,activity)},Modifier.weight(1f).height(44.dp)){Text("关闭",style=uiText(16))}
         }
     }
 }
 
 @Composable
 internal fun TimePanel(state:ClockState){
+    if(state.startupFailure.isNotBlank()){StartupFailurePanel(state);return}
     val context=LocalContext.current
     val density=LocalDensity.current
     val platform=LocalViewConfiguration.current
@@ -295,25 +340,30 @@ internal fun TimePanel(state:ClockState){
     DisposableEffect(Unit){onDispose{state.onTimeScrub?.invoke(false);state.uiManipulating=false}}
     val captionHoverGroup=remember{SpatialHoverEffectGroup.obtain()}
     CompositionLocalProvider(LocalViewConfiguration provides pickup){
-        Column(Modifier.width(720.dp).height(222.dp),horizontalAlignment=Alignment.CenterHorizontally){
+        Column(Modifier.width(784.dp).height(222.dp),horizontalAlignment=Alignment.CenterHorizontally){
             // Fixed slot above the ruler: entering preview never moves the controls.
-            Box(Modifier.width(528.dp).offset(x=(-32).dp).height(32.dp),contentAlignment=Alignment.Center){
-                if(state.mode==EarthMode.TEMPERATURE){
+            Box(Modifier.width(528.dp).height(32.dp),contentAlignment=Alignment.Center){
+                if(state.mode==EarthMode.EARTHQUAKE)QuakeCaption(state)
+                else if(state.mode==EarthMode.TEMPERATURE){
                     if(state.temperature.manifest==null)Text("气温数据不可用",style=uiText(12))
-                    else if(!state.temperature.autoNow)GlassAction({state.touchUi();state.temperature.now(state.now)},Modifier.height(28.dp)){Text("现在",style=uiText(13))}
+                    else if(!state.temperature.autoNow)GlassAction({state.useFeature();state.temperature.now(state.now)},Modifier.height(28.dp)){Text("现在",style=uiText(13))}
                 } else if(state.preview)GlassAction({state.live()},Modifier.height(28.dp)){Text("回到现在",style=uiText(13))}
                 else if(state.clockNotice.isNotBlank())Text(state.clockNotice,style=uiText(12))
             }
-            TemperatureLegend(Modifier.width(528.dp).offset(x=(-32).dp)
+            TemperatureLegend(Modifier.width(528.dp)
                 .graphicsLayer{alpha=state.temperature.reveal})
             Spacer(Modifier.height(12.dp))
             Row(Modifier.fillMaxWidth().height(64.dp),verticalAlignment=Alignment.CenterVertically,
                 horizontalArrangement=Arrangement.spacedBy(16.dp)){
-                ToolbarIcon("城市菜单",true){state.toggleCities()}
+                ToolbarIcon("时钟 · 城市菜单",true,state.mode==EarthMode.WORLD_TIME){
+                    if(state.mode!=EarthMode.WORLD_TIME)state.switchMode(EarthMode.WORLD_TIME)
+                    state.toggleCities()
+                }
+                EarthquakeToggle(state)
                 // One visible ruler, one gesture owner. No transparent Slider or separate input overlay.
                 Box(Modifier.weight(1f).height(48.dp).clip(CircleShape).backgroundMaterial()
                     .background(Color.White.copy(alpha=if(hovered||dragging).12f else 0f))
-                    .hoverable(interaction).spatialHoverEffect(SpatialHoverStyle.Highlight).semantics{contentDescription=if(state.mode==EarthMode.TEMPERATURE)"逐小时气温预报时间轴，左右拖动选择已加载时刻" else "六小时时间滑块，蓝色表示现在，白色表示预览时间，左右拖动选择"}
+                    .hoverable(interaction).spatialHoverEffect(SpatialHoverStyle.Highlight).semantics{contentDescription=if(state.mode==EarthMode.EARTHQUAKE)"地震历史回放时间条，UTC；左右拖动暂停并选择时刻" else if(state.mode==EarthMode.TEMPERATURE)"逐小时气温预报时间轴，左右拖动选择已加载时刻" else "六小时时间滑块，蓝色表示现在，白色表示预览时间，左右拖动选择"}
                     .pointerInput(state.ready,state.mode){
                         if(state.ready)detectDragGestures(context=context,targetedToEntity=null,
                             onDragStart={dragging=true;state.uiManipulating=true;state.beginTimeDrag()},
@@ -323,13 +373,18 @@ internal fun TimePanel(state:ClockState){
                                 state.dragTimeBy(delta.x/density.density*360f/528f)
                             }
                     }){
-                    TimeRulerDrawing(state,dragging)
+                    if(state.earthquakes.reveal<.999f)Box(Modifier.fillMaxSize().alpha(1f-state.earthquakes.reveal)){TimeRulerDrawing(state,dragging)}
+                    if(state.earthquakes.reveal>.001f)Box(Modifier.fillMaxSize().alpha(state.earthquakes.reveal)){
+                        // The Dock already owns the native glass surface. A second
+                        // native material here can occlude the inset play control.
+                        CompositionLocalProvider(LocalInsideGlass provides true){QuakeTimeline(state)}
+                    }
                 }
                 TemperatureToggle(state)
                 ToolbarIcon("时间选项",false){state.toggleTimeTools()}
             }
             Spacer(Modifier.height(16.dp))
-            Box(Modifier.width(656.dp).offset(x=(-32).dp).height(42.dp)){
+            Box(Modifier.width(656.dp).height(42.dp)){
             // System-like caption proportions; no WindowContainer is inserted into this Mixed Stage.
             val handleInteraction=remember{MutableInteractionSource()}
             val handleHover by handleInteraction.collectIsHoveredAsState()
@@ -426,7 +481,7 @@ private fun TimeRulerDrawing(state:ClockState,dragging:Boolean){
         if(dragging&&abs(thumbX-nowX)>9.dp.toPx())drawRoundRect(Color.White,
             topLeft=Offset(thumbX-2.5.dp.toPx(),10.dp.toPx()),size=androidx.compose.ui.geometry.Size(5.dp.toPx(),28.dp.toPx()),
             cornerRadius=androidx.compose.ui.geometry.CornerRadius(2.5.dp.toPx()))
-        if(nowX in 0f..size.width)drawRoundRect(Color(0xFF5B9DFF),
+        if(nowX in 0f..size.width)drawRoundRect(Color(AppSelectionStyle.COLOR_ARGB),
             topLeft=Offset(nowX-6.dp.toPx(),6.dp.toPx()),size=androidx.compose.ui.geometry.Size(12.dp.toPx(),36.dp.toPx()),
             cornerRadius=androidx.compose.ui.geometry.CornerRadius(6.dp.toPx()))
     }
@@ -505,6 +560,15 @@ private fun DateWheel(label:String,value:Int,range:IntRange,state:ClockState,onV
 @Composable
 internal fun TimeOptionsPanel(state:ClockState){
     val navigator=LocalSpatialNavigator.current
+    if(state.mode==EarthMode.EARTHQUAKE){
+        Glass(Modifier.width(300.dp)){
+            CoordinateToggle(state)
+            GlassAction({WorldClockSession.collapse(navigator)},Modifier.fillMaxWidth().height(40.dp),state.ready&&!WorldClockSession.busy){Text("收起到桌面",style=uiText(15))}
+            GlassAction({state.switchMode(EarthMode.WORLD_TIME)},Modifier.fillMaxWidth().height(40.dp)){Text("返回世界时间",style=uiText(15))}
+            GlassAction({state.touchUi();state.timeToolsOpen=false},Modifier.fillMaxWidth().height(36.dp)){Text("收起菜单",style=uiText(14))}
+        }
+        return
+    }
     if(state.mode==EarthMode.TEMPERATURE){TemperatureOptions(state);return}
     var chosen by remember(state.timeToolsOpen){mutableStateOf(state.instant.atZone(ZoneId.systemDefault()).toLocalDate())}
     DisposableEffect(Unit){onDispose{state.uiManipulating=false}}

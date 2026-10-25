@@ -1,0 +1,692 @@
+#usda 1.0
+(defaultPrim = "QuakeAsset"
+ metersPerUnit = 1
+ upAxis = "Y")
+def Xform "QuakeAsset" {
+    def Mesh "Template" {
+        point3f[] points = [(-1,-1,0),(1,-1,0),(0,1,0)]
+        int[] faceVertexCounts = [3]
+        int[] faceVertexIndices = [0,1,2]
+        normal3f[] normals = [(0,0,1),(0,0,1),(0,0,1)] (interpolation = "vertex")
+        texCoord2f[] primvars:st = [(-1,-1),(1,-1),(0,1)] (interpolation = "vertex")
+        texCoord2f[] primvars:st1 = [(0,1),(0,1),(0,1)] (interpolation = "vertex")
+        color3f[] primvars:displayColor = [(0,0,0),(0,0,0),(0,0,0)] (interpolation = "vertex")
+        float[] primvars:displayOpacity = [1,1,1] (interpolation = "vertex")
+        uniform token subdivisionScheme = "none"
+        rel material:binding = </QuakeAsset/QuakeMaterial>
+    }
+    def Material "QuakeMaterial" (customData = {
+        bool applyToneMapping = 0
+        string blendingMode = "TRANSPARENT"
+        string cullingMode = "BACK"
+        bool depthTest = 1
+        bool depthWrite = 0
+        string materialType = "SHADER_GRAPH"
+        string shaderGraphGuid = "fd128f24-8040-4b13-938a-202610250078"
+    }) {
+        token outputs:mtlx:surface.connect = </QuakeAsset/QuakeMaterial/Surface.outputs:out>
+        def Shader "UV" {
+            uniform token info:id = "ND_texcoord_vector2"
+            int inputs:index = 0
+            float2 outputs:out
+        }
+        def Shader "Meta" {
+            uniform token info:id = "ND_texcoord_vector2"
+            int inputs:index = 1
+            float2 outputs:out
+        }
+        def Shader "Vertex" {
+            uniform token info:id = "ND_geomcolor_color4"
+            int inputs:index = 0
+            color4 outputs:out
+        }
+        def Shader "Wave" {
+            uniform token info:id = "ND_extract_color4"
+            color4 inputs:in.connect = </QuakeAsset/QuakeMaterial/Vertex.outputs:out>
+            int inputs:index = 0
+            float outputs:out
+        }
+        def Shader "Slot" {
+            uniform token info:id = "ND_extract_color4"
+            color4 inputs:in.connect = </QuakeAsset/QuakeMaterial/Vertex.outputs:out>
+            int inputs:index = 1
+            float outputs:out
+        }
+        def Shader "Seed" {
+            uniform token info:id = "ND_extract_color4"
+            color4 inputs:in.connect = </QuakeAsset/QuakeMaterial/Vertex.outputs:out>
+            int inputs:index = 2
+            float outputs:out
+        }
+        def Shader "Magnitude" {
+            uniform token info:id = "ND_extract_color4"
+            color4 inputs:in.connect = </QuakeAsset/QuakeMaterial/Vertex.outputs:out>
+            int inputs:index = 3
+            float outputs:out
+        }
+        def Shader "Birth" {
+            uniform token info:id = "ND_extract_vector2"
+            float2 inputs:in.connect = </QuakeAsset/QuakeMaterial/Meta.outputs:out>
+            int inputs:index = 0
+            float outputs:out
+        }
+        def Shader "Event" {
+            uniform token info:id = "ND_extract_vector2"
+            float2 inputs:in.connect = </QuakeAsset/QuakeMaterial/Meta.outputs:out>
+            int inputs:index = 1
+            float outputs:out
+        }
+        def Shader "Radius" {
+            uniform token info:id = "ND_magnitude_vector2"
+            float2 inputs:in.connect = </QuakeAsset/QuakeMaterial/UV.outputs:out>
+            float outputs:out
+        }
+        def Shader "Animation" {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1 = 0
+            float inputs:in2 = 0
+            float outputs:out
+        }
+        def Shader "SelectionDelta" {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Event.outputs:out>
+            float inputs:in2 = -1
+            float outputs:out
+        }
+        def Shader "SelectionAbs" {
+            uniform token info:id = "ND_absval_float"
+            float inputs:in.connect = </QuakeAsset/QuakeMaterial/SelectionDelta.outputs:out>
+            float outputs:out
+        }
+        def Shader "SelectionWeight" {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1 = 1
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/SelectionAbs.outputs:out>
+            float outputs:out
+        }
+        def Shader "Selected" {
+            uniform token info:id = "ND_clamp_float"
+            float inputs:in.connect = </QuakeAsset/QuakeMaterial/SelectionWeight.outputs:out>
+            float inputs:low = 0
+            float inputs:high = 1
+            float outputs:out
+        }
+        def Shader "Age" {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Animation.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Birth.outputs:out>
+            float outputs:out
+        }
+        def Shader "Arrival" {
+            uniform token info:id = "ND_smoothstep_float"
+            float inputs:in.connect = </QuakeAsset/QuakeMaterial/Age.outputs:out>
+            float inputs:low = 0
+            float inputs:high = 0.18
+            float outputs:out
+        }
+        def Shader "DotEdge" {
+            uniform token info:id = "ND_smoothstep_float"
+            float inputs:in.connect = </QuakeAsset/QuakeMaterial/Radius.outputs:out>
+            float inputs:low = 0.59
+            float inputs:high = 0.72
+            float outputs:out
+        }
+        def Shader "Dot" {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1 = 1
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/DotEdge.outputs:out>
+            float outputs:out
+        }
+        def Shader "DotVisible" {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Dot.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Arrival.outputs:out>
+            float outputs:out
+        }
+        def Shader "Cycles" {
+            uniform token info:id = "ND_divide_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Animation.outputs:out>
+            float inputs:in2 = 2.4
+            float outputs:out
+        }
+        def Shader "SeedTime" {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Cycles.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Seed.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring0Offset" {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/SeedTime.outputs:out>
+            float inputs:in2 = 1.0
+            float outputs:out
+        }
+        def Shader "Ring0Phase" {
+            uniform token info:id = "ND_modulo_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Ring0Offset.outputs:out>
+            float inputs:in2 = 1
+            float outputs:out
+        }
+        def Shader "Ring0Range" {
+            uniform token info:id = "ND_mix_float"
+            float inputs:bg = 0.49230769230769234
+            float inputs:fg = 0.8769230769230769
+            float inputs:mix.connect = </QuakeAsset/QuakeMaterial/Selected.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring0Travel" {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Ring0Phase.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Ring0Range.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring0Radius" {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Ring0Travel.outputs:out>
+            float inputs:in2 = 0.04615384615384615
+            float outputs:out
+        }
+        def Shader "Ring0Delta" {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Radius.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Ring0Radius.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring0Distance" {
+            uniform token info:id = "ND_absval_float"
+            float inputs:in.connect = </QuakeAsset/QuakeMaterial/Ring0Delta.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring0Edge" {
+            uniform token info:id = "ND_smoothstep_float"
+            float inputs:in.connect = </QuakeAsset/QuakeMaterial/Ring0Distance.outputs:out>
+            float inputs:low = 0.008
+            float inputs:high = 0.023
+            float outputs:out
+        }
+        def Shader "Ring0Line" {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1 = 1
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Ring0Edge.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring0Rise" {
+            uniform token info:id = "ND_smoothstep_float"
+            float inputs:in.connect = </QuakeAsset/QuakeMaterial/Ring0Phase.outputs:out>
+            float inputs:low = 0
+            float inputs:high = 0.12
+            float outputs:out
+        }
+        def Shader "Ring0Fall" {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1 = 1
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Ring0Phase.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring0Fall2" {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Ring0Fall.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Ring0Fall.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring0Envelope" {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Ring0Rise.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Ring0Fall2.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring0Alpha" {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Ring0Line.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Ring0Envelope.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring1Offset" {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/SeedTime.outputs:out>
+            float inputs:in2 = 0.6666666666666667
+            float outputs:out
+        }
+        def Shader "Ring1Phase" {
+            uniform token info:id = "ND_modulo_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Ring1Offset.outputs:out>
+            float inputs:in2 = 1
+            float outputs:out
+        }
+        def Shader "Ring1Range" {
+            uniform token info:id = "ND_mix_float"
+            float inputs:bg = 0.49230769230769234
+            float inputs:fg = 0.8769230769230769
+            float inputs:mix.connect = </QuakeAsset/QuakeMaterial/Selected.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring1Travel" {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Ring1Phase.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Ring1Range.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring1Radius" {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Ring1Travel.outputs:out>
+            float inputs:in2 = 0.04615384615384615
+            float outputs:out
+        }
+        def Shader "Ring1Delta" {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Radius.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Ring1Radius.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring1Distance" {
+            uniform token info:id = "ND_absval_float"
+            float inputs:in.connect = </QuakeAsset/QuakeMaterial/Ring1Delta.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring1Edge" {
+            uniform token info:id = "ND_smoothstep_float"
+            float inputs:in.connect = </QuakeAsset/QuakeMaterial/Ring1Distance.outputs:out>
+            float inputs:low = 0.008
+            float inputs:high = 0.023
+            float outputs:out
+        }
+        def Shader "Ring1Line" {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1 = 1
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Ring1Edge.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring1Rise" {
+            uniform token info:id = "ND_smoothstep_float"
+            float inputs:in.connect = </QuakeAsset/QuakeMaterial/Ring1Phase.outputs:out>
+            float inputs:low = 0
+            float inputs:high = 0.12
+            float outputs:out
+        }
+        def Shader "Ring1Fall" {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1 = 1
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Ring1Phase.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring1Fall2" {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Ring1Fall.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Ring1Fall.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring1Envelope" {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Ring1Rise.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Ring1Fall2.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring1Alpha" {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Ring1Line.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Ring1Envelope.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring1Sum" {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Ring0Alpha.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Ring1Alpha.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring2Offset" {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/SeedTime.outputs:out>
+            float inputs:in2 = 0.33333333333333337
+            float outputs:out
+        }
+        def Shader "Ring2Phase" {
+            uniform token info:id = "ND_modulo_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Ring2Offset.outputs:out>
+            float inputs:in2 = 1
+            float outputs:out
+        }
+        def Shader "Ring2Range" {
+            uniform token info:id = "ND_mix_float"
+            float inputs:bg = 0.49230769230769234
+            float inputs:fg = 0.8769230769230769
+            float inputs:mix.connect = </QuakeAsset/QuakeMaterial/Selected.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring2Travel" {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Ring2Phase.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Ring2Range.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring2Radius" {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Ring2Travel.outputs:out>
+            float inputs:in2 = 0.04615384615384615
+            float outputs:out
+        }
+        def Shader "Ring2Delta" {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Radius.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Ring2Radius.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring2Distance" {
+            uniform token info:id = "ND_absval_float"
+            float inputs:in.connect = </QuakeAsset/QuakeMaterial/Ring2Delta.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring2Edge" {
+            uniform token info:id = "ND_smoothstep_float"
+            float inputs:in.connect = </QuakeAsset/QuakeMaterial/Ring2Distance.outputs:out>
+            float inputs:low = 0.008
+            float inputs:high = 0.023
+            float outputs:out
+        }
+        def Shader "Ring2Line" {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1 = 1
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Ring2Edge.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring2Rise" {
+            uniform token info:id = "ND_smoothstep_float"
+            float inputs:in.connect = </QuakeAsset/QuakeMaterial/Ring2Phase.outputs:out>
+            float inputs:low = 0
+            float inputs:high = 0.12
+            float outputs:out
+        }
+        def Shader "Ring2Fall" {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1 = 1
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Ring2Phase.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring2Fall2" {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Ring2Fall.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Ring2Fall.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring2Envelope" {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Ring2Rise.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Ring2Fall2.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring2Alpha" {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Ring2Line.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Ring2Envelope.outputs:out>
+            float outputs:out
+        }
+        def Shader "Ring2Sum" {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Ring1Sum.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Ring2Alpha.outputs:out>
+            float outputs:out
+        }
+        def Shader "WaveStrength" {
+            uniform token info:id = "ND_mix_float"
+            float inputs:bg = 0.22
+            float inputs:fg = 0.72
+            float inputs:mix.connect = </QuakeAsset/QuakeMaterial/Selected.outputs:out>
+            float outputs:out
+        }
+        def Shader "WaveAlpha" {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Ring2Sum.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/WaveStrength.outputs:out>
+            float outputs:out
+        }
+        def Shader "Gain0Delta" {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Slot.outputs:out>
+            float inputs:in2 = 0.0
+            float outputs:out
+        }
+        def Shader "Gain0Abs" {
+            uniform token info:id = "ND_absval_float"
+            float inputs:in.connect = </QuakeAsset/QuakeMaterial/Gain0Delta.outputs:out>
+            float outputs:out
+        }
+        def Shader "Gain0Match" {
+            uniform token info:id = "ND_ifgreatereq_float"
+            float inputs:value1 = 0.08
+            float inputs:value2.connect = </QuakeAsset/QuakeMaterial/Gain0Abs.outputs:out>
+            float inputs:in1 = 1
+            float inputs:in2 = 0
+            float outputs:out
+        }
+        def Shader "Gain0" {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Gain0Match.outputs:out>
+            float inputs:in2 = 0
+            float outputs:out
+        }
+        def Shader "Gain1Delta" {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Slot.outputs:out>
+            float inputs:in2 = 0.2
+            float outputs:out
+        }
+        def Shader "Gain1Abs" {
+            uniform token info:id = "ND_absval_float"
+            float inputs:in.connect = </QuakeAsset/QuakeMaterial/Gain1Delta.outputs:out>
+            float outputs:out
+        }
+        def Shader "Gain1Match" {
+            uniform token info:id = "ND_ifgreatereq_float"
+            float inputs:value1 = 0.08
+            float inputs:value2.connect = </QuakeAsset/QuakeMaterial/Gain1Abs.outputs:out>
+            float inputs:in1 = 1
+            float inputs:in2 = 0
+            float outputs:out
+        }
+        def Shader "Gain1" {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Gain1Match.outputs:out>
+            float inputs:in2 = 0
+            float outputs:out
+        }
+        def Shader "Gain2Delta" {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Slot.outputs:out>
+            float inputs:in2 = 0.4
+            float outputs:out
+        }
+        def Shader "Gain2Abs" {
+            uniform token info:id = "ND_absval_float"
+            float inputs:in.connect = </QuakeAsset/QuakeMaterial/Gain2Delta.outputs:out>
+            float outputs:out
+        }
+        def Shader "Gain2Match" {
+            uniform token info:id = "ND_ifgreatereq_float"
+            float inputs:value1 = 0.08
+            float inputs:value2.connect = </QuakeAsset/QuakeMaterial/Gain2Abs.outputs:out>
+            float inputs:in1 = 1
+            float inputs:in2 = 0
+            float outputs:out
+        }
+        def Shader "Gain2" {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Gain2Match.outputs:out>
+            float inputs:in2 = 0
+            float outputs:out
+        }
+        def Shader "Gain3Delta" {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Slot.outputs:out>
+            float inputs:in2 = 0.6
+            float outputs:out
+        }
+        def Shader "Gain3Abs" {
+            uniform token info:id = "ND_absval_float"
+            float inputs:in.connect = </QuakeAsset/QuakeMaterial/Gain3Delta.outputs:out>
+            float outputs:out
+        }
+        def Shader "Gain3Match" {
+            uniform token info:id = "ND_ifgreatereq_float"
+            float inputs:value1 = 0.08
+            float inputs:value2.connect = </QuakeAsset/QuakeMaterial/Gain3Abs.outputs:out>
+            float inputs:in1 = 1
+            float inputs:in2 = 0
+            float outputs:out
+        }
+        def Shader "Gain3" {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Gain3Match.outputs:out>
+            float inputs:in2 = 0
+            float outputs:out
+        }
+        def Shader "Gain4Delta" {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Slot.outputs:out>
+            float inputs:in2 = 0.8
+            float outputs:out
+        }
+        def Shader "Gain4Abs" {
+            uniform token info:id = "ND_absval_float"
+            float inputs:in.connect = </QuakeAsset/QuakeMaterial/Gain4Delta.outputs:out>
+            float outputs:out
+        }
+        def Shader "Gain4Match" {
+            uniform token info:id = "ND_ifgreatereq_float"
+            float inputs:value1 = 0.08
+            float inputs:value2.connect = </QuakeAsset/QuakeMaterial/Gain4Abs.outputs:out>
+            float inputs:in1 = 1
+            float inputs:in2 = 0
+            float outputs:out
+        }
+        def Shader "Gain4" {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Gain4Match.outputs:out>
+            float inputs:in2 = 0
+            float outputs:out
+        }
+        def Shader "Gain5Delta" {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Slot.outputs:out>
+            float inputs:in2 = 1.0
+            float outputs:out
+        }
+        def Shader "Gain5Abs" {
+            uniform token info:id = "ND_absval_float"
+            float inputs:in.connect = </QuakeAsset/QuakeMaterial/Gain5Delta.outputs:out>
+            float outputs:out
+        }
+        def Shader "Gain5Match" {
+            uniform token info:id = "ND_ifgreatereq_float"
+            float inputs:value1 = 0.08
+            float inputs:value2.connect = </QuakeAsset/QuakeMaterial/Gain5Abs.outputs:out>
+            float inputs:in1 = 1
+            float inputs:in2 = 0
+            float outputs:out
+        }
+        def Shader "Gain5" {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Gain5Match.outputs:out>
+            float inputs:in2 = 0
+            float outputs:out
+        }
+        def Shader "GainSum1" {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/Gain0.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Gain1.outputs:out>
+            float outputs:out
+        }
+        def Shader "GainSum2" {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/GainSum1.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Gain2.outputs:out>
+            float outputs:out
+        }
+        def Shader "GainSum3" {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/GainSum2.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Gain3.outputs:out>
+            float outputs:out
+        }
+        def Shader "GainSum4" {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/GainSum3.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Gain4.outputs:out>
+            float outputs:out
+        }
+        def Shader "Gain" {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/GainSum4.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Gain5.outputs:out>
+            float outputs:out
+        }
+        def Shader "WavesVisible" {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/WaveAlpha.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Gain.outputs:out>
+            float outputs:out
+        }
+        def Shader "Opacity" {
+            uniform token info:id = "ND_mix_float"
+            float inputs:bg.connect = </QuakeAsset/QuakeMaterial/DotVisible.outputs:out>
+            float inputs:fg.connect = </QuakeAsset/QuakeMaterial/WavesVisible.outputs:out>
+            float inputs:mix.connect = </QuakeAsset/QuakeMaterial/Wave.outputs:out>
+            float outputs:out
+        }
+        def Shader "YellowBand" {
+            uniform token info:id = "ND_ifgreatereq_float"
+            float inputs:value1.connect = </QuakeAsset/QuakeMaterial/Magnitude.outputs:out>
+            float inputs:value2 = 0.25
+            float inputs:in1 = 1
+            float inputs:in2 = 0
+            float outputs:out
+        }
+        def Shader "RedBand" {
+            uniform token info:id = "ND_ifgreatereq_float"
+            float inputs:value1.connect = </QuakeAsset/QuakeMaterial/Magnitude.outputs:out>
+            float inputs:value2 = 0.75
+            float inputs:in1 = 1
+            float inputs:in2 = 0
+            float outputs:out
+        }
+        def Shader "PointOnly" {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1 = 1
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/Wave.outputs:out>
+            float outputs:out
+        }
+        def Shader "YellowPoint" {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </QuakeAsset/QuakeMaterial/YellowBand.outputs:out>
+            float inputs:in2.connect = </QuakeAsset/QuakeMaterial/PointOnly.outputs:out>
+            float outputs:out
+        }
+        def Shader "PointColor" {
+            uniform token info:id = "ND_mix_color3"
+            color3f inputs:bg = (1,1,1)
+            color3f inputs:fg = (1,.6653873,.0781874)
+            float inputs:mix.connect = </QuakeAsset/QuakeMaterial/YellowPoint.outputs:out>
+            color3f outputs:out
+        }
+        def Shader "MagnitudeColor" {
+            uniform token info:id = "ND_mix_color3"
+            color3f inputs:bg.connect = </QuakeAsset/QuakeMaterial/PointColor.outputs:out>
+            color3f inputs:fg = (1,.0822827,.0595112)
+            float inputs:mix.connect = </QuakeAsset/QuakeMaterial/RedBand.outputs:out>
+            color3f outputs:out
+        }
+        def Shader "Color" {
+            uniform token info:id = "ND_mix_color3"
+            color3f inputs:bg.connect = </QuakeAsset/QuakeMaterial/MagnitudeColor.outputs:out>
+            color3f inputs:fg = (0.174647404,0.104616484,1.000000000)
+            float inputs:mix.connect = </QuakeAsset/QuakeMaterial/Selected.outputs:out>
+            color3f outputs:out
+        }
+        def Shader "Surface" {
+            uniform token info:id = "ND__unlit_surfaceshader"
+            color3f inputs:color.connect = </QuakeAsset/QuakeMaterial/Color.outputs:out>
+            float inputs:opacity.connect = </QuakeAsset/QuakeMaterial/Opacity.outputs:out>
+            bool inputs:applyPostProcessToneMap = 0
+            bool inputs:hasPremultipliedAlpha = 0
+            token outputs:out
+        }
+    }
+}

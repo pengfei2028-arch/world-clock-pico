@@ -64,7 +64,7 @@ internal object WorldClockSession {
         busy = true; error = ""; loadFailure=null; desktopRequested = true
         scope.launch {
             try {
-                clock.timeToolsOpen = false; clock.citiesOpen = false
+                clock.dismissPanels()
                 if(desktopMounted)navigator.restoreWindowContainer(DESKTOP, DESKTOP_TAG)
                 else navigator.openWindowContainer(DESKTOP, DESKTOP_TAG)
                 awaitState("desktop container mounted") { desktopMounted }

@@ -27,11 +27,13 @@ import com.pico.spatial.tracking.hmd.HMDTrackingProvider
 
 private class EarthResources {
     var closed = false; private set
+    var startupEye=Vector3(0f,1.5f,0f)
     var bundle: AssetBundle? = null
     var effectsBundle: AssetBundle? = null
     var cloudsBundle: AssetBundle? = null
     var temperatureRenderer: TemperatureRenderer? by mutableStateOf(null)
     var coordinateRenderer:CoordinateRenderer?=null
+    var earthquakeRenderer:EarthquakeRenderer?=null
     var coordinateHit:((Vector3)->GeoCoordinate?)?=null
     var interactionReady = false
     var handToStage: ((Vector3) -> Vector3)? = null
@@ -70,6 +72,7 @@ private class EarthResources {
         frameSubscription = null
         handToStage = null; headInStage = null; viewRotationInStage = null
         temperatureRenderer?.close();temperatureRenderer=null
+        earthquakeRenderer?.close();earthquakeRenderer=null
         coordinateHit=null;coordinateRenderer?.close();coordinateRenderer=null
         entities.forEach { it.destroy() }
         entities.clear()
@@ -100,6 +103,10 @@ private const val EARTH_CENTER_DROP_M = 4.1956f
 // Official SDK 6.1.9. This is a look-development Stage, not a device benchmark.
 @Composable
 fun HomeStage() {
+    key(WorldClockSession.clock.immersiveRetry){ImmersiveHomeStage()}
+}
+@Composable
+private fun ImmersiveHomeStage() {
     val resources = remember { EarthResources() }
     val motion = WorldClockSession.motion
     val entrance = WorldClockSession.entrance
@@ -107,9 +114,30 @@ fun HomeStage() {
     val clock = WorldClockSession.clock
     DisposableEffect(clock){
         WorldClockSession.immersiveResources=true
-        clock.ready=false
+        clock.ready=false;clock.startupFailure="";WorldClockSession.loadFailure=null
         if(com.wupengfei.worldclock.BuildConfig.DEBUG)TemperatureTestAccess.state=clock
         onDispose{if(TemperatureTestAccess.state===clock){TemperatureTestAccess.state=null;TemperatureTestAccess.renderer=null}}
+    }
+    val quakeRepository=remember { EarthquakeRepository(context) }
+    LaunchedEffect(clock.mode,clock.earthquakes.period,clock.earthquakes.refreshRequest){
+        val q=clock.earthquakes
+        if(clock.mode==EarthMode.EARTHQUAKE){
+            val period=q.period
+            if(q.catalog==null)try{quakeRepository.cached(period)?.let{q.accept(it);q.status="缓存目录 · 正在检查更新"}}catch(e:CancellationException){throw e}catch(_:Exception){}
+            try{
+                while(isActive){
+                    q.loading=true
+                    try{
+                        val catalog=quakeRepository.refresh(period);ensureActive();q.status="目录已更新";q.accept(catalog)
+                        Log.i("WorldClockQuakes","USGS period=${period.days} generated=${catalog.generatedAt} fetched=${catalog.fetchedAt} count=${catalog.events.size} partial=${catalog.partial}")
+                    }catch(e:CancellationException){throw e}catch(e:Exception){
+                        q.status=if(q.catalog!=null)"更新失败 · 使用已缓存周期" else "无法连接数据源 · 请重试"
+                        Log.w("WorldClockQuakes","USGS refresh failed; keeping cache",e)
+                    }finally{q.loading=false}
+                    delay(60_000)
+                }
+            }finally{q.loading=false;q.pause()}
+        }
     }
     val temperatureRepository=remember { TemperatureRepository(context) }
     LaunchedEffect(Unit) {
@@ -185,6 +213,14 @@ fun HomeStage() {
         onDispose { clock.onTimeScrub=null;clock.toolbarHandPoint=null;clock.toolbarHandGain=null; hmd.stop(); resources.close(); clock.ready=false; WorldClockSession.immersiveResources=false }
     }
 
+    // SDK 6.1.9 caches attachment IDs, so allocation is monotonic within this
+    // SpatialView. Never remove/re-add cached destroyed entities.
+    var quakePanelAllocated by remember { mutableStateOf(false) }
+    LaunchedEffect(clock.ready,clock.mode){
+        if(clock.ready&&clock.mode==EarthMode.EARTHQUAKE){
+            quakePanelAllocated=true
+        }
+    }
     SpatialView(
         modifier = Modifier.pointerInput(context) {
             val input = GlobePointerInput(motion)
@@ -203,7 +239,7 @@ fun HomeStage() {
                         if (previousOwner == null && pointer.isDownEvent()) {
                             clock.manualInteraction()
                             resources.viewRotationInStage?.invoke()?.let { input.setViewOrientation(it) }
-                            if(clock.coordinates.enabled&&!clock.uiManipulating){
+                            if((clock.coordinates.enabled||clock.mode==EarthMode.EARTHQUAKE)&&!clock.uiManipulating){
                                 val hit=pointer.position3D
                                 coordinateTap.begin(pointer.pointerId.value,resources.coordinateHit?.invoke(Vector3(hit.x,hit.y,hit.z)),now)
                             }else coordinateTap.cancel()
@@ -222,8 +258,10 @@ fun HomeStage() {
                         coordinateTap.observe(input.moving,input.rejectedSamples>0)
                         if(previousOwner==pointer.pointerId.value&&!pointer.pressed){
                             val selected=coordinateTap.end(pointer.pointerId.value,now)
-                            if(clock.coordinates.enabled&&!clock.uiManipulating&&selected!=null){
-                                clock.coordinates.select(selected);motion.readCoordinates(now)
+                            if((clock.coordinates.enabled||clock.mode==EarthMode.EARTHQUAKE)&&!clock.uiManipulating&&selected!=null){
+                                if(clock.mode==EarthMode.EARTHQUAKE)resources.earthquakeRenderer?.selectAt(selected)
+                                else clock.coordinates.select(selected)
+                                motion.readCoordinates(now)
                                 Log.i("WorldClockCoordinates","V65 Full selected lat=${selected.latitude} lon=${selected.longitude}; original mesh UV")
                             }
                         }
@@ -252,6 +290,7 @@ fun HomeStage() {
             AttachmentPanel("cities",alignment=AttachmentPanelComponent.Alignment.BOTTOM_LEFT) { ClockTheme { CityPanel(clock,context) } }
             AttachmentPanel("timeline",alignment=AttachmentPanelComponent.Alignment.TOP_CENTER) { ClockTheme { TimePanel(clock) } }
             AttachmentPanel("time_tools",alignment=AttachmentPanelComponent.Alignment.BOTTOM_RIGHT) { ClockTheme { TimeOptionsPanel(clock) } }
+            if(quakePanelAllocated)AttachmentPanel("quake_panel",alignment=AttachmentPanelComponent.Alignment.BOTTOM_CENTER){ClockTheme{EarthquakePanel(clock)}}
             AttachmentPanel("coordinate_card",alignment=AttachmentPanelComponent.Alignment.CENTER){ClockTheme{
                 CoordinateCard(clock.coordinates.selection,Modifier.alpha(clock.coordinates.panelAlpha))
             }}
@@ -291,6 +330,7 @@ fun HomeStage() {
                 val eye = if (trackedEye.y.isFinite() && trackedEye.y in 0.3f..2.6f) {
                     trackedEye
                 } else Vector3(0f, 1.5f, 0f)
+                resources.startupEye=eye
                 clock.toolbarHandGain={x,y,z->
                     val hand=content.convertPosition(Vector3(x,y,z),ViewCoordinateSpace.Global,stageOrigin)
                     val head=resources.headInStage?.invoke()?:eye
@@ -351,6 +391,34 @@ fun HomeStage() {
                     colorSpace = TextureColorSpace.RAW
                     textureEncoding = TextureEncoding.LINEAR
                 }
+                // The bundle's SRGB normal/specular samplers are never used after
+                // RAW replacements. Detach and release them BEFORE allocating replacements:
+                // keeping both 8K copies alive can exceed the platform resource budget.
+                val stagingBitmap=android.graphics.Bitmap.createBitmap(1,1,android.graphics.Bitmap.Config.ARGB_8888)
+                stagingBitmap.eraseColor(android.graphics.Color.rgb(128,128,255))
+                val stagingTexture=try{TextureResource.create(stagingBitmap)}finally{stagingBitmap.recycle()}
+                resources.textures.add(stagingTexture)
+                val redundantTextures=linkedSetOf<TextureResource>()
+                val retainedColorTextures=linkedSetOf<TextureResource>()
+                fun detachUnusedDataMaps(e:Entity){
+                    e.components[ModelComponent::class.java]?.materials?.forEach{material->
+                        val m=material as ShaderGraphMaterial
+                        retainedColorTextures.add(m.getParameter("Day_file",TextureResource::class.java))
+                        retainedColorTextures.add(m.getParameter("Night_file",TextureResource::class.java))
+                        for(name in listOf("NormalTex_file","SpecularTex_file")){
+                            redundantTextures.add(m.getParameter(name,TextureResource::class.java))
+                            m.setParameter(name,stagingTexture)
+                        }
+                    }
+                    e.getChildren().forEach{detachUnusedDataMaps(it)}
+                }
+                detachUnusedDataMaps(earth)
+                val released=redundantTextures.filter{it !in retainedColorTextures}
+                released.forEach{if(it.valid)it.close();resources.importedResources.remove(it)}
+                Log.i("WorldClockResources","V74 released unused bundle data maps before RAW load: count="+released.size+" remainingValid="+released.count{it.valid})
+                // Allow native release requests to reach the resource service before the next 8K allocation.
+                delay(80)
+                resources.ensureOpen()
                 val normalData = TextureResource.load("earth_data/normal_8k.jpg",
                     LoadType.FROM_ASSETS, linearDataOptions)
                 resources.textures.add(normalData)
@@ -396,6 +464,8 @@ fun HomeStage() {
                 Log.i("WorldClockEarth", "V42 view-plane manual rotation; gain 336deg/m; drag capped 70deg/s; release dwell 3s then gentle pole return; independent shimmer clock")
                 bindLinearDataMaps(earth)
                 check(correctedMaterials == 1)
+                stagingTexture.close();resources.textures.remove(stagingTexture)
+                Log.i("WorldClockResources","V74 RAW maps ready at original 8192x4096; replaced imports released; startupQuakePanels=0")
                 try { resources.temperatureRenderer=TemperatureRenderer.create(earth,clock.temperature,java.io.File(context.cacheDir,"temperature-display-v56"));if(com.wupengfei.worldclock.BuildConfig.DEBUG)TemperatureTestAccess.renderer=resources.temperatureRenderer } catch(e:Exception){clock.temperature.status="气温材质加载失败";Log.e("WorldClockTemperature","Material load failed",e)}
                 Log.i("WorldClockEarth", "V52 user AI 8192x4096 specular map bound RAW+LINEAR; original normal unchanged; V51 Earth bundle and AI day texture preserved")
                 // Keep the imported axial tilt hierarchy. Only scale and translate its parent.
@@ -450,6 +520,24 @@ fun HomeStage() {
                     // Attach a zero-opacity controller before joining the live scene.
                     // Keep the entity active throughout fades; avoid enable/material races.
                     clouds.components.set(cloudOpacity)
+                    // The imported mask is replaced by the RAW original. Release the unused
+                    // 8K copy before allocating its replacement, as for normal/specular maps.
+                    val cloudStagingBitmap=android.graphics.Bitmap.createBitmap(1,1,android.graphics.Bitmap.Config.ARGB_8888)
+                    val cloudStaging=try{TextureResource.create(cloudStagingBitmap)}finally{cloudStagingBitmap.recycle()}
+                    resources.textures.add(cloudStaging)
+                    val redundantCloudMasks=linkedSetOf<TextureResource>()
+                    fun detachCloudMask(e:Entity){
+                        e.components[ModelComponent::class.java]?.materials?.forEach{base->
+                            val material=base as ShaderGraphMaterial
+                            redundantCloudMasks.add(material.getParameter("CloudMask_file",TextureResource::class.java))
+                            material.setParameter("CloudMask_file",cloudStaging)
+                        }
+                        e.getChildren().forEach{detachCloudMask(it)}
+                    }
+                    detachCloudMask(clouds)
+                    redundantCloudMasks.forEach{if(it.valid)it.close();resources.importedResources.remove(it)}
+                    Log.i("WorldClockResources","V76 released redundant 8K cloud mask: count="+redundantCloudMasks.size+" remainingValid="+redundantCloudMasks.count{it.valid})
+                    delay(80);resources.ensureOpen()
                     val mask=TextureResource.load("cloud_data/clouds_8k.jpg",LoadType.FROM_ASSETS,
                         TextureCreateOption().apply{colorSpace=TextureColorSpace.RAW;textureEncoding=TextureEncoding.LINEAR})
                     resources.textures.add(mask)
@@ -465,6 +553,7 @@ fun HomeStage() {
                         e.getChildren().forEach{bindCloud(it)}
                     }
                     bindCloud(clouds);check(cloudMaterials==1)
+                    if(cloudStaging.valid)cloudStaging.close();resources.textures.remove(cloudStaging)
                     disableEnvironmentFill(clouds)
                     clouds.setName("SourceCloudLayer_V41")
                     check(geographicEntity.addChild(clouds)){"Cannot attach source cloud layer"}
@@ -555,6 +644,14 @@ fun HomeStage() {
                 resources.ownModelResources(sunEffect)
                 val features=ClockScene(content,attachments,clock,geographicEntity,stageOrigin,eye,resources.entities,sunEffect,context.resources.displayMetrics.density,coordinateRenderer)
                 Log.i("WorldClockEarth","V31 procedural Sun loaded: white core, soft halo, subtle horizontal rays; frosted PBR pins")
+                resources.earthquakeRenderer=coordinateRenderer?.let{renderer->
+                    try{EarthquakeRenderer.create(renderer,stageOrigin,content,attachments,clock,context.resources.displayMetrics.density)}
+                    catch(e:CancellationException){throw e}
+                    catch(e:Exception){clock.earthquakes.renderFailure="地震图层加载失败，请重新打开应用";Log.e("WorldClockQuakes","Renderer initialization",e);null}
+                }
+                var lastQuakeFocus=clock.earthquakes.focusRequest
+                var quakeFocusAudit:String?=null
+                var quakeFocusAuditAfter=0.0
                 var lastFocusRequest=clock.focusRequest
                 var lastResumeRequest=clock.resumeRequest
                 var lastUiActivity=0
@@ -584,6 +681,11 @@ fun HomeStage() {
                     resources.temperatureRenderer?.update(clock.mode,event.deltaTime.toDouble())
                     maxGapSeconds = max(maxGapSeconds, now - previousFrame)
                     previousFrame = now
+                    val quake=clock.earthquakes
+                    val quakeActive=clock.mode==EarthMode.EARTHQUAKE
+                    val fadeStep=(event.deltaTime.toDouble()/QuakeStyle.FADE_SECONDS).toFloat()
+                    quake.reveal=if(quakeActive)min(1f,quake.reveal+fadeStep) else max(0f,quake.reveal-fadeStep)
+                    if(quakeActive)quake.advance(event.deltaTime.toDouble())
                     val wasRestoringTilt = motion.restoringTilt
                     val idleDelta = entrance.advance(event.deltaTime.toDouble(),motion.dragging)
                     if (!resources.interactionReady) {
@@ -608,7 +710,7 @@ fun HomeStage() {
                     val displayScale=EARTH_DISPLAY_SCALE*(.25f+.75f*visibility)
                     earthTransform.setScaleVector(Vector3(displayScale,displayScale,displayScale))
                     if(resources.interactionReady && !motion.dragging && !motion.timelineHeld) {
-                        if(clock.focusRequest!=lastFocusRequest) {
+                        if(clock.focusRequest!=lastFocusRequest&&clock.mode!=EarthMode.EARTHQUAKE) {
                             lastFocusRequest=clock.focusRequest
                             clock.selected?.let{city->
                                 val c=earth.convertPositionTo(Vector3(0f,0f,0f),stageOrigin)
@@ -623,12 +725,25 @@ fun HomeStage() {
                     if(clock.uiActivity!=lastUiActivity || clock.uiManipulating){
                         lastUiActivity=clock.uiActivity;motion.noteUiActivity(now)
                     }
+                    if(quakeActive&&quake.focusRequest!=lastQuakeFocus&&!motion.dragging&&!motion.timelineHeld){
+                        lastQuakeFocus=quake.focusRequest
+                        quake.selected?.let{selected->resources.earthquakeRenderer?.let{renderer->
+                            val c=earth.convertPositionTo(Vector3(0f,0f,0f),stageOrigin)
+                            val head=resources.headInStage?.invoke()?:eye
+                            val local=renderer.directionInEarth(selected,earth)
+                            val toward=(CoordinateRenderer.vec(head)-CoordinateRenderer.vec(c)).normalized()
+                            motion.focusLocalPoint(local,toward)
+                            quakeFocusAudit=selected.id;quakeFocusAuditAfter=0.0
+                            Log.i("WorldClockQuakes","V82 focus event=${selected.id} lat=${selected.latitude} lon=${selected.longitude} rootLocal=$local toward=$toward from=${motion.presentation} explicitHierarchy=true")
+                        }}
+                    }
+                    if(quakeActive&&!quake.selectionUsesCityFocus&&(quake.selected!=null||quake.groupIds.isNotEmpty())&&!motion.focusing)motion.readCoordinates(now)
                     val wasFocused=motion.focusLocked
                     // Preview freezes UTC, never the independent presentation orbit.
                     motion.tick(if(resources.interactionReady) event.deltaTime.toDouble() else idleDelta, now)
-                    if(wasFocused&&!motion.focusLocked){clock.selectedId=null;Log.i("WorldClockEarth","V33 city focus released after 5s idle")}
+                    if(wasFocused&&!motion.focusLocked&&clock.mode!=EarthMode.EARTHQUAKE){clock.selectedId=null;Log.i("WorldClockEarth","V33 city focus released after 5s idle")}
                     // Clouds stay fully transparent for the entire VST reveal and globe approach.
-                    val revealClouds=clock.mode==EarthMode.WORLD_TIME && cloudVisibility.canReveal(entrance.finished) && motion.cloudsMayShow(now)
+                    val revealClouds=clock.mode!=EarthMode.TEMPERATURE && cloudVisibility.canReveal(entrance.finished) && motion.cloudsMayShow(now)
                     if(revealClouds!=cloudsVisible){
                         cloudsVisible=revealClouds
                         Log.i("WorldClockClouds","V47 fade "+(if(revealClouds)"in" else "out for interaction")+"; openingElapsed="+entrance.elapsed+"; openingFinished="+entrance.finished+"; held="+motion.dragging+"; focus="+motion.focusLocked)
@@ -672,7 +787,26 @@ fun HomeStage() {
                     val worldTip = stageOrigin.convertPositionTo(light, null)
                     val worldLight = Vector3(worldTip.x-worldOrigin.x, worldTip.y-worldOrigin.y, worldTip.z-worldOrigin.z)
                     earthMaterials.forEach { it.setParameter("SunDot_in2", worldLight) }
-                    coordinateRenderer?.update(event.deltaTime.toDouble(),visibility)
+                    coordinateRenderer?.update(event.deltaTime.toDouble(),visibility*(if(quakeActive).30f else 1f))
+                    resources.earthquakeRenderer?.update(event.deltaTime.toDouble(),center,resources.headInStage?.invoke()?:eye,visibility,resources.interactionReady)
+                    if(quakeFocusAudit!=null){
+                        if(!quakeActive||quake.selectedId!=quakeFocusAudit||motion.dragging)quakeFocusAudit=null
+                        else if(!motion.focusing){
+                            if(quakeFocusAuditAfter==0.0)quakeFocusAuditAfter=now+.2
+                            else if(now>=quakeFocusAuditAfter){
+                                quake.selected?.let{selected->resources.earthquakeRenderer?.let{renderer->
+                                    val head=resources.headInStage?.invoke()?:eye
+                                    val toward=(CoordinateRenderer.vec(head)-CoordinateRenderer.vec(center)).normalized()
+                                    val actual=renderer.direction(selected,center)
+                                    val error=Math.toDegrees(acos(actual.dot(toward).coerceIn(-1.0,1.0)))
+                                    val native=renderer.nativeDirection(selected,center)
+                                    val nativeError=Math.toDegrees(acos(native.dot(toward).coerceIn(-1.0,1.0)))
+                                    Log.i("WorldClockQuakes","V82 focus settled event=${selected.id} hierarchyErrorDegrees=$error nativeErrorDegrees=$nativeError actual=$actual target=$toward")
+                                }}
+                                quakeFocusAudit=null
+                            }
+                        }
+                    }
                     features.update(resources.interactionReady,center,resources.headInStage?.invoke()?:eye,light,earthOpacity.opacity,entrance.pose.veilProgress.toFloat(),veilOpacity.opacity)
                     if (!motion.dragging && wasRestoringTilt && !motion.restoringTilt) {
                         Log.i("WorldClockEarth", "V31 tilt restored; axisErrorDegrees=" + normalAxisErrorDegrees() +
@@ -707,6 +841,17 @@ fun HomeStage() {
                 WorldClockSession.immersiveResources=false
                 Log.e("WorldClockEarth", "Earth load failed", error)
                 WorldClockSession.failedToLoad(error)
+                clock.startupFailure="地球加载失败，请重试。若仍失败，可以关闭后重新打开。"
+                // Reuse the already allocated Dock attachment: even resource failure
+                // leaves a visible retry/close surface instead of an empty VST scene.
+                attachments.entity("timeline")?.let{panel->
+                    val eye=resources.startupEye
+                    panel.components[TransformComponent::class.java]?.apply{
+                        setPosition(Vector3(eye.x,eye.y+.15f,eye.z-2.5f))
+                        setScaleVector(Vector3(3.5f,3.5f,3.5f));setQuaternion(Quat(0f,0f,0f,1f))
+                    }
+                    panel.enabled=true;content.addEntity(panel)
+                }
             }
         }
     )
