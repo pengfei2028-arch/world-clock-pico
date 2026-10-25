@@ -1,0 +1,88 @@
+{
+  "version": "0.91.0",
+  "versionCode": 91,
+  "package": "com.wupengfei.worldclock",
+  "change": "Replace sample launcher icon with user-approved Earth Observer vector brand; localized application labels. No gameplay changes.",
+  "figma": "https://www.figma.com/design/dcAVPtoJZ6gLaHjxSk57wj/Earth-Observer?node-id=62-83",
+  "editable_page": "60:55",
+  "mark_node": "62:55",
+  "lockup_node": "62:63",
+  "pico_spec": "https://developer-cn.picoxr.com/document/spatial-design/app-icon/",
+  "pico_tool": "https://developer-cn.picoxr.com/document/spatial-toolkit/manage-app-icon/",
+  "layers": {
+    "size": [
+      1024,
+      1024
+    ],
+    "count": 2,
+    "color_space": "sRGB",
+    "order_front_to_back": [
+      "icon_3d_layer_1",
+      "icon_3d_layer_0"
+    ],
+    "background": "Opaque white inscribed circle; antialiasing only at silhouette edge",
+    "foreground": "Transparent outside the black planet and upper-left sun"
+  },
+  "sdf": "SpatialPlugin 6.1.1; SdfGenerator.generateRaw(32,0,0,Distance,200)",
+  "typefaces": {
+    "Chinese": "Noto Sans SC Black",
+    "English": "Inter Bold"
+  },
+  "project_geometry": {
+    "master": [
+      512,
+      512
+    ],
+    "planet": [
+      256,
+      280,
+      184
+    ],
+    "sun": [
+      109,
+      112,
+      27
+    ],
+    "daylight_ellipse": {
+      "center": [
+        230,
+        250
+      ],
+      "radii": [
+        168,
+        80
+      ],
+      "rotation_degrees": -45
+    },
+    "icon_mark_scale": 1.6,
+    "icon_mark_position": [
+      102.4,
+      76.8
+    ],
+    "clearspace": "At least one sun diameter in brand placements. This is a project choice, not an official PICO numeric rule."
+  },
+  "apk": "EarthObserver_v91_BrandIcon.apk",
+  "apk_sha256": "f8f13586fc3647c32fd12cf8b3de229d44c8d112cb6648e6be3b3ecb5bb276d3",
+  "apk_bytes": 202370787,
+  "tests": {
+    "count": 222,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "unchanged_assets_in_apk": 74,
+  "verification": "222 tests passed. Build, APK v2 signature, all 74 asset hashes and icon constraints verified. V91 installed successfully on emulator-5554; manual launcher appearance and startup pending user. No headset currently connected.",
+  "rollback": "GitHub v0.90.0 and local worldclock_work/v91/pre-branding",
+  "publication": "V91 local engineering changes; GitHub remains published V90 until separately uploaded.",
+  "files": {
+    "earth-observer-brand-standard.png": "3ae7287662c49cb46e9a2fcd4ca5730607f9f044d29fb20d1528c29efefb28ef",
+    "earth-observer-icon-1024.png": "198eab161dd488b05f6da264f09278b3169fd6c04b129e9fcbe82044cef092fb",
+    "earth-observer-lockup.svg": "c4aedb3cf39d3e46795e0b47288e2c12f62dcee5b8b7e78cf66eb4060b33067b",
+    "earth-observer-mark.svg": "ef919c00db47bd5f292cbc1da62cef8e22b7f8f557b68d3528ea0447518e2c39",
+    "icon_3d_layer_0.png": "1f9c2f0f611bee5d38ce1adfd710e5cb32ab62ab1cbe0aa4693c58d9dc4ea5ce",
+    "icon_3d_layer_1.png": "0d6066ae7b36e0a28abb15d43e57b3f68d825f4ebba0286881390f78a8ae0a35",
+    "icon_3d_sdf_0.png": "78fea848af4a807eb24c97495fa4df0dee466365cb422145ebc87d21b55ee739",
+    "icon_3d_sdf_1.png": "94ee066d63821ce9e418bbce8834af08bc319bebdf607e79972ec01491a78598"
+  },
+  "approval": "REJECTED: user says symbol and wordmark do not match reference. Do not publish V91 brand. Use reference-r2-pending after explicit approval."
+}

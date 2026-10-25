@@ -1,0 +1,31 @@
+{
+  "source": "Figma exported PNG, 512\u00d7512, bilinear alpha 50% crossings",
+  "intended_width": 16,
+  "native_geometry": "400-diameter circle, inside stroke 16. Inner diameter 368.",
+  "measurements": [
+    {
+      "angle": -65,
+      "measured_width_px": 15.95
+    },
+    {
+      "angle": -90,
+      "measured_width_px": 16.0
+    },
+    {
+      "angle": -120,
+      "measured_width_px": 15.94
+    },
+    {
+      "angle": -150,
+      "measured_width_px": 16.02
+    },
+    {
+      "angle": -180,
+      "measured_width_px": 16.0
+    },
+    {
+      "angle": -205,
+      "measured_width_px": 15.75
+    }
+  ]
+}

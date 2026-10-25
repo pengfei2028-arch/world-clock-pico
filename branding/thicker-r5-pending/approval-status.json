@@ -1,0 +1,68 @@
+{
+  "status": "Superseded by R6: user requested further thickening. These R5 exports retain stroke 20; Figma nodes updated in place.",
+  "direction": "R5: increase uniform INSIDE circle stroke 16 to 20 (+25%); retain outer diameter 400, sun, wordmarks and layout.",
+  "figma": "https://www.figma.com/design/dcAVPtoJZ6gLaHjxSk57wj/Earth-Observer?node-id=72-80",
+  "corrected_logo_only": "https://www.figma.com/design/dcAVPtoJZ6gLaHjxSk57wj/Earth-Observer?node-id=72-89",
+  "session": "cecbb19f-cb82-489a-a1b5-2e0d8baaa8d4",
+  "page": "60:55",
+  "board": "72:80",
+  "mark_set": "72:68",
+  "mark_ink": "72:58",
+  "mark_paper": "72:63",
+  "lockup": "72:69",
+  "created": [
+    "79:75",
+    "79:76",
+    "79:77",
+    "79:78"
+  ],
+  "removed": [
+    "76:75",
+    "76:76",
+    "76:78",
+    "76:79"
+  ],
+  "geometry": {
+    "master": [
+      512,
+      512
+    ],
+    "planet_center": [
+      256,
+      280
+    ],
+    "outer_radius": 200,
+    "stroke_inside": 20,
+    "inner_radius": 180,
+    "sun_center": [
+      94,
+      95
+    ],
+    "sun_radius": 29,
+    "terminator": {
+      "chord_offset": 34.23913043478261,
+      "tangent_handle": 107.60869565217392,
+      "A": [
+        356.7446346093995,
+        130.8339227658695
+      ],
+      "B": [
+        106.83392276586949,
+        380.7446346093995
+      ],
+      "C1": [
+        167.06169345627137,
+        469.920006868934
+      ],
+      "C2": [
+        445.920006868934,
+        191.06169345627137
+      ]
+    }
+  },
+  "validation": "Figma comparison screenshot inspected. Native 400-diameter circle with INSIDE stroke 20; exported PNG radial validation passed. See stroke-verification.json.",
+  "supersedes": "R4 construction accepted; thickness revised to R5 at user request.",
+  "application_changed": false,
+  "current_installed_build": "V91 rejected branding; no R5 package built.",
+  "superseded_by": "branding/bolder-r6-pending/approval-status.json"
+}

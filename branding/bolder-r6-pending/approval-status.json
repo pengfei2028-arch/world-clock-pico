@@ -1,0 +1,76 @@
+{
+  "status": "R6 approved and shipped locally as V92; user found rim too thin after simulator preview. Superseded visually by pending R7.",
+  "direction": "Uniform circular INSIDE stroke 20 to 26 (+30%). Outer diameter 400, inner diameter 348. Sun and typography unchanged.",
+  "figma": "https://www.figma.com/design/dcAVPtoJZ6gLaHjxSk57wj/Earth-Observer?node-id=72-80",
+  "corrected_logo_only": "https://www.figma.com/design/dcAVPtoJZ6gLaHjxSk57wj/Earth-Observer?node-id=72-89",
+  "session": "cecbb19f-cb82-489a-a1b5-2e0d8baaa8d4",
+  "page": "60:55",
+  "board": "72:80",
+  "mark_set": "72:68",
+  "mark_ink": "72:58",
+  "mark_paper": "72:63",
+  "lockup": "72:69",
+  "created": [],
+  "removed": [],
+  "geometry": {
+    "master": [
+      512,
+      512
+    ],
+    "planet_center": [
+      256,
+      280
+    ],
+    "outer_radius": 200,
+    "stroke_inside": 26,
+    "inner_radius": 174,
+    "sun_center": [
+      94,
+      95
+    ],
+    "sun_radius": 29,
+    "terminator": {
+      "A": [
+        353.3864801224195,
+        135.80612534034051
+      ],
+      "B": [
+        111.80612534034051,
+        377.3864801224195
+      ],
+      "C1": [
+        170.02630367439565,
+        463.5893399733029
+      ],
+      "C2": [
+        439.5893399733029,
+        194.02630367439565
+      ],
+      "chord_offset": 33.09782608695652,
+      "tangent_handle": 104.02173913043478
+    }
+  },
+  "validation": "Both native circle outlines changed to 26; Figma comparison screenshot visually verified; no application changes.",
+  "supersedes": "User requested a thicker R6; R5 was not approved.",
+  "application_changed": true,
+  "current_installed_build": "V92 / 0.92.0 installed on emulator-5554; user manual visual validation pending.",
+  "mutated": [
+    "79:76",
+    "79:78",
+    "76:77",
+    "76:80",
+    "79:75",
+    "79:77",
+    "72:81",
+    "72:88",
+    "72:111",
+    "72:80",
+    "72:68",
+    "72:69",
+    "72:58",
+    "72:63",
+    "72:69"
+  ],
+  "package_record": "branding/earth-observer-r6/branding-v92.json",
+  "superseded_by": "branding/heavy-r7-pending/approval-status.json"
+}

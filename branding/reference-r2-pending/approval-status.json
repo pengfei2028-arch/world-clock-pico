@@ -1,0 +1,10 @@
+{
+  "status": "SUPERSEDED: user requests regular geometric reconstruction, not an exact trace of AI contours. Review R3 instead.",
+  "reason": "User rejected V91 geometry and substituted font; requested strict source match and confirmation before packaging.",
+  "method": "Original bitmap contours traced to editable SVG paths, including original Chinese and English letterforms. Only sample identifier 11B-2B excluded.",
+  "figma": "https://www.figma.com/design/dcAVPtoJZ6gLaHjxSk57wj/Earth-Observer?node-id=69-81",
+  "master_lockup": "69:79",
+  "master_mark": "69:80",
+  "current_installed_version": "V91; rejected branding remains installed on emulator until approval of R2.",
+  "application_changed_for_R2": false
+}

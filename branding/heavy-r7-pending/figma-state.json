@@ -1,0 +1,67 @@
+{
+  "exports": {
+    "review": {
+      "nodeId": "72:80",
+      "name": "heavy-outline-review.png"
+    },
+    "mark": {
+      "nodeId": "72:58",
+      "name": "earth-observer-heavy-mark.svg"
+    },
+    "lockup": {
+      "nodeId": "72:69",
+      "name": "earth-observer-heavy-lockup.svg"
+    },
+    "icon": {
+      "nodeId": "83:87",
+      "name": "earth-observer-heavy-icon.png"
+    }
+  },
+  "mutation": {
+    "mutatedNodeIds": [
+      "79:76",
+      "79:78",
+      "76:77",
+      "76:80",
+      "79:75",
+      "79:77",
+      "72:81",
+      "72:88",
+      "72:111",
+      "72:80",
+      "72:68",
+      "72:69",
+      "83:75",
+      "83:77",
+      "83:87",
+      "72:58",
+      "72:63",
+      "72:68",
+      "72:69"
+    ],
+    "createdNodeIds": [],
+    "geometry": {
+      "outer": 400,
+      "inner": 328,
+      "stroke": 36,
+      "terminator": {
+        "A": [
+          347.7895559774529,
+          144.09312963112555
+        ],
+        "B": [
+          120.09312963112555,
+          371.7895559774529
+        ],
+        "C1": [
+          174.9673207046028,
+          453.0382284805844
+        ],
+        "C2": [
+          429.0382284805844,
+          198.9673207046028
+        ]
+      }
+    }
+  }
+}

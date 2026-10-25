@@ -1,0 +1,55 @@
+{
+  "status": "REJECTED: user identified variable circular rim width. Figma nodes updated in-place to R4, same IDs. Do not use saved R3 SVGs.",
+  "direction": "Preserve the general AI reference silhouette, but rebuild regular native circles and an ellipse; standard typography instead of tracing AI defects.",
+  "figma": "https://www.figma.com/design/dcAVPtoJZ6gLaHjxSk57wj/Earth-Observer?node-id=72-80",
+  "session": "cecbb19f-cb82-489a-a1b5-2e0d8baaa8d4",
+  "page": "60:55",
+  "board": "72:80",
+  "mark_set": "72:68",
+  "mark_ink": "72:58",
+  "mark_paper": "72:63",
+  "lockup": "72:69",
+  "styles": [
+    "S:e6df4e0edcafde906e96dbbdc0d5926c7fd80307,",
+    "S:d4d7097233f6e1d78610bc9b569742a36753e663,"
+  ],
+  "geometry": {
+    "master": 512,
+    "planetCenter": [
+      256,
+      280
+    ],
+    "planetRadius": 200,
+    "sunCenter": [
+      94,
+      95
+    ],
+    "sunRadius": 29,
+    "daylightCenter": [
+      214,
+      240
+    ],
+    "daylightEllipseRadii": [
+      174,
+      112
+    ],
+    "daylightAngle": -45
+  },
+  "fonts": {
+    "Chinese": {
+      "family": "Noto Sans SC",
+      "style": "Black",
+      "size": 150,
+      "spacing": 10
+    },
+    "English": {
+      "family": "Inter",
+      "style": "Bold",
+      "size": 42,
+      "spacing": 13
+    }
+  },
+  "validation": "Reviewed Figma rendering. Native circle and ellipse Boolean geometry; regular type, no trace contours. Application and APK have not changed for R3.",
+  "supersedes": "R2 direct tracing was rejected as copying AI contour defects. V91 earlier reconstruction also rejected.",
+  "currentInstalledApp": "V91 on emulator; rejected brand remains until approval of replacement."
+}

@@ -1,8 +1,14 @@
-# 世界时钟 · World Clock for PICO
+# 地球观察 · Earth Observer for PICO
 
-基于 **PICO Spatial SDK 6.1.9、Kotlin 和 Compose** 的 MR 地球、世界时间、全球气温与地震活动应用。当前交付版本 **V90 / 0.90.0**，用户已确认并授权发布；此前头显确认版V63及V72/V82标签保留回退。使用用户提供的 AI 8K 颜色图与高光图，后续不新增8K资源。本工程不是 Unity 项目。
+基于 **PICO Spatial SDK 6.1.9、Kotlin 和 Compose** 的 MR 地球、世界时间、全球气温、地震活动及城市距离应用。当前交付版本 **V93 / 0.93.0**。保留原有8K资源，不新增8K贴图。本工程不是Unity项目。
 
-[下载 V90 APK 与 SHA256 校验值](https://github.com/pengfei2028-arch/world-clock-pico/releases/tag/v0.90.0) · 保持当前开发签名，支持覆盖安装；不是商店发行包。
+[下载 V93 APK 与 SHA256 校验值](https://github.com/pengfei2028-arch/world-clock-pico/releases/tag/v0.93.0) · 使用现有开发签名，支持保留数据覆盖安装；不是商店发行包。
+
+## V93 地球观察图标
+
+使用用户确认的R7矢量标志：等粗圆框36、日照留白、左上太阳；应用名为“地球观察 / Earth Observer”。接入PICO双层1024×1024图标及官方SDF，保留现有地球效果、交互与业务逻辑。222项单元检查、签名及74项场景资产校验通过。已安装模拟器并由用户手动启动，日志确认地球开场、Shared Space进入及资源释放。当前版本未做头显测试。
+
+见 [V93交接](HANDOFF_V93.md)、[正式品牌资产](branding/earth-observer-r7/) 和 [Figma标志](https://www.figma.com/design/dcAVPtoJZ6gLaHjxSk57wj/Earth-Observer?node-id=72-89)。V90及更早标签保留回退。下方为历史开发记录，其中验收/发布状态描述的是当时情况；V93已包含其最终代码。
 
 ## V90 地震列表与来源
 

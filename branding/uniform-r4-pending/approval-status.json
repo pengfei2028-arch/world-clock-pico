@@ -1,0 +1,72 @@
+{
+  "status": "Superseded by R5: user accepted uniform construction and requested a thicker rim. Figma nodes updated in place; these R4 exports retain the prior 16-unit stroke.",
+  "direction": "Correct the variable daylight rim: true constant-width circle outline, separate tangent night fill. No more offset-ellipse subtraction.",
+  "figma": "https://www.figma.com/design/dcAVPtoJZ6gLaHjxSk57wj/Earth-Observer?node-id=72-80",
+  "corrected_logo_only": "https://www.figma.com/design/dcAVPtoJZ6gLaHjxSk57wj/Earth-Observer?node-id=72-89",
+  "session": "cecbb19f-cb82-489a-a1b5-2e0d8baaa8d4",
+  "page": "60:55",
+  "board": "72:80",
+  "mark_set": "72:68",
+  "mark_ink": "72:58",
+  "mark_paper": "72:63",
+  "lockup": "72:69",
+  "created": [
+    "76:75",
+    "76:76",
+    "76:77",
+    "76:78",
+    "76:79",
+    "76:80"
+  ],
+  "removed": [
+    "72:61",
+    "72:59",
+    "72:60",
+    "72:66",
+    "72:64",
+    "72:65"
+  ],
+  "geometry": {
+    "master": [
+      512,
+      512
+    ],
+    "planet_center": [
+      256,
+      280
+    ],
+    "outer_radius": 200,
+    "stroke_inside": 16,
+    "inner_radius": 184,
+    "sun_center": [
+      94,
+      95
+    ],
+    "sun_radius": 29,
+    "terminator": {
+      "chord_offset": 35,
+      "tangent_handle": 110,
+      "A": [
+        358.983404,
+        127.519121
+      ],
+      "B": [
+        103.519121,
+        382.983404
+      ],
+      "C1": [
+        165.085287,
+        474.140451
+      ],
+      "C2": [
+        450.140451,
+        189.085287
+      ]
+    }
+  },
+  "validation": "Figma rendering inspected; native circle has INSIDE stroke 16; exported 512px alpha measurement at 6 angles 15.75–16.02px (raster AA). See stroke-verification.json.",
+  "supersedes": "User explicitly rejected R3 because rim was uneven. R3 is not approved.",
+  "application_changed": false,
+  "current_installed_build": "V91 rejected branding; no R4 package built.",
+  "superseded_by": "branding/thicker-r5-pending/approval-status.json"
+}

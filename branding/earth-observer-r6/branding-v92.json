@@ -1,0 +1,75 @@
+{
+  "version": "0.92.0",
+  "versionCode": 92,
+  "package": "com.wupengfei.worldclock",
+  "approval": "User: 可以了 打包测试下 看看 — approved R6 uniform stroke26 on 2026-10-25.",
+  "figma": "https://www.figma.com/design/dcAVPtoJZ6gLaHjxSk57wj/Earth-Observer?node-id=72-89",
+  "mark_node": "72:58",
+  "lockup_node": "72:69",
+  "icon_node": "83:87",
+  "geometry": {
+    "outer_diameter": 400,
+    "inside_stroke": 26,
+    "inner_diameter": 348,
+    "icon_scale": 1.6,
+    "position": [
+      102.4,
+      76.8
+    ]
+  },
+  "icon_layers": {
+    "count": 2,
+    "size": [
+      1024,
+      1024
+    ],
+    "order_front_to_back": [
+      1,
+      0
+    ],
+    "color_space": "sRGB",
+    "sdf": "Official SpatialPlugin 6.1.1 SdfGenerator generateRaw(32,0,0,Distance,200)"
+  },
+  "apk": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-20\\new-chat-2\\builds\\EarthObserver_v92_ApprovedLogo.apk",
+  "sha256": "5fe5384ddeec1955fc33455a3e70ff4b1132dd43fd09b5312e58e3f0bed582ff",
+  "bytes": 202371695,
+  "tests": {
+    "count": 222,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0
+  },
+  "unchanged_assets": 74,
+  "changed_files": [
+    "src/main/res/drawable/icon_3d_layer_0.png",
+    "src/main/res/drawable/icon_3d_layer_1.png",
+    "src/main/res/drawable/icon_3d_sdf_1.png",
+    "src/main/res/drawable/ic_launcher_foreground.png",
+    "src/main/res/mipmap-xxxhdpi/ic_spatial_launcher.png",
+    "build.gradle.kts"
+  ],
+  "mirror_files_verified": 206,
+  "icon_pixel_checks": {
+    "icon_3d_layer_0.png": "APK decoded pixels match approved Figma export / generated SDF",
+    "icon_3d_layer_1.png": "APK decoded pixels match approved Figma export / generated SDF",
+    "icon_3d_sdf_0.png": "APK decoded pixels match approved Figma export / generated SDF",
+    "icon_3d_sdf_1.png": "APK decoded pixels match approved Figma export / generated SDF",
+    "ic_spatial_launcher.png": "APK decoded pixels match approved Figma export / generated SDF"
+  },
+  "runtime_validation": "V92 installed and version verified. User inspected icon and requested thicker rim. Application launch was not confirmed; no headset validation.",
+  "publication": "Local package; no GitHub push in this task.",
+  "backup": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-20\\new-chat-2\\worldclock_work\\v92\\pre-r6-20261025-210941",
+  "installation": {
+    "device": "emulator-5554",
+    "versionCode": 92,
+    "versionName": "0.92.0",
+    "install": "Success; adb install -r, user data preserved",
+    "package_verified": true,
+    "signature": "APK Signature Scheme v2 verified",
+    "lastUpdateTime": "2026-10-25 21:11:48",
+    "manual_launch": "Requested; pending user operation",
+    "headset_connected": false
+  },
+  "user_feedback": "After viewing V92 icon in simulator, user reports rim still too thin. R7 stroke36 prepared in Figma, awaiting approval. Startup success was not reported.",
+  "figma_live_revision": "IDs72:58/72:69/83:87 now show pending R7. Use saved V92 assets for R6 reproduction."
+}

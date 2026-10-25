@@ -1,0 +1,70 @@
+{
+  "version": "0.93.0",
+  "versionCode": 93,
+  "package": "com.wupengfei.worldclock",
+  "approval": "User approved R7: 可以 打包 (2026-10-25)",
+  "figma": "https://www.figma.com/design/dcAVPtoJZ6gLaHjxSk57wj/Earth-Observer?node-id=72-89",
+  "icon_node": "83:87",
+  "mark_node": "72:58",
+  "geometry": {
+    "outer": 400,
+    "inner": 328,
+    "stroke_inside": 36,
+    "icon_scale": 1.6,
+    "icon_position": [
+      102.4,
+      76.8
+    ]
+  },
+  "layers": {
+    "size": [
+      1024,
+      1024
+    ],
+    "count": 2,
+    "color_space": "sRGB",
+    "order_front_to_back": [
+      1,
+      0
+    ],
+    "sdf": "Official SpatialPlugin 6.1.1 SdfGenerator generateRaw(32,0,0,Distance,200)"
+  },
+  "apk": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-20\\new-chat-2\\builds\\EarthObserver_v93_ApprovedLogo.apk",
+  "sha256": "a2001cca822d58f83fb5ebcec81a5fb57f8e75b3a916571ff8cc8bd57c19af4c",
+  "bytes": 202378635,
+  "tests": {
+    "tests": 222,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0
+  },
+  "unchanged_assets": 74,
+  "changed_files": [
+    "src/main/res/drawable/icon_3d_layer_0.png",
+    "src/main/res/drawable/icon_3d_layer_1.png",
+    "src/main/res/drawable/icon_3d_sdf_1.png",
+    "src/main/res/drawable/ic_launcher_foreground.png",
+    "src/main/res/mipmap-xxxhdpi/ic_spatial_launcher.png",
+    "build.gradle.kts"
+  ],
+  "mirror_files_verified": 206,
+  "icon_pixel_validation": "Five packaged icon/SDF images exactly match local approved exports/generated SDF.",
+  "runtime_validation": "User manually launched V93. Logs confirm Earth opening complete, Shared Space entry and desktop resource disposal; no captured fatal exception. Emulator base-panel configuration retried three times with timeout; no new fix in this branding release. No headset testing.",
+  "publication": "User authorized GitHub main and v0.93.0 release with APK/checksum.",
+  "backup": "C:\\Users\\Admin\\Documents\\Codex\\2026-10-20\\new-chat-2\\worldclock_work\\v93\\pre-r7-20261025-211958",
+  "installation": {
+    "device": "emulator-5554",
+    "version": "0.93.0",
+    "versionCode": 93,
+    "lastUpdateTime": "2026-10-25 21:21:01",
+    "data_preserved": true,
+    "signature": "APK v2 verification passed",
+    "manual_launch": true,
+    "opening_complete": true,
+    "shared_space_confirmed": true,
+    "desktop_disposal_logged": true,
+    "fatal_in_captured_process_log": false,
+    "headset_verified": false,
+    "user_reply": "可以打包 git"
+  }
+}
