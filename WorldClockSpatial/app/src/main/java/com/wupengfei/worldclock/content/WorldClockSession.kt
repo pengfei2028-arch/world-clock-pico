@@ -13,10 +13,13 @@ internal object WorldClockSession {
     const val STAGE = "WorldClockEarthMixedV08"
     const val DESKTOP = "WorldClockDesktopV58"
     const val DESKTOP_TAG = "earth"
-    val clock = ClockState()
-    val motion = GlobeMotion()
-    val entrance = GlobeEntrance()
-    var geographicBase: GlobeQuaternion? = null
+    private val runs = WorldClockRuns()
+    val clock get() = runs.current.clock
+    val motion get() = runs.current.motion
+    val entrance get() = runs.current.entrance
+    var geographicBase: GlobeQuaternion?
+        get() = runs.current.geographicBase
+        set(value) { runs.current.geographicBase = value }
     var applicationContext: android.content.Context? = null
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     var busy by mutableStateOf(false); private set
@@ -36,11 +39,23 @@ internal object WorldClockSession {
     var error by mutableStateOf(""); private set
     var stageNavigator: SpatialNavigator? = null
     var desktopNavigator: SpatialNavigator? = null
-    val keepTaskAlive get() = desktopRequested || busy
+    val keepTaskAlive get() = desktopRequested || busy || clock.footprints.pickingCityId!=null || clock.footprints.busy
 
     fun setDesktopDiameter(value:Float) { if(!busy && value.isFinite())diameter=value.coerceIn(DesktopEarthLayout.MIN_DIAMETER,DesktopEarthLayout.MAX_DIAMETER) }
     fun resizeDesktop(delta:Float) { if(delta.isFinite())setDesktopDiameter(diameter+delta) }
-    fun onLaunch() { if(!stageMounted&&!desktopMounted&&!busy){immersiveRendering=true;desktopRendering=false;desktopRequested=false;immersiveVisibility=1f;error=""} }
+    fun onLaunch() {
+        if (runs.launch(stageMounted, desktopMounted, busy||clock.footprints.pickingCityId!=null||clock.footprints.busy, immersiveResources, desktopResources)) {
+            immersiveRendering=true;desktopRendering=false;desktopRequested=false
+            immersiveVisibility=1f;desktopVisibility=1f
+            diameter=DesktopEarthLayout.DEFAULT_DIAMETER;desktopFrames=0L
+            loadFailure=null;rejectNextExpandForTest=false;error=""
+            Log.i("WorldClockLifecycle","V94 fresh run="+runs.generation+" pid="+android.os.Process.myPid()+
+                " entrance="+entrance.elapsed+"; stored cities will reload")
+        } else {
+            Log.i("WorldClockLifecycle","V94 retained active run="+runs.generation+
+                " stage="+stageMounted+" desktop="+desktopMounted+" busy="+busy)
+        }
+    }
     fun desktopClosed() { if(!busy&&desktopRequested){desktopRequested=false;desktopRendering=false;immersiveRendering=true} }
     fun failedToLoad(e:Throwable) { loadFailure=e;Log.e("WorldClockSpace","Scene load failed",e) }
     private suspend fun fade(from:Float,to:Float,desktop:Boolean) {
@@ -147,20 +162,38 @@ internal object WorldClockSession {
 
     fun closeSoftware(navigator: SpatialNavigator, activity: Activity?) {
         if (busy) return
+        clock.footprints.close()
         busy = true
+        clock.dismissPanels();clock.earthquakes.pause();clock.ready=false
+        desktopRequested = false; desktopRendering = false; immersiveRendering = false
+        Log.i("WorldClockLifecycle","V94 explicit close run="+runs.generation+"; stopping both renderers")
         scope.launch {
             try {
-                desktopRequested = false; desktopRendering = false; immersiveRendering = false
-                runCatching { navigator.closeWindowContainer(DESKTOP, DESKTOP_TAG) }
-                runCatching { navigator.closeStage() }
+                // Give composition disposal time to cancel frame subscriptions, tracking,
+                // downloads and native handles before removing the Activities beneath it.
+                val released=withTimeoutOrNull(3_000) {
+                    while(immersiveResources || desktopResources)delay(16)
+                    true
+                }==true
+                Log.i("WorldClockLifecycle","V94 close renderers released="+released+
+                    " heavy="+immersiveResources+" light="+desktopResources)
+                if(desktopMounted)runCatching { navigator.closeWindowContainer(DESKTOP, DESKTOP_TAG) }
+                    .onFailure { Log.w("WorldClockLifecycle","Close desktop container",it) }
+                if(stageMounted)runCatching { navigator.closeStage() }
+                    .onFailure { Log.w("WorldClockLifecycle","Close immersive Stage",it) }
             } finally {
                 // A container may supply a wrapped Context or a different stub Activity.
                 // Explicit software close removes all of this app's own tasks, including
                 // the stopped launch Activity retained during desktop mode.
-                activity?.finishAndRemoveTask()
+                runCatching { activity?.finishAndRemoveTask() }
+                    .onFailure { Log.w("WorldClockLifecycle","Finish close-button Activity",it) }
                 val manager=applicationContext?.getSystemService(android.content.Context.ACTIVITY_SERVICE) as? android.app.ActivityManager
-                manager?.appTasks?.forEach { it.finishAndRemoveTask() }
+                manager?.appTasks?.forEach { task ->
+                    runCatching { task.finishAndRemoveTask() }
+                        .onFailure { Log.w("WorldClockLifecycle","Finish app task",it) }
+                }
                 busy = false
+                Log.i("WorldClockLifecycle","V94 close requested for all app tasks; next idle launch starts a fresh run")
             }
         }
     }

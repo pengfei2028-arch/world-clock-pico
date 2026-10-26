@@ -79,7 +79,7 @@ internal object QuakeStyle {
     const val PANEL_DP=288f
     const val PANEL_BODY_DP=360f
     const val PICK_SCALE=32f
-    const val PANEL_ICON_X_DP=-304f // 784dp Dock: -392 + 64 + 24.
+    const val PANEL_ICON_X_DP=368f // 912dp Dock: quake occupies former temperature slot.
     const val PANEL_BOTTOM_Y_DP=8f // Icon top -8dp; keep a 16dp gap above it.
 }
 internal data class QuakeProjection(val event:QuakeEvent,val x:Double,val y:Double)

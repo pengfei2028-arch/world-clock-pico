@@ -49,6 +49,13 @@
 
         </activity>
 
+        <activity
+            android:name=".platform.FootprintPickerActivity"
+            android:exported="false"
+            android:theme="@style/Theme.WorldClockSpatialTheme" />
+
+        <!-- SDK 6.1.9: hit-test opt-out is limited to the separate, display-only status attachment. -->
+        <meta-data android:name="pico.spatial.use_experimental_api" android:value="1" />
         <meta-data android:name="icon.3d.list" android:resource="@array/icon_3d_list" />
         <meta-data android:name="icon.sdf.list" android:resource="@array/icon_sdf_list" />
     </application>

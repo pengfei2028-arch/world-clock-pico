@@ -86,11 +86,11 @@ private fun number(value:Double?,digits:Int=1)=value?.let{String.format(Locale.R
         }
     }
 }
-@Composable internal fun QuakeCaption(clock:ClockState){
+@Composable internal fun QuakeCaption(clock:ClockState,showAction:Boolean=true){
     val q=clock.earthquakes
     Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(10.dp)){
         Text(if(q.replay)shortTime.format(q.replayTime?:q.catalog?.start?:clock.now) else q.catalog?.let{"整个周期 · ${shortTime.format(it.start).substringBefore(" ")}–${shortTime.format(it.end).substringBefore(" ")} · UTC"}?:"整个周期总览 · UTC",style=uiText(12))
-        if(q.replay)GlassAction({clock.useFeature();q.overview()},Modifier.height(28.dp)){Text("返回总览",style=uiText(12))}
+        if(q.replay&&showAction)GlassAction({clock.useFeature();q.overview()},Modifier.height(28.dp)){Text("返回总览",style=uiText(12))}
     }
 }
 @Composable private fun RegionRow(event:QuakeEvent,onClick:()->Unit){

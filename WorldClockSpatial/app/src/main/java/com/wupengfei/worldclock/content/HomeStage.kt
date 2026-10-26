@@ -35,6 +35,7 @@ private class EarthResources {
     var coordinateRenderer:CoordinateRenderer?=null
     var earthquakeRenderer:EarthquakeRenderer?=null
     var distanceRenderer:DistanceRenderer?=null
+    var footprintRenderer:FootprintRenderer?=null
     var coordinateHit:((Vector3)->GeoCoordinate?)?=null
     var interactionReady = false
     var handToStage: ((Vector3) -> Vector3)? = null
@@ -76,6 +77,7 @@ private class EarthResources {
         temperatureRenderer?.close();temperatureRenderer=null
         earthquakeRenderer?.close();earthquakeRenderer=null
         distanceRenderer?.close();distanceRenderer=null
+        footprintRenderer?.close();footprintRenderer=null
         coordinateHit=null;coordinateRenderer?.close();coordinateRenderer=null
         entities.forEach { it.destroy() }
         entities.clear()
@@ -106,7 +108,7 @@ private const val EARTH_CENTER_DROP_M = 4.1956f
 // Official SDK 6.1.9. This is a look-development Stage, not a device benchmark.
 @Composable
 fun HomeStage() {
-    key(WorldClockSession.clock.immersiveRetry){ImmersiveHomeStage()}
+    key(WorldClockSession.clock,WorldClockSession.clock.immersiveRetry){ImmersiveHomeStage()}
 }
 @Composable
 private fun ImmersiveHomeStage() {
@@ -115,6 +117,8 @@ private fun ImmersiveHomeStage() {
     val entrance = WorldClockSession.entrance
     val context = LocalContext.current
     val clock = WorldClockSession.clock
+    val chooseFootprintPhotos=rememberFootprintPhotoPicker(clock.footprints)
+    LaunchedEffect(clock){clock.footprints.initialize(context)}
     DisposableEffect(clock){
         WorldClockSession.immersiveResources=true
         clock.ready=false;clock.startupFailure="";WorldClockSession.loadFailure=null
@@ -219,6 +223,14 @@ private fun ImmersiveHomeStage() {
     // SDK 6.1.9 caches attachment IDs, so allocation is monotonic within this
     // SpatialView. Never remove/re-add cached destroyed entities.
     var quakePanelAllocated by remember { mutableStateOf(false) }
+    var footprintAllocated by remember { mutableStateOf(false) }
+    var footprintPinsAllocated by remember { mutableIntStateOf(0) }
+    LaunchedEffect(clock.ready,clock.footprints.enabled,clock.footprints.albums.size){
+        if(clock.ready&&clock.footprints.enabled){
+            footprintAllocated=true
+            footprintPinsAllocated=max(footprintPinsAllocated,clock.footprints.albums.size)
+        }
+    }
     LaunchedEffect(clock.ready,clock.mode){
         if(clock.ready&&clock.mode==EarthMode.EARTHQUAKE){
             quakePanelAllocated=true
@@ -303,8 +315,17 @@ private fun ImmersiveHomeStage() {
         attachments = {
             AttachmentPanel("cities",alignment=AttachmentPanelComponent.Alignment.BOTTOM_LEFT) { ClockTheme { CityPanel(clock,context) } }
             AttachmentPanel("timeline",alignment=AttachmentPanelComponent.Alignment.TOP_CENTER) { ClockTheme { TimePanel(clock) } }
+            AttachmentPanel("time_status",alignment=AttachmentPanelComponent.Alignment.TOP_CENTER) { ClockTheme { TimeStatusPanel(clock) } }
+            AttachmentPanel("time_return",alignment=AttachmentPanelComponent.Alignment.TOP_CENTER) { ClockTheme { TimeReturnPanel(clock) } }
             AttachmentPanel("time_tools",alignment=AttachmentPanelComponent.Alignment.BOTTOM_RIGHT) { ClockTheme { TimeOptionsPanel(clock) } }
             if(quakePanelAllocated)AttachmentPanel("quake_panel",alignment=AttachmentPanelComponent.Alignment.BOTTOM_CENTER){ClockTheme{EarthquakePanel(clock)}}
+            if(footprintAllocated){
+                AttachmentPanel("footprint_places",alignment=AttachmentPanelComponent.Alignment.BOTTOM_LEFT){ClockTheme{FootprintPlaces(clock)}}
+                AttachmentPanel("footprint_album",alignment=AttachmentPanelComponent.Alignment.BOTTOM_CENTER){ClockTheme{FootprintAlbumPanel(clock,chooseFootprintPhotos)}}
+            }
+            for(slot in 0 until footprintPinsAllocated){
+                AttachmentPanel("footprint_pin_$slot",alignment=AttachmentPanelComponent.Alignment.CENTER){ClockTheme{FootprintPin(clock,slot)}}
+            }
             AttachmentPanel("distance_card",alignment=AttachmentPanelComponent.Alignment.CENTER){ClockTheme{DistanceReadout(clock)}}
             AttachmentPanel("coordinate_card",alignment=AttachmentPanelComponent.Alignment.CENTER){ClockTheme{
                 CoordinateCard(clock.coordinates.selection,Modifier.alpha(clock.coordinates.panelAlpha))
@@ -665,6 +686,8 @@ private fun ImmersiveHomeStage() {
                     catch(e:Exception){clock.distance.failure="距离图层加载失败，请重新打开应用";Log.e("WorldClockDistance","Optional renderer initialization",e);null}
                 }
                 var lastDistanceRead=-1
+                resources.footprintRenderer=coordinateRenderer?.let{FootprintRenderer(it,stageOrigin,earth,content,attachments,clock,eye,context.resources.displayMetrics.density)}
+                var lastFootprintFocus=-1
                 var lastQuakeFocus=clock.earthquakes.focusRequest
                 var quakeFocusAudit:String?=null
                 var quakeFocusAuditAfter=0.0
@@ -740,6 +763,19 @@ private fun ImmersiveHomeStage() {
                     }
                     if(clock.uiActivity!=lastUiActivity || clock.uiManipulating){
                         lastUiActivity=clock.uiActivity;motion.noteUiActivity(now)
+                    }
+                    if(clock.footprints.enabled&&clock.footprints.albumOpen&&!motion.dragging&&!motion.timelineHeld){
+                        if(lastFootprintFocus!=clock.footprints.focusRequest){
+                            lastFootprintFocus=clock.footprints.focusRequest
+                            clock.footprints.city(clock.catalog)?.let{city->resources.footprintRenderer?.let{renderer->
+                                val c=earth.convertPositionTo(Vector3(0f,0f,0f),stageOrigin)
+                                val head=resources.headInStage?.invoke()?:eye
+                                motion.focusLocalPoint(renderer.directionInEarth(city),(CoordinateRenderer.vec(head)-CoordinateRenderer.vec(c)).normalized())
+                                Log.i("WorldClockFootprints","V96 focus city=${city.id} independent=true")
+                            }}
+                        }
+                        // Reading an album is an intentional hold; releasing it restores the established idle policy.
+                        if(!motion.focusing)motion.readCoordinates(now)else motion.noteUiActivity(now)
                     }
                     if(quakeActive&&quake.focusRequest!=lastQuakeFocus&&!motion.dragging&&!motion.timelineHeld){
                         lastQuakeFocus=quake.focusRequest
@@ -828,6 +864,7 @@ private fun ImmersiveHomeStage() {
                     }
                     resources.distanceRenderer?.update(event.deltaTime.toDouble(),resources.headInStage?.invoke()?:eye,visibility,resources.interactionReady)
                     features.update(resources.interactionReady,center,resources.headInStage?.invoke()?:eye,light,earthOpacity.opacity,entrance.pose.veilProgress.toFloat(),veilOpacity.opacity)
+                    resources.footprintRenderer?.update(event.deltaTime.toDouble(),resources.headInStage?.invoke()?:eye,visibility,resources.interactionReady)
                     if (!motion.dragging && wasRestoringTilt && !motion.restoringTilt) {
                         Log.i("WorldClockEarth", "V31 tilt restored; axisErrorDegrees=" + normalAxisErrorDegrees() +
                             "; orientation=" + motion.presentation)

@@ -14,6 +14,8 @@ internal class ClockScene(private val content: SpatialViewContent,private val at
     private val coordinates:CoordinateRenderer?) {
     private val citiesPanel=attachments.entity("cities")
     private val timelinePanel=attachments.entity("timeline")
+    private val statusPanel=attachments.entity("time_status")
+    private val returnPanel=attachments.entity("time_return")
     private val toolsPanel=attachments.entity("time_tools")
     private var quakePanel:Entity?=null
     private val coordinatePanel=attachments.entity("coordinate_card")
@@ -86,7 +88,7 @@ internal class ClockScene(private val content: SpatialViewContent,private val at
         }
         android.util.Log.i("WorldClockSun","V42 compact profile: core unchanged; bloom .35/-150; halo .045/-32; angular size fixed")
         android.util.Log.i("WorldClockSun","V36 material parameters="+sunMaterials.first().getParameterNames().joinToString())
-        listOfNotNull(citiesPanel,timelinePanel,toolsPanel).forEach{
+        listOfNotNull(citiesPanel,timelinePanel,toolsPanel,statusPanel,returnPanel).forEach{
             transform(it).apply{setScaleVector(Vector3(3.5f,3.5f,3.5f));setQuaternion(Quat(0f,0f,0f,1f))}
         }
     }
@@ -107,10 +109,15 @@ internal class ClockScene(private val content: SpatialViewContent,private val at
         state.toolbarDrag.advance(seconds)
         val unit=toolbarUnit
         val bar=Vector3(eye.x+state.toolbarDrag.x.toFloat()*unit,eye.y-1f-state.toolbarDrag.y.toFloat()*unit,eye.z-2.5f)
-        // V83 ruler button is inserted before temperature. Offset the wider Dock
-        // by 32dp so the existing time ruler, left controls and caption stay put.
-        timelinePanel?.let{transform(it).setPosition(Vector3(bar.x+32f*unit,bar.y+92f*unit,bar.z))}
-        citiesPanel?.let{transform(it).setPosition(Vector3(bar.x-392f*unit,bar.y+44f*unit,bar.z+.015f))}
+        // Dock controls keep their original world position after removing the top 92dp slot.
+        timelinePanel?.let{transform(it).setPosition(Vector3(bar.x,bar.y,bar.z))}
+        statusPanel?.let{transform(it).setPosition(Vector3(bar.x,bar.y+92f*unit,bar.z))}
+        val returnAction=state.timeReturnAction()
+        val returnX=if(returnAction==TimeReturnAction.QUAKE_OVERVIEW)216f else 0f
+        returnPanel?.let{transform(it).setPosition(Vector3(bar.x+returnX*unit,bar.y+92f*unit,bar.z+.001f))}
+        show(statusPanel,ready&&state.timeStatusVisible())
+        show(returnPanel,ready&&returnAction!=TimeReturnAction.NONE)
+        citiesPanel?.let{transform(it).setPosition(Vector3(bar.x-456f*unit,bar.y+44f*unit,bar.z+.015f))}
         toolsPanel?.let{transform(it).setPosition(Vector3(bar.x+456f*unit,bar.y+44f*unit,bar.z+.015f))}
         show(timelinePanel,ready);show(citiesPanel,ready&&state.citiesOpen);show(toolsPanel,ready&&state.timeToolsOpen)
         val q=state.earthquakes
@@ -162,7 +169,7 @@ internal class ClockScene(private val content: SpatialViewContent,private val at
         pins.indices.forEach{i->
             val pin=pins[i];val city=state.cities.getOrNull(i)
             if(pin.cityId!=city?.id){pin.cityId=city?.id;pin.visibility=PinVisibility()}
-            if(!ready||city==null||state.mode==EarthMode.EARTHQUAKE){
+            if(!ready||city==null||state.mode==EarthMode.EARTHQUAKE||state.footprints.enabled){
                 pin.stem.enabled=false;pin.head.enabled=false;pin.line.enabled=false;show(pin.card,false)
                 if(state.labelOpacity[i]!=0f)state.labelOpacity[i]=0f
                 return@forEach
@@ -196,7 +203,7 @@ internal class ClockScene(private val content: SpatialViewContent,private val at
         val selectedNormal=selectedTip?.let{(it-c).normalized()}
         val pointAlpha=coordinateVisibility.update(if(ready&&selectedTip!=null&&selectedNormal!=null)
             PinVisibility.atLimb(selectedNormal.dot((h-selectedTip).normalized())) else 0f,seconds)*state.coordinates.reveal*globeOpacity
-        val generic=!state.distance.enabled&&state.mode!=EarthMode.EARTHQUAKE&&selection!=null&&selection.cityId==null&&selectedTip!=null&&pointAlpha>.001f
+        val generic=!state.distance.enabled&&!state.footprints.enabled&&state.mode!=EarthMode.EARTHQUAKE&&selection!=null&&selection.cityId==null&&selectedTip!=null&&pointAlpha>.001f
         val pointLayout=if(generic)CityLabelLayout.place(c,selectedTip!!,metresPerDp) else null
         val candidates=frames.filter{it.alpha>0.001f}.map{CityLabelCandidate(it.city.id,it.layout)}+
             listOfNotNull(pointLayout?.let{CityLabelCandidate("coordinate-point",it)})

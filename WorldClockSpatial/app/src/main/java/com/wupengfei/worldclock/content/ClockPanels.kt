@@ -64,14 +64,23 @@ internal class ClockState {
     val earthquakes=EarthquakeState()
     val coordinates=CoordinateState()
     val distance=DistanceState()
-    val timeModeActive get()=mode==EarthMode.WORLD_TIME&&!distance.enabled
+    val footprints=FootprintState()
+    val timeModeActive get()=mode==EarthMode.WORLD_TIME&&!distance.enabled&&!footprints.enabled
+    fun toggleFootprints(){
+        if(footprints.enabled){val open=!footprints.placesOpen;useFeature();if(open)footprints.openPlaces();resumeRequest++;return}
+        switchMode(EarthMode.WORLD_TIME);selectedId=null;focusRequest++
+        footprints.enabled=true;footprints.openPlaces()
+    }
+    fun selectFootprint(city:ClockCity){useFeature();selectedId=null;footprints.selectCity(city.id)}
     fun toggleDistance(){
+        footprints.disable()
         if(!distance.enabled&&mode!=EarthMode.WORLD_TIME)switchMode(EarthMode.WORLD_TIME)
         useFeature();selectedId=null;focusRequest++;distance.toggle(cities)
     }
     fun toggleCoordinates(){useFeature();coordinates.toggle(selected)}
     fun switchMode(next:EarthMode){
         useFeature()
+        footprints.disable()
         // A clock click must exit distance even when its lighting clock already uses WORLD_TIME.
         distance.disable()
         if(next==mode)return
@@ -111,6 +120,7 @@ internal class ClockState {
     fun dismissPanels(){
         citiesOpen=false;timeToolsOpen=false;searching=false;query="";notice=""
         earthquakes.closePanel();panelEpoch++
+        footprints.dismiss()
     }
     fun useFeature(){touchUi();dismissPanels()}
     fun toggleCities(){val open=!citiesOpen;switchMode(EarthMode.WORLD_TIME);citiesOpen=open}
@@ -136,7 +146,7 @@ internal class ClockState {
     val selected get()=cities.firstOrNull{it.id==selectedId}
     fun setOffset(value:Float){touchUi();if(previewBase==null)previewBase=now;offsetMinutes=value}
     fun beginTimeDrag(){
-        if(distance.enabled)switchMode(EarthMode.WORLD_TIME)
+        if(distance.enabled||footprints.enabled)switchMode(EarthMode.WORLD_TIME)
         onTimeScrub?.invoke(true);manualInteraction()
         touchUi()
         if(mode==EarthMode.EARTHQUAKE){
@@ -215,10 +225,10 @@ internal fun uiText(size:Int=16,weight:FontWeight=FontWeight.Normal)=
 private val LocalInsideGlass=staticCompositionLocalOf { false }
 
 @Composable
-internal fun Glass(modifier:Modifier=Modifier,content:@Composable ColumnScope.()->Unit){
+internal fun Glass(modifier:Modifier=Modifier,padding:Dp=14.dp,spacing:Dp=10.dp,content:@Composable ColumnScope.()->Unit){
     CompositionLocalProvider(LocalInsideGlass provides true) {
-        Column(modifier.clip(RoundedCornerShape(20.dp)).backgroundMaterial().padding(14.dp),
-            verticalArrangement=Arrangement.spacedBy(10.dp),content=content)
+        Column(modifier.clip(RoundedCornerShape(20.dp)).backgroundMaterial().padding(padding),
+            verticalArrangement=Arrangement.spacedBy(spacing),content=content)
     }
 }
 
@@ -354,26 +364,16 @@ internal fun TimePanel(state:ClockState){
     DisposableEffect(Unit){onDispose{state.onTimeScrub?.invoke(false);state.uiManipulating=false}}
     val captionHoverGroup=remember{SpatialHoverEffectGroup.obtain()}
     CompositionLocalProvider(LocalViewConfiguration provides pickup){
-        Column(Modifier.width(848.dp).height(222.dp),horizontalAlignment=Alignment.CenterHorizontally){
-            // Fixed slot above the ruler: entering preview never moves the controls.
-            Box(Modifier.offset(x=(-32).dp).width(528.dp).height(32.dp),contentAlignment=Alignment.Center){
-                if(state.distance.enabled)Text(state.distance.hint(state.cities),style=uiText(13))
-                else if(state.mode==EarthMode.EARTHQUAKE)QuakeCaption(state)
-                else if(state.mode==EarthMode.TEMPERATURE){
-                    if(state.temperature.manifest==null)Text("气温数据不可用",style=uiText(12))
-                    else if(!state.temperature.autoNow)GlassAction({state.useFeature();state.temperature.now(state.now)},Modifier.height(28.dp)){Text("现在",style=uiText(13))}
-                } else if(state.preview)GlassAction({state.live()},Modifier.height(28.dp)){Text("回到现在",style=uiText(13))}
-                else if(state.clockNotice.isNotBlank())Text(state.clockNotice,style=uiText(12))
-            }
-            TemperatureLegend(Modifier.offset(x=(-32).dp).width(528.dp)
-                .graphicsLayer{alpha=state.temperature.reveal})
-            Spacer(Modifier.height(12.dp))
+        // V100: status is a separate attachment. Keep the proven native Dock layers
+        // and remove the old 92dp transparent input area above the controls.
+        Column(Modifier.width(912.dp).height(130.dp),horizontalAlignment=Alignment.CenterHorizontally){
             Row(Modifier.fillMaxWidth().height(64.dp),verticalAlignment=Alignment.CenterVertically,
                 horizontalArrangement=Arrangement.spacedBy(16.dp)){
                 ToolbarIcon("时钟 · 城市菜单",true,state.timeModeActive){
                     state.toggleCities()
                 }
-                EarthquakeToggle(state)
+                TemperatureToggle(state)
+                FootprintToggle(state)
                 // One visible ruler, one gesture owner. No transparent Slider or separate input overlay.
                 Box(Modifier.weight(1f).height(48.dp).clip(CircleShape).backgroundMaterial()
                     .background(Color.White.copy(alpha=if(hovered||dragging).12f else 0f))
@@ -395,16 +395,17 @@ internal fun TimePanel(state:ClockState){
                     }
                 }
                 DistanceToggle(state)
-                TemperatureToggle(state)
+                EarthquakeToggle(state)
                 ToolbarIcon("时间选项",false){state.toggleTimeTools()}
             }
             Spacer(Modifier.height(16.dp))
-            Box(Modifier.offset(x=(-32).dp).width(656.dp).height(42.dp)){
+            Box(Modifier.width(656.dp).height(48.dp)){
             // System-like caption proportions; no WindowContainer is inserted into this Mixed Stage.
             val handleInteraction=remember{MutableInteractionSource()}
             val handleHover by handleInteraction.collectIsHoveredAsState()
-            CaptionCloseButton(Modifier.align(Alignment.Center).offset(x=72.dp),captionHoverGroup,handleHover)
-            Box(Modifier.align(Alignment.Center).size(112.dp,42.dp).hoverable(handleInteraction)
+            // V95: 48dp close target begins where the 112dp drag target ends.
+            CaptionCloseButton(Modifier.align(Alignment.Center).offset(x=80.dp),captionHoverGroup,handleHover)
+            Box(Modifier.align(Alignment.Center).size(112.dp,48.dp).hoverable(handleInteraction)
                 .spatialHoverEffectGroup(captionHoverGroup)
                 .semantics{contentDescription="拖动工具栏"}
                 .pointerInput(state.ready){
@@ -515,13 +516,13 @@ private fun CaptionCloseButton(modifier:Modifier,group:SpatialHoverEffectGroup,b
     val interaction=remember{MutableInteractionSource()}
     val hovered by interaction.collectIsHoveredAsState()
     val closePainter=painterResource(com.pico.spatial.ui.design.R.drawable.ic_sui_close)
-    Box(modifier.size(32.dp,42.dp).spatialHoverEffectGroup(group)
+    Box(modifier.size(48.dp).spatialHoverEffectGroup(group)
         .hoverable(interaction).semantics{contentDescription="关闭软件"}
         .clickable(enabled=!closing,interactionSource=interaction,indication=null){
             if(!closing){WorldClockSession.closeSoftware(navigator,activity)}
         },contentAlignment=Alignment.Center){
         // Keep the icon and disc in the same drawing layer as the native reveal.
-        Canvas(Modifier.size(16.dp).spatialHoverEffect{hover->
+        Canvas(Modifier.size(24.dp).spatialHoverEffect{hover->
             alpha(if(hover.isActive||barHovered||hovered)1f else 0f)
         }){
             drawCircle(Color.White.copy(alpha=.18f))

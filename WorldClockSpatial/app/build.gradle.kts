@@ -12,8 +12,8 @@ android {
         applicationId = "com.wupengfei.worldclock"
         minSdk = 35
         targetSdk = 35
-        versionCode = 93
-        versionName = "0.93.0"
+        versionCode = 102
+        versionName = "0.102.0"
         buildConfigField("String", "TEMPERATURE_BASE_URL", "\"${providers.gradleProperty("temperatureBaseUrl").getOrElse("")}\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -43,6 +43,7 @@ android {
 }
 
 dependencies {
+    implementation("androidx.exifinterface:exifinterface:1.3.7")
     implementation(libs.androidx.core.ktx)
     implementation(platform(libs.spatial.bom))
     implementation(libs.spatial.core)
