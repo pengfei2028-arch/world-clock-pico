@@ -40,6 +40,10 @@ android {
         compose = true
         buildConfig = true
     }
+    androidResources {
+        // PICO Spatial bundles are prebuilt locally and must stay uncompressed in the APK.
+        noCompress += "bundle"
+    }
 }
 
 dependencies {
