@@ -1,0 +1,286 @@
+package com.wupengfei.worldclock.content
+
+import com.pico.spatial.core.container.SpatialViewContent
+import com.pico.spatial.ui.foundation.content.SpatialViewAttachments
+import com.pico.spatial.core.ecs.*
+import com.pico.spatial.core.ecs.resource.*
+import com.pico.spatial.core.math.*
+import kotlin.math.*
+
+/** Project geometry/placement choices; panels themselves use PICO design components. */
+internal class ClockScene(private val content: SpatialViewContent,private val attachments: SpatialViewAttachments,
+    private val state: ClockState,private val geographic: Entity,private val origin: Entity,
+    private val eye: Vector3,owned: MutableList<Entity>,private val sunEffect: Entity,private val uiDensity:Float,
+    private val coordinates:CoordinateRenderer?) {
+    private val citiesPanel=attachments.entity("cities")
+    private val timelinePanel=attachments.entity("timeline")
+    private val statusPanel=attachments.entity("time_status")
+    private val returnPanel=attachments.entity("time_return")
+    private val toolsPanel=attachments.entity("time_tools")
+    private var quakePanel:Entity?=null
+    private val coordinatePanel=attachments.entity("coordinate_card")
+    private val coordinateLabels=CoordinateRuler.slots.indices.map{attachments.entity("coordinate_ruler_$it")}.toMutableList()
+    private var labelLookupSeconds=1.0
+    private val coordinateVisibility=PinVisibility()
+    private val mounted=mutableSetOf<Entity>()
+    private val toolbarUnit=content.convertSize(Vector3(uiDensity,0f,0f),ViewCoordinateSpace.Local,origin).x*3.5f
+    private val sunMaterials=mutableListOf<ShaderGraphMaterial>()
+    private var lastSunAudit=0L
+    private val labelAvoidance=CityLabelAvoidance()
+    private val distanceLabelAvoidance=DistanceLabelLayout()
+    private var lastLabelAudit=0L
+    private fun show(e:Entity?,visible:Boolean){
+        if(e==null)return
+        if(visible && mounted.add(e)){e.enabled=true;content.addEntity(e)}
+        else if(e in mounted && e.enabled!=visible)e.enabled=visible
+    }
+    private data class Pin(val stem:Entity,val head:Entity,val line:Entity,val card:Entity?,
+        val stemAlpha:OpacityControllerComponent=OpacityControllerComponent(0f),
+        val headAlpha:OpacityControllerComponent=OpacityControllerComponent(0f),
+        val lineAlpha:OpacityControllerComponent=OpacityControllerComponent(0f),
+        val cardAlpha:OpacityControllerComponent=OpacityControllerComponent(0f),
+        var cityId:String?=null,var visibility:PinVisibility=PinVisibility())
+    private var previousFrameNanos=java.lang.System.nanoTime()
+    // Built-in PICO PBR: frosted translucent pearl, restrained highlight; project art values.
+    private val pinMaterial=PhysicallyBasedMaterial.create(BlendingMode.TRANSPARENT).apply{
+        setBaseColor(Color4(0.76f,0.83f,0.90f,1f));setOpacity(0.72f)
+        setRoughness(0.52f);setMetallic(0f);setEmissiveColor(Color4(0.035f,0.04f,0.045f,1f))
+        setDepthTest(true);setDepthWrite(false);setCullingMode(MaterialCullingMode.BACK)
+    }
+    private val leaderMaterial=UnlitMaterial.create(BlendingMode.TRANSPARENT).apply{
+        setBaseColor(Color4(0.92f,0.95f,1f,0.65f));setApplyToneMapping(false);setDepthTest(true);setDepthWrite(false)
+    }
+    private val stemMesh=MeshResource.createCylinder(height=1f,radius=0.07f)
+    private val headMesh=MeshResource.createSphere(0.16f)
+    private val lineMesh=MeshResource.createCylinder(height=1f,radius=CoordinateStyle.LEADER_RADIUS)
+    private val distanceFrame=coordinates?.let{EntityTransformPath(it.surfaceEntity,origin)}
+    private val distanceCityLocals=mutableMapOf<String,GlobeVector3>()
+    private val coordinateLeader=model(lineMesh,leaderMaterial,"CoordinateLeader",content,owned)
+    private val coordinateLeaderAlpha=OpacityControllerComponent(0f).also{coordinateLeader.components.set(it)}
+    private fun model(mesh: MeshResource,material: Material,name: String,content: SpatialViewContent,owned: MutableList<Entity>): Entity = Entity().apply {
+        setName(name);components.set(ModelComponent(mesh,material));owned.add(this);content.addEntity(this);enabled=false
+    }
+    private val pins=(0 until 8).map{slot->
+        val card=attachments.entity("city_card_"+slot)
+        Pin(model(stemMesh,pinMaterial,"CityStem_"+slot,content,owned),
+            model(headMesh,pinMaterial,"CityPin_"+slot,content,owned),
+            model(lineMesh,leaderMaterial,"CityLeader_"+slot,content,owned),
+            card).also{pin->
+                pin.stem.components.set(pin.stemAlpha);pin.head.components.set(pin.headAlpha)
+                pin.line.components.set(pin.lineAlpha);pin.card?.components?.set(pin.cardAlpha)
+            }
+    }
+    init {
+        owned.add(sunEffect);content.addEntity(sunEffect);sunEffect.enabled=false
+        fun collectSun(e:Entity){
+            e.components[ModelComponent::class.java]?.materials?.forEach{sunMaterials.add(it as ShaderGraphMaterial)}
+            e.getChildren().forEach{collectSun(it)}
+        }
+        collectSun(sunEffect)
+        check(sunMaterials.isNotEmpty()){ "Sun veil material missing" }
+        // V42 project art tuning: retain the bright core/rays, contract the diffuse disk.
+        sunMaterials.forEach{
+            it.setParameter("InnerBloomFalloff_in2",-150f)
+            it.setParameter("InnerBloomStrength_in2",.35f)
+            it.setParameter("WideHaloFalloff_in2",-32f)
+            it.setParameter("WideHaloStrength_in2",.045f)
+            check(abs(it.getParameter<Float>("WideHaloStrength_in2")-.045f)<.0001f)
+        }
+        android.util.Log.i("WorldClockSun","V42 compact profile: core unchanged; bloom .35/-150; halo .045/-32; angular size fixed")
+        android.util.Log.i("WorldClockSun","V36 material parameters="+sunMaterials.first().getParameterNames().joinToString())
+        listOfNotNull(citiesPanel,timelinePanel,toolsPanel,statusPanel,returnPanel).forEach{
+            transform(it).apply{setScaleVector(Vector3(3.5f,3.5f,3.5f));setQuaternion(Quat(0f,0f,0f,1f))}
+        }
+    }
+
+    private fun vec(v: Vector3)=GlobeVector3(v.x.toDouble(),v.y.toDouble(),v.z.toDouble())
+    private fun sdk(v: GlobeVector3)=Vector3(v.x.toFloat(),v.y.toFloat(),v.z.toFloat())
+    private fun quat(q: GlobeQuaternion)=Quat(q.x.toFloat(),q.y.toFloat(),q.z.toFloat(),q.w.toFloat())
+    private fun facing(position:Vector3,head:Vector3)=quat(GlobeQuaternion.align(GlobeVector3.Z,(vec(head)-vec(position)).normalized()))
+    private fun transform(e:Entity)=e.components[TransformComponent::class.java]!!
+    fun cityDirection(city:ClockCity,center:Vector3):GlobeVector3 {
+        val point=geographic.convertPositionTo(sdk(city.direction),origin)
+        return (vec(point)-vec(center)).normalized()
+    }
+    fun update(ready:Boolean,center:Vector3,head:Vector3,light:Vector3,globeOpacity:Float,veilProgress:Float,veilOpacity:Float) {
+        val frameNow=java.lang.System.nanoTime()
+        val seconds=((frameNow-previousFrameNanos)/1e9).coerceIn(0.0,0.1)
+        previousFrameNanos=frameNow
+        state.toolbarDrag.advance(seconds)
+        val unit=toolbarUnit
+        val bar=Vector3(eye.x+state.toolbarDrag.x.toFloat()*unit,eye.y-1f-state.toolbarDrag.y.toFloat()*unit,eye.z-2.5f)
+        // Dock controls keep their original world position after removing the top 92dp slot.
+        timelinePanel?.let{transform(it).setPosition(Vector3(bar.x,bar.y,bar.z))}
+        statusPanel?.let{transform(it).setPosition(Vector3(bar.x,bar.y+92f*unit,bar.z))}
+        val returnAction=state.timeReturnAction()
+        val returnX=if(returnAction==TimeReturnAction.QUAKE_OVERVIEW)216f else 0f
+        returnPanel?.let{transform(it).setPosition(Vector3(bar.x+returnX*unit,bar.y+92f*unit,bar.z+.001f))}
+        show(statusPanel,ready&&state.timeStatusVisible())
+        show(returnPanel,ready&&returnAction!=TimeReturnAction.NONE)
+        citiesPanel?.let{transform(it).setPosition(Vector3(bar.x-456f*unit,bar.y+44f*unit,bar.z+.015f))}
+        toolsPanel?.let{transform(it).setPosition(Vector3(bar.x+456f*unit,bar.y+44f*unit,bar.z+.015f))}
+        show(timelinePanel,ready);show(citiesPanel,ready&&state.citiesOpen);show(toolsPanel,ready&&state.timeToolsOpen)
+        val q=state.earthquakes
+        val quakeVisible=ready&&state.mode==EarthMode.EARTHQUAKE&&q.panelOpen&&!state.citiesOpen&&!state.timeToolsOpen
+        val panelStep=(seconds/.18).toFloat()
+        q.panelReveal=if(quakeVisible)min(1f,q.panelReveal+panelStep) else max(0f,q.panelReveal-panelStep)
+        if(quakePanel==null)quakePanel=attachments.entity("quake_panel")
+        quakePanel?.let{transform(it).apply{
+            setScaleVector(Vector3(3.5f,3.5f,3.5f));setQuaternion(Quat(0f,0f,0f,1f))
+            setPosition(Vector3(bar.x+QuakeStyle.PANEL_ICON_X_DP*unit,bar.y+QuakeStyle.PANEL_BOTTOM_Y_DP*unit,bar.z+.015f))
+        }}
+        show(quakePanel,q.panelReveal>.001f)
+        val c=vec(center);val h=vec(head)
+        val sunPosition=c+vec(light)*350.0
+        sunEffect.enabled=globeOpacity>0.001f && veilOpacity>0.001f
+        // Clip before the black veil begins showing VST: fade 36..42 degrees.
+        // The veil itself feathers 42..58 degrees. Both share the opening spread.
+        val sunFacing=GlobeQuaternion.align(GlobeVector3.Z,(h-sunPosition).normalized())
+        val sunRelative=sunPosition-vec(eye)
+        val toHead=h-sunPosition
+        val visualScale=sqrt(toHead.dot(toHead))/350.0
+        val sunRight=sunFacing.rotate(GlobeVector3.X)*(40.0*visualScale)
+        val sunUp=sunFacing.rotate(GlobeVector3.Y)*(40.0*visualScale)
+        val spread=veilProgress.coerceAtLeast(0.001f).toDouble()
+        val edge=(1/sqrt(1+(spread*tan(Math.toRadians(42.0))).pow(2))).toFloat()
+        val solid=(1/sqrt(1+(spread*tan(Math.toRadians(36.0))).pow(2))).toFloat()
+        sunMaterials.forEach{
+            it.setParameter("VeilCenter_in2",sdk(sunRelative))
+            it.setParameter("VeilRight_in1",sdk(sunRight));it.setParameter("VeilUp_in1",sdk(sunUp))
+            it.setParameter("VeilForward_in2",Vector3(0f,0f,-1f))
+            it.setParameter("VeilMask_Remap_inlow",edge);it.setParameter("VeilMask_Remap_inhigh",solid)
+            it.setParameter("VeilReveal_in2",globeOpacity*veilOpacity)
+        }
+        transform(sunEffect).apply{setPosition(sdk(sunPosition));setQuaternion(quat(sunFacing));setScaleVector(Vector3(visualScale.toFloat(),visualScale.toFloat(),visualScale.toFloat()))}
+        val auditNow=android.os.SystemClock.elapsedRealtime()
+        if(auditNow-lastSunAudit>=5000){
+            lastSunAudit=auditNow
+            android.util.Log.i("WorldClockSun","V36 sun cone="+Math.toDegrees(acos((-sunRelative.normalized().z).coerceIn(-1.0,1.0)))+
+                "; edgeDot="+edge+"; solidDot="+solid+"; enabled="+sunEffect.enabled)
+        }
+        // PICO converts view pixels to metres using the current device UI scale.
+        // 1dp is not 1mm; use the same density as the attachment content.
+        val metresPerDp=content.convertSize(Vector3(uiDensity,0f,0f),ViewCoordinateSpace.Local,origin).x.toDouble()*CityLabelLayout.SCALE
+        if(metresPerDp<=0.0||!metresPerDp.isFinite())return
+        data class LabelFrame(val slot:Int,val city:ClockCity,val top:GlobeVector3,
+            val alpha:Float,val layout:CityLabelLayout)
+        val frames=mutableListOf<LabelFrame>()
+        val distanceTransform=if(state.distance.enabled)distanceFrame?.frame()else null
+        pins.indices.forEach{i->
+            val pin=pins[i];val city=state.cities.getOrNull(i)
+            if(pin.cityId!=city?.id){pin.cityId=city?.id;pin.visibility=PinVisibility()}
+            if(!ready||city==null||state.mode==EarthMode.EARTHQUAKE||state.footprints.enabled){
+                pin.stem.enabled=false;pin.head.enabled=false;pin.line.enabled=false;show(pin.card,false)
+                if(state.labelOpacity[i]!=0f)state.labelOpacity[i]=0f
+                return@forEach
+            }
+            val distanceTip=distanceTransform?.point(distanceCityLocals.getOrPut(city.id){checkNotNull(coordinates).mapping.point(city.latitude,city.longitude).normalized()*(2*DistanceStyle.SURFACE_SCALE)})
+            val n=distanceTip?.let{(it-c).normalized()}?:cityDirection(city,center);val surface=c+n*24.0;val top=distanceTip?:c+n*24.9
+            val limb=PinVisibility.atLimb(n.dot((h-surface).normalized()))
+            val pinAlpha=pin.visibility.update(limb,seconds)
+            val visible=pinAlpha>0.001f
+            pin.stemAlpha.opacity=pinAlpha;pin.headAlpha.opacity=pinAlpha
+            pin.stem.enabled=visible;pin.head.enabled=visible
+            transform(pin.stem).apply{setPosition(sdk(c+n*24.45));setScaleVector(Vector3(1f,.9f,1f));setQuaternion(quat(GlobeQuaternion.align(GlobeVector3.Y,n)))}
+            transform(pin.head).setPosition(sdk(top))
+            if(state.distance.enabled){
+                pin.stem.enabled=false;pin.line.enabled=false
+                val ray=top-h;val z=state.distance.readoutAnchor?.z?:c.z+27.84
+                val k=if(abs(ray.z)<1e-6)1.0 else ((z-h.z)/ray.z).coerceIn(.01,1.0)
+                val anchor=h+ray*k+GlobeVector3(-56*metresPerDp,0.0,0.0)
+                frames.add(LabelFrame(i,city,top,pinAlpha,CityLabelLayout(anchor,anchor,true,
+                    DistanceStyle.CITY_WIDTH*metresPerDp/2,DistanceStyle.CITY_HEIGHT*metresPerDp/2)))
+                return@forEach
+            }
+            // Every label remains in the same upright stage XY plane. The entire plane
+            // lies beyond the globe's frontmost point, so no edge can cut into the sphere.
+            val layout=CityLabelLayout.place(c,top,metresPerDp)
+            if(state.labelOnRight[i]!=layout.labelOnRight)state.labelOnRight[i]=layout.labelOnRight
+            frames.add(LabelFrame(i,city,top,pinAlpha,layout))
+        }
+        val selection=state.coordinates.selection
+        val selectedTip=coordinates?.selectedPosition(origin)
+        val selectedNormal=selectedTip?.let{(it-c).normalized()}
+        val pointAlpha=coordinateVisibility.update(if(ready&&selectedTip!=null&&selectedNormal!=null)
+            PinVisibility.atLimb(selectedNormal.dot((h-selectedTip).normalized())) else 0f,seconds)*state.coordinates.reveal*globeOpacity
+        val generic=!state.distance.enabled&&!state.footprints.enabled&&state.mode!=EarthMode.EARTHQUAKE&&selection!=null&&selection.cityId==null&&selectedTip!=null&&pointAlpha>.001f
+        val pointLayout=if(generic)CityLabelLayout.place(c,selectedTip!!,metresPerDp) else null
+        val candidates=frames.filter{it.alpha>0.001f}.map{CityLabelCandidate(it.city.id,it.layout)}+
+            listOfNotNull(pointLayout?.let{CityLabelCandidate("coordinate-point",it)})
+        // Reserve the globe-height band. Respect unusually large platform UI scales too.
+        val reservedHeight=if(state.distance.enabled&&state.distance.readoutAnchor!=null)
+            (DistanceStyle.PANEL_HEIGHT/2.0+6.0)*metresPerDp else 0.0
+        val halfBand=max(26.0,candidates.sumOf{it.layout.halfHeight}+6.0*metresPerDp*max(0,candidates.size-1)+metresPerDp+reservedHeight)
+        val arranged=if(state.distance.enabled)distanceLabelAvoidance.update(candidates,state.distance.readoutAnchor,
+            metresPerDp,c.y-halfBand,c.y+halfBand,seconds) else {
+            distanceLabelAvoidance.update(emptyList(),null,metresPerDp,c.y-halfBand,c.y+halfBand,seconds)
+            labelAvoidance.update(candidates,metresPerDp,c.y-halfBand,c.y+halfBand,seconds)
+        }
+        frames.forEach{frame->
+            val i=frame.slot;val pin=pins[i]
+            val layout=arranged[frame.city.id]?:frame.layout
+            // Only the geographical horizon fades a city. Crowding never hides one.
+            val labelAlpha=frame.alpha
+            val show=labelAlpha>0.001f
+            // Compose attachments need view-layer alpha; model opacity does not fade their UI.
+            if(abs(state.labelOpacity[i]-labelAlpha)>.002f)state.labelOpacity[i]=labelAlpha
+            pin.lineAlpha.opacity=labelAlpha
+            show(pin.card,show);pin.line.enabled=show&&!state.distance.enabled
+            if(show){
+                pin.card?.let{transform(it).apply{setPosition(sdk(layout.center));setScaleVector(Vector3(CityLabelLayout.SCALE,CityLabelLayout.SCALE,CityLabelLayout.SCALE));setQuaternion(Quat(0f,0f,0f,1f))}}
+                val elbow=layout.elbow
+                fun segment(e:Entity,a:GlobeVector3,b:GlobeVector3){val d=b-a
+                    transform(e).apply{setPosition(sdk((a+b)*0.5));setScaleVector(Vector3(1f,sqrt(d.dot(d)).toFloat(),1f));setQuaternion(quat(GlobeQuaternion.align(GlobeVector3.Y,d)))}
+                }
+                if(!state.distance.enabled)segment(pin.line,frame.top,elbow)
+            }
+        }
+        val placed=arranged["coordinate-point"]
+        if(generic&&placed!=null){
+            // Geography drives placement, so head micro-motion cannot jitter the card.
+            // Keep the solver's exact non-overlap result; only orientation faces the reader.
+            state.coordinates.panelAlpha=pointAlpha;show(coordinatePanel,true)
+            coordinatePanel?.let{transform(it).apply{
+                setPosition(sdk(placed.center));setScaleVector(Vector3(CityLabelLayout.SCALE,CityLabelLayout.SCALE,CityLabelLayout.SCALE))
+                setQuaternion(facing(sdk(placed.center),head))
+            }}
+            val end=placed.elbow;val d=end-selectedTip!!
+            coordinateLeader.enabled=true;coordinateLeaderAlpha.opacity=pointAlpha
+            transform(coordinateLeader).apply{setPosition(sdk((end+selectedTip)*.5));setScaleVector(Vector3(1f,sqrt(d.dot(d)).toFloat(),1f));setQuaternion(quat(GlobeQuaternion.align(GlobeVector3.Y,d)))}
+        }else{
+            show(coordinatePanel,false);coordinateLeader.enabled=false;state.coordinates.panelAlpha=0f
+        }
+        // Fixed geographic children: neither head pose nor city-card placement moves text.
+        val rulerPlacements=if(ready)coordinates?.updateRuler(seconds) else null
+        labelLookupSeconds+=seconds
+        if(coordinates!=null&&rulerPlacements!=null&&labelLookupSeconds>=.5){
+            labelLookupSeconds=0.0
+            coordinateLabels.indices.forEach{i->
+                if(coordinateLabels[i]==null)coordinateLabels[i]=attachments.entity("coordinate_ruler_$i")
+                coordinateLabels[i]?.let{coordinates.bindRulerLabel(it,i)}
+            }
+        }
+        CoordinateRuler.displayOrder.forEach{i->
+            val label=coordinateLabels[i]
+            if(rulerPlacements==null||label==null){
+                label?.enabled=false;state.coordinates.rulerAlpha[i]=0f;return@forEach
+            }
+            val a=state.coordinates.reveal*globeOpacity
+            state.coordinates.rulerAlpha[i]=a;label.enabled=a>.001f
+        }
+        if(auditNow-lastLabelAudit>=5000){
+            lastLabelAudit=auditNow
+            if(coordinates!=null&&state.coordinates.enabled){
+                android.util.Log.i("WorldClockCoordinates","V72 bound labels: resolved=${coordinateLabels.count{it!=null}}; enabled=${coordinateLabels.count{it?.enabled==true}}; references=${CoordinateRuler.displayOrder.filter{CoordinateRuler.slots[it].reference&&coordinateLabels[it]?.enabled==true}.joinToString{CoordinateRuler.slots[it].title}}; maxLocalAnchorError=${coordinates.rulerAnchorError()}; zNormalDot=${coordinates.labelFacingDot()}; upDot=${coordinates.labelUpDot()}; maxRoll=${coordinates.maximumTextRoll()}; textLeaders=0; ${coordinates.referenceWorldPositions()}")
+            }
+            val cards=arranged.values.toList()
+            var overlaps=0
+            for(i in cards.indices)for(j in i+1 until cards.size){val a=cards[i];val b=cards[j]
+                if(abs(a.center.x-b.center.x)<a.halfWidth+b.halfWidth-.0001 &&
+                    abs(a.center.y-b.center.y)<a.halfHeight+b.halfHeight-.0001)overlaps++
+            }
+            android.util.Log.i("WorldClockLabels","V50 front="+candidates.size+"; cards="+arranged.size+
+                "; overlaps="+overlaps+"; ids="+arranged.keys.joinToString()+"; metresPerDp="+metresPerDp)
+        }
+    }
+}
