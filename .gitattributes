@@ -14,3 +14,5 @@ gradlew text eol=lf
 *.jpg binary
 *.png binary
 *.jar binary
+# Source archive ships byte-level SHA256 manifests; preserve upstream line endings.
+third_party/island_supplement/** -text
