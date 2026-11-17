@@ -1,0 +1,31 @@
+South China Sea geographic search supplement / 南海主要岛礁搜索目录
+
+This is a separate natural-feature browsing catalogue, not an administrative-city or jurisdiction database.
+65 named features, compiled 2026-11-17. IDs 900000000001..900000000065 are stable project-local identifiers,
+not GeoNames IDs. Do not renumber them: world-clock bookmarks and personal photo albums use these strings.
+The original cities/catalog.tsv, city pin coordinates and timezone history are unchanged.
+
+Coordinates and geometry: © OpenStreetMap contributors, ODbL 1.0.
+https://www.openstreetmap.org/copyright
+https://opendatacommons.org/licenses/odbl/1-0/
+The separate supplemental database, its factual annotations and adaptations are made available under ODbL 1.0.
+The TSV plus south_china_sea_sources.json provide the complete supplemental database and per-feature provenance.
+
+Chinese standard names checked against the Chinese Committee on Geographical Names' 1983 document:
+https://www.mfa.gov.cn/web/wjb_673085/zzjg_673183/bjhysws_674671/bhflfg/dtdmxgfl/202303/P020230313585088793886.pdf
+Selected factual reef coordinates checked with NUS Satellite Research Project (July 2016):
+https://cil.nus.edu.sg/wp-content/uploads/2017/08/Table-of-Shallow-Features-Names.pdf
+https://cil.nus.edu.sg/south-china-sea-satellite-mapping-project/
+The NUS table's duplicated Subi Reef coordinate was rejected. The catalogue uses an independently checked
+OSM position for 渚碧礁; no claim is made that any source is error-free or survey-grade.
+
+ARCHIPELAGO: representative browsing point, often at sea, not the location of a city.
+ISLAND/CAY: dry-land representative point where a usable coastline was available.
+REEF: reef-flat/atoll reference point, possibly underwater; a Chinese name ending in 岛 or 沙洲 does not
+assert that its entire reference polygon is dry land. No coastline, boundary or sovereignty claim is encoded.
+The +08:00 clock is an explicit application reference offset; it is not a legal-timezone or historical-DST claim.
+population=0 means population is not supplied, not a population measurement.
+
+This list covers major named features, not every named rock, bank or reef in the South China Sea.
+Coordinates use WGS84 latitude/longitude. Mesh placement must use coordinates/earth_surface.bin,
+not a guessed world-space direction. Name search and placement require no network connection.

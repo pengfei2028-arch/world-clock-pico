@@ -1,0 +1,34 @@
+{
+  "id": "maldives",
+  "name": "马尔代夫",
+  "bounds_wsen": [
+    73.25,
+    4.0,
+    73.65,
+    4.45
+  ],
+  "size": [
+    1280,
+    960
+  ],
+  "source": "OpenStreetMap natural=coastline; live 2026-11-17; supersedes older GSHHG within this local detail window",
+  "source_url": "https://www.openstreetmap.org/copyright",
+  "license": "EOX2025 imagery CC BY-NC-SA 4.0; current OSM coastline ODbL / older GSHHG LGPLv3 where explicitly stated",
+  "source_date": "2026-11-17T08:06:05Z",
+  "coverage": "群岛主链存在少量蓝白斑点，大量陆地轮廓无法分辨；薄环礁/小岛低于原8K像素尺度。",
+  "polygon_count": 129,
+  "classification": "dry-land coastline draft only, not submerged reef",
+  "source_day_sha256": "e034b66dfefab2171d49ecbf8ac68606e0902397203447eea56b60ec6a2932eb",
+  "visual_material": "Actual georeferenced 2025 EOX Sentinel-2 cloudless RGB on sourced land mask; no invented details",
+  "limitations": "No island enlargement. 2K regional texels can still exceed tiny cay widths; full-detail coast is retained in vector and may need smaller geographic tiles. These are conservative additions only; present land and its 1-original-pixel fringe excluded.",
+  "excluded_unclosed_lines": 0,
+  "geometry_revision": "current OSM after real satellite overlay revealed old GSHHG shoreline misregistration; no arbitrary pixel translation",
+  "coastline_source": "OpenStreetMap current coastline 2026-11-17T08:06:05Z; ODbL 1.0; disused/abandoned filtered",
+  "alpha_identical_to_selected_source_mask": true,
+  "source_full_window_coverage": true,
+  "outside_mask_unchanged": true,
+  "imagery_metadata": "sources/imagery/maldives_modern_EOX2025.json",
+  "query": "[out:json][timeout:40];way[\"natural\"=\"coastline\"](3.985,73.235,4.465,73.665);out body geom;",
+  "download_endpoint": "https://overpass-api.de/api/interpreter",
+  "raw_osm_response_sha256": "b83cd1082178e830e384289c9141c5e2f5dd00c3e3dbcf180707673f71252cdd"
+}

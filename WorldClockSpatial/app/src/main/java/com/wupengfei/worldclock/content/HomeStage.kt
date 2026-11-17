@@ -181,7 +181,8 @@ private fun ImmersiveHomeStage() {
                     bindPinPositions(context.assets.open("cities/pin_positions.tsv").bufferedReader())
                     val rules=CityTimeZones.read(context.assets.open("cities/timezones.tsv").bufferedReader())
                     cities.forEach{it.timeZones=rules}
-                }
+                }.withGeographicPlaces(context.assets.open("places/south_china_sea.tsv").bufferedReader(),
+                    CoordinateSurface.read(context.assets.open("coordinates/earth_surface.bin")))
             }
             clock.catalog=catalog
             val ids=context.getSharedPreferences("world_clock",0).getString("cityIds", "").orEmpty().split(',')

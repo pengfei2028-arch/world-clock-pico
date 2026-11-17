@@ -1,0 +1,49 @@
+{
+  "name": "xisha_yongle",
+  "crs": "EPSG:4326",
+  "wgs84_bounds_wsen": [
+    111.52,
+    16.43,
+    111.86,
+    16.67
+  ],
+  "size": [
+    3629,
+    2672
+  ],
+  "year": 2024,
+  "acquisition": "2024-02-03",
+  "license": "Copernicus Sentinel Data Legal Notice",
+  "license_url": "https://sentinels.copernicus.eu/documents/247904/690755/Sentinel_Data_Legal_Notice",
+  "attribution": "Contains modified Copernicus Sentinel data 2024. Accessed via Earth Search / AWS Sentinel-2 L2A COGs.",
+  "sources": [
+    {
+      "id": "S2B_49QEU_20240203_0_L2A",
+      "date": "2024-02-03T03:13:19.507000Z",
+      "cloud_cover_scene": 0.214764,
+      "source_url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/49/Q/EU/2024/2/S2B_49QEU_20240203_0_L2A/TCI.tif",
+      "source_crs": "EPSG:32649",
+      "source_window": [
+        5546,
+        5677,
+        3637,
+        2668
+      ],
+      "source_affine": [
+        10.0,
+        0.0,
+        555440.0,
+        0.0,
+        -10.0,
+        1843250.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  ],
+  "resampling": "Bilinear warp from original 10m TCI to WGS84 equirectangular, approx10m; no AI/geometry alteration",
+  "missing_pixels": 31,
+  "notes": "Single-day acquisition; not verified current2026 coastline. Reef/water colours are not dry-land outline.",
+  "visual_qa": "Usable geographic reference; sea has white speckles (cloud/glint/waves not classified), do not interpret them as land; 31 zero boundary pixels."
+}

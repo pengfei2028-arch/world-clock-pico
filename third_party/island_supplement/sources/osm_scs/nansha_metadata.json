@@ -1,0 +1,73 @@
+{
+  "bounds_wsen": [
+    111.0,
+    7.3,
+    116.0,
+    12.0
+  ],
+  "size": [
+    2560,
+    2406
+  ],
+  "counts": {
+    "land": 108,
+    "submerged_reef": 457
+  },
+  "imagery": [
+    {
+      "file": "sources/imagery/nansha_meiji_EOX2025_mercator.json",
+      "year": 2025,
+      "license": "CC BY-NC-SA 4.0",
+      "attribution": "EOxCloudless by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2025)."
+    }
+  ],
+  "source": "OpenStreetMap contributors / ODbL; WGS84",
+  "source_day_sha256": "e034b66dfefab2171d49ecbf8ac68606e0902397203447eea56b60ec6a2932eb",
+  "unchanged_outside_alpha": true,
+  "land_reef_separate": true,
+  "notes": "True coordinate footprints; no enlarged islands or sovereignty lines. Areas outside imagery coverage use illustrative colour on sourced vector footprints, not invented terrain.",
+  "query": "[out:json][timeout:30];(way[\"natural\"~\"^(coastline|reef)$\"](7.0,111.0,12.5,117.5);relation[\"natural\"~\"^(coastline|reef)$\"](7.0,111.0,12.5,117.5););out body geom;",
+  "download_endpoint": "https://overpass-api.de/api/interpreter",
+  "source_retrieved_date": "2026-11-17",
+  "raw_osm_response_sha256": "1470b41e7480992ab3b01ffd3e63575e37ee45075deaa756b557849f21cd6bbf",
+  "changes_to_geometry": "Closed ways and exact-endpoint stitched coastlines; relation holes retained. Nansha offshore subset excludes adjacent large mainland/island shapes. Rendering ignores disused=yes and abandoned=yes and land polygon longitude span >0.6 degrees.",
+  "v105_brightness": {
+    "id": "scs_nansha",
+    "bounds_wsen": [
+      111.0,
+      7.3,
+      116.0,
+      12.0
+    ],
+    "size": [
+      2560,
+      2406
+    ],
+    "sourceSha256": "7a4880ca4aca65e4e9c93eeaec260e1025cfebd797514d3448326ab70a61f8aa",
+    "outputSha256": "5d6bde19dc90ade7e3c006986d3c594c87ce5afb8845a995662a2bb47bb80a32",
+    "landGainTarget": 1.35,
+    "reefGainTarget": 1.15,
+    "gainDomain": "encoded sRGB RGB channels; per-pixel shared scale capped to preserve hue without channel clipping",
+    "alphaExact": true,
+    "transparentPixelsExact": true,
+    "boundsExact": true,
+    "artificialIslandScale": 1.0,
+    "changedRGBPixels": 94471,
+    "statistics": {
+      "land": {
+        "pixels": 1098,
+        "meanEncodedLumaBefore": 136.94502295081963,
+        "meanEncodedLumaAfter": 182.5031732240437,
+        "meanEncodedLumaIncreasePercent": 33.267474269280406,
+        "actualGainMedian": 1.335882306098938
+      },
+      "reef": {
+        "pixels": 71815,
+        "meanEncodedLumaBefore": 67.40171778876278,
+        "meanEncodedLumaAfter": 77.7133711202395,
+        "meanEncodedLumaIncreasePercent": 15.298799006567565,
+        "actualGainMedian": 1.149999976158142
+      }
+    }
+  }
+}

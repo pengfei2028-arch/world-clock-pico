@@ -113,29 +113,31 @@ import androidx.compose.ui.platform.LocalView
                 Text("已有照片的地点暂不支持移除",style=uiText(12),color=PicoTheme.colorScheme.labelSecondary)
                 GlassAction({clock.touchUi();manage=false},Modifier.fillMaxWidth().height(38.dp)){Text("添加地点",style=uiText(14))}
             }else{
+                // Keep the same single rounded SDK hover layer as the world-time city search.
                 TextField(value=f.query,onValueChange={clock.touchUi();f.query=it},
-                    modifier=Modifier.fillMaxWidth().spatialHoverEffect(SpatialHoverStyle.Highlight),textStyle=uiText(16),
-                    placeholder={Text("城市或国家",style=uiText(16))},enabled=clock.catalog!=null&&available,
+                    modifier=Modifier.fillMaxWidth(),textStyle=uiText(16),
+                    placeholder={Text("城市",style=uiText(16))},enabled=clock.catalog!=null&&available,
                     colors=TextFieldDefaults.textFieldColors(textColor=Color.White,backgroundColor=Color.White.copy(alpha=.06f),focusedColor=Color.White.copy(alpha=.12f),placeholderColor=Color.White.copy(alpha=.55f)))
                 val results=remember(clock.catalog,f.query){clock.catalog?.search(f.query).orEmpty()}
                 key(f.query){
                     Column(Modifier.heightIn(max=220.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(6.dp)){
-                        if(results.isEmpty())Text(if(clock.catalog==null||!f.initialized)"正在载入" else "没有匹配城市",style=uiText(14))
+                        if(results.isEmpty())Text(if(clock.catalog==null||!f.initialized)"正在载入" else "没有匹配地点",style=uiText(14))
                         results.forEach{city->
                             GlassAction({clock.touchUi();if(f.albums.any{it.cityId==city.id})clock.selectFootprint(city)else f.add(city)},
                                 Modifier.fillMaxWidth().height(40.dp),enabled=available){
                                 Text(city.name,style=uiText(15),modifier=Modifier.weight(1f).alignByBaseline(),maxLines=1,overflow=TextOverflow.Ellipsis)
                                 Spacer(Modifier.width(8.dp))
-                                Text(city.country,style=uiText(12),color=PicoTheme.colorScheme.labelSecondary,
+                                Text(city.searchContext,style=uiText(12),color=PicoTheme.colorScheme.labelSecondary,
                                     modifier=Modifier.widthIn(max=76.dp).alignByBaseline(),maxLines=1,overflow=TextOverflow.Ellipsis)
                             }
                         }
                     }
                 }
                 if(f.albums.isNotEmpty())GlassAction({clock.touchUi();manage=true},Modifier.fillMaxWidth().height(34.dp)){Text("管理地点",style=uiText(13))}
+                if(results.any{it.feature=="ARCHIPELAGO"})Text("群岛定位至浏览代表点",style=uiText(10),color=PicoTheme.colorScheme.labelTertiary)
             }
             if(f.error.isNotBlank()&&f.errorCityId==null)Text(f.error,style=uiText(12),color=PicoTheme.colorScheme.labelSecondary)
-            Text("地名 © GeoNames · CC BY 4.0",style=uiText(10),color=PicoTheme.colorScheme.labelTertiary)
+            Text("地名 © GeoNames / OpenStreetMap contributors",style=uiText(10),color=PicoTheme.colorScheme.labelTertiary)
         }
         return
     }
@@ -180,7 +182,7 @@ import androidx.compose.ui.platform.LocalView
             padding=0.dp,spacing=0.dp){
             Column(Modifier.padding(horizontal=24.dp,vertical=16.dp),verticalArrangement=Arrangement.spacedBy(if(expanded)12.dp else 16.dp)){
                 Row(Modifier.fillMaxWidth().height(48.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)){
-                    Text("${city.name} · ${city.country}",style=uiText(20,FontWeight.Medium),modifier=Modifier.weight(1f),maxLines=1,overflow=TextOverflow.Ellipsis)
+                    Text(city.albumTitle,style=uiText(20,FontWeight.Medium),modifier=Modifier.weight(1f),maxLines=1,overflow=TextOverflow.Ellipsis)
                     if(!expanded)GlassAction({clock.touchUi();choosePhotos(sourceView)},Modifier.size(144.dp,48.dp),enabled=!f.busy&&f.pickingCityId==null){
                         Text("＋ 添加照片",style=uiText(16))
                     }

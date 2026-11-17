@@ -12,8 +12,8 @@ android {
         applicationId = "com.wupengfei.worldclock"
         minSdk = 35
         targetSdk = 35
-        versionCode = 102
-        versionName = "0.102.0"
+        versionCode = 105
+        versionName = "0.105.0"
         buildConfigField("String", "TEMPERATURE_BASE_URL", "\"${providers.gradleProperty("temperatureBaseUrl").getOrElse("")}\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -39,6 +39,10 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+    androidResources {
+        // PICO Spatial bundles are prebuilt locally and must stay uncompressed in the APK.
+        noCompress += "bundle"
     }
 }
 

@@ -1,8 +1,16 @@
 # 地球观察 · Earth Observer for PICO
 
-基于 **PICO Spatial SDK 6.1.9、Kotlin 和 Compose** 的 MR 地球、世界时间、全球气温、地震活动、城市距离及个人足迹应用。当前交付版本 **V102 / 0.102.0**。保留原有8K资源，不新增8K贴图。本工程不是Unity项目。
+基于 **PICO Spatial SDK 6.1.9、Kotlin 和 Compose** 的 MR 地球、世界时间、全球气温、地震活动、城市距离及个人足迹应用。当前交付版本 **V105 / 0.105.0**。保留原有8K资源，不新增8K贴图。本工程不是Unity项目。
 
-[下载 V102 APK 与 SHA256 校验值](https://github.com/pengfei2028-arch/world-clock-pico/releases/tag/v0.102.0) · 使用现有开发签名，支持保留数据覆盖安装；不是商店发行包。
+[下载 V105 APK 与 SHA256 校验值](https://github.com/pengfei2028-arch/world-clock-pico/releases/tag/v0.105.0) · 使用现有开发签名，支持保留数据覆盖安装；不是商店发行包。
+
+## V105 群岛细节与离线搜索
+
+在原有地球 Day 贴图内补充南海主要岛礁及部分全球群岛细节，并适度提亮南海陆地与礁盘。保留真实地理尺度、现有8K/3K尺寸、材质、光照、云层、夜灯和交互；没有新增运行纹理或球体。增加65条离线南海地点搜索，修正城市输入框重复矩形高亮，输入提示保持“城市”。
+
+用户头显查看V105后授权发布。Release构建、261项测试与运行资源核对通过；发布前仅补充现有更多菜单中的地图来源署名。可安装APK为开发签名；PICO Vibe Lab 使用[独立根目录构建分支](https://github.com/pengfei2028-arch/world-clock-pico/tree/release/vibelab-v102)，由平台构建签名。
+
+岛礁补图按非商业许可发布：EOxCloudless — EOX IT Services GmbH（Contains modified Copernicus Sentinel data 2025），CC BY-NC-SA 4.0；© OpenStreetMap contributors（ODbL）、GSHHG（LGPL v3）及选定Copernicus Sentinel 2024数据。完整来源、各自许可和派生文件见[补图来源归档](third_party/island_supplement/README.md)，不要视为无条件商业授权。见[V105交接](HANDOFF_V105.md)。
 
 ## V102 个人足迹与选图窗口
 
