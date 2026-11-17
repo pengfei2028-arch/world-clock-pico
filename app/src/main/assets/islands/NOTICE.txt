@@ -1,0 +1,35 @@
+Island texture supplement / V105 non-commercial release
+
+Prepared 2026-11-17. This build replaces only selected blocks/pixels of the
+existing Full/Shared Day texture. Texture dimensions, resource count, shaders,
+night lights, normal map, specular map, clouds and globe geometry are unchanged.
+Small islands retain their geographic scale; a feature may be smaller than a
+pixel at the existing global resolution. This is not a navigation/chart product.
+
+South China Sea shoreline/reef geometry and six modern detail windows:
+© OpenStreetMap contributors, ODbL 1.0.
+https://www.openstreetmap.org/copyright
+https://opendatacommons.org/licenses/odbl/1-0/
+
+Fourteen broad archipelago outline drafts use GSHHG 2.3.7 (2017), LGPL v3.
+https://www.soest.hawaii.edu/pwessel/gshhg/
+https://www.gnu.org/licenses/lgpl-3.0.html
+These drafts are not an exhaustive current survey of all global islands.
+
+Satellite-derived color in the detail windows includes EOxCloudless
+https://cloudless.eox.at by EOX IT Services GmbH
+(Contains modified Copernicus Sentinel data 2025),
+CC BY-NC-SA 4.0. Geographic clipping, resampling and blending are modifications.
+https://s2maps.eu/
+https://creativecommons.org/licenses/by-nc-sa/4.0/
+Selected South China Sea details also contain modified Copernicus Sentinel
+data (2024), obtained through the public Sentinel-2 L2A COG collection.
+https://registry.opendata.aws/sentinel-2-l2a-cogs/
+
+The combined supplement containing EOX imagery is a non-commercial
+adaptation under CC BY-NC-SA 4.0. This notice does not relicense the pre-existing
+application or other original Earth art. Supplement sources, geometry and licensing
+are available in third_party/island_supplement/ in the public repository:
+https://github.com/pengfei2028-arch/world-clock-pico/tree/release/vibelab-v102/third_party/island_supplement
+Source attribution is available in the application's existing More menu.
+No boundaries, jurisdiction claims or artificial island enlargement are added.

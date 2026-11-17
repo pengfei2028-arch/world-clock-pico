@@ -268,28 +268,34 @@ internal fun CityPanel(state:ClockState,context:Context){
                     }
                 }
                 GlassAction({manage=false},Modifier.fillMaxWidth().height(38.dp)){Text("添加城市",style=uiText(14))}
-                Text("地名 © GeoNames · CC BY 4.0",style=uiText(10),color=PicoTheme.colorScheme.labelTertiary)
+                Text("地名 © GeoNames / OpenStreetMap contributors",style=uiText(10),color=PicoTheme.colorScheme.labelTertiary)
             }else{
+                // The SDK field owns its rounded hover layer; an outer effect highlights a rectangular wrapper.
                 TextField(value=state.query,onValueChange={state.touchUi();state.query=it},
-                    modifier=Modifier.fillMaxWidth().spatialHoverEffect(SpatialHoverStyle.Highlight),textStyle=uiText(16),
+                    modifier=Modifier.fillMaxWidth(),textStyle=uiText(16),
                     colors=TextFieldDefaults.textFieldColors(textColor=Color.White,backgroundColor=Color.White.copy(alpha=.06f),focusedColor=Color.White.copy(alpha=.12f),placeholderColor=Color.White.copy(alpha=.55f)),
-                    placeholder={Text("城市或国家",style=uiText(16))},enabled=state.catalog!=null)
+                    placeholder={Text("城市",style=uiText(16))},enabled=state.catalog!=null)
                 val results=remember(state.catalog,state.query){state.catalog?.search(state.query).orEmpty()}
                 Column(Modifier.heightIn(max=220.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(6.dp)){
-                    if(results.isEmpty())Text(if(state.catalog==null)"正在载入" else "没有匹配城市",style=uiText(14))
+                    if(results.isEmpty())Text(if(state.catalog==null)"正在载入" else "没有匹配地点",style=uiText(14))
                     results.forEach{city->
                         GlassAction({state.add(city,context)},Modifier.fillMaxWidth().height(40.dp),state.ready){
                           Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){
                             Text(city.name,style=uiText(15),modifier=Modifier.weight(1f).alignByBaseline(),
                                 maxLines=1,overflow=TextOverflow.Ellipsis)
                             Spacer(Modifier.width(8.dp))
-                            Text(city.country,style=uiText(12),color=PicoTheme.colorScheme.labelSecondary,
+                            Text(city.searchContext,style=uiText(12),color=PicoTheme.colorScheme.labelSecondary,
                                 modifier=Modifier.widthIn(max=76.dp).alignByBaseline(),maxLines=1,overflow=TextOverflow.Ellipsis)
                           }
                         }
                     }
                 }
                 if(state.cities.isNotEmpty())GlassAction({manage=true},Modifier.fillMaxWidth().height(34.dp)){Text("管理城市",style=uiText(13))}
+                if(results.any{it.isGeographicPlace}){
+                    Text("岛礁参考时间 UTC+08:00",style=uiText(10),color=PicoTheme.colorScheme.labelTertiary)
+                    if(results.any{it.feature=="ARCHIPELAGO"})Text("群岛定位至浏览代表点",style=uiText(10),color=PicoTheme.colorScheme.labelTertiary)
+                    Text("© OpenStreetMap contributors",style=uiText(10),color=PicoTheme.colorScheme.labelTertiary)
+                }
             }
             if(state.notice.isNotBlank())Text(state.notice,style=uiText(12),color=PicoTheme.colorScheme.labelSecondary)
         }
@@ -579,6 +585,30 @@ private fun DateWheel(label:String,value:Int,range:IntRange,state:ClockState,onV
 }
 
 @Composable
+internal fun MapSourceCredits(){
+    val context=LocalContext.current
+    var expanded by remember{mutableStateOf(false)}
+    GlassAction({expanded=!expanded},Modifier.fillMaxWidth().height(32.dp)){
+        Text(if(expanded)"收起地图来源" else "地图来源与许可",style=uiText(12))
+    }
+    if(expanded)Column(Modifier.fillMaxWidth().heightIn(max=200.dp).verticalScroll(rememberScrollState()),
+        verticalArrangement=Arrangement.spacedBy(8.dp)){
+        Text("以下来源用于岛礁补图，按非商业许可发布。",style=uiText(12),color=PicoTheme.colorScheme.labelSecondary)
+        listOf(
+            "EOxCloudless — EOX IT Services GmbH\nContains modified Copernicus Sentinel data 2025\nCC BY-NC-SA 4.0" to "https://cloudless.eox.at",
+            "© OpenStreetMap contributors · ODbL 1.0" to "https://www.openstreetmap.org/copyright",
+            "GSHHG 2.3.7 — Paul Wessel / Walter H. F. Smith\nLGPL v3" to "https://www.soest.hawaii.edu/pwessel/gshhg/",
+            "Contains modified Copernicus Sentinel data 2024" to "https://registry.opendata.aws/sentinel-2-l2a-cogs/",
+        ).forEach{(label,url)->
+            Text(label,style=uiText(12).copy(textDecoration=androidx.compose.ui.text.style.TextDecoration.Underline),
+                modifier=Modifier.fillMaxWidth().clickable(interactionSource=remember{MutableInteractionSource()},indication=null){
+                    context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW,android.net.Uri.parse(url)))
+                }.padding(vertical=4.dp))
+        }
+    }
+}
+
+@Composable
 internal fun TimeOptionsPanel(state:ClockState){
     val navigator=LocalSpatialNavigator.current
     if(state.mode==EarthMode.EARTHQUAKE){
@@ -587,6 +617,7 @@ internal fun TimeOptionsPanel(state:ClockState){
             GlassAction({WorldClockSession.collapse(navigator)},Modifier.fillMaxWidth().height(40.dp),state.ready&&!WorldClockSession.busy){Text("收起到桌面",style=uiText(15))}
             GlassAction({state.switchMode(EarthMode.WORLD_TIME)},Modifier.fillMaxWidth().height(40.dp)){Text("返回世界时间",style=uiText(15))}
             GlassAction({state.touchUi();state.timeToolsOpen=false},Modifier.fillMaxWidth().height(36.dp)){Text("收起菜单",style=uiText(14))}
+            MapSourceCredits()
         }
         return
     }
@@ -609,6 +640,7 @@ internal fun TimeOptionsPanel(state:ClockState){
             GlassAction({state.touchUi();state.timeToolsOpen=false},Modifier.weight(1f).height(36.dp)){Text("取消",style=uiText(14))}
             GlassAction({state.chooseDate(chosen);state.timeToolsOpen=false},Modifier.weight(1f).height(36.dp)){Text("查看",style=uiText(14))}
         }
+        MapSourceCredits()
     }
 }
 

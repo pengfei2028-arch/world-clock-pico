@@ -1,0 +1,36 @@
+{
+  "id": "chagos",
+  "name": "查戈斯",
+  "bounds_wsen": [
+    72.32,
+    -7.5,
+    72.55,
+    -7.2
+  ],
+  "size": [
+    1280,
+    960
+  ],
+  "source": "OpenStreetMap natural=coastline; live 2026-11-17; supersedes older GSHHG within this local detail window",
+  "source_url": "https://www.openstreetmap.org/copyright",
+  "license": "EOX2025 imagery CC BY-NC-SA 4.0; current OSM coastline ODbL / older GSHHG LGPLv3 where explicitly stated",
+  "source_date": "OSM live API 2026-11-17",
+  "coverage": "图幅几乎为海色，仅最南侧迪戈加西亚附近有微弱亮斑。",
+  "polygon_count": 13,
+  "classification": "dry-land coastline draft only, not submerged reef",
+  "source_day_sha256": "e034b66dfefab2171d49ecbf8ac68606e0902397203447eea56b60ec6a2932eb",
+  "visual_material": "Actual georeferenced 2025 EOX Sentinel-2 cloudless RGB on sourced land mask; no invented details",
+  "limitations": "No island enlargement. 2K regional texels can still exceed tiny cay widths; full-detail coast is retained in vector and may need smaller geographic tiles. These are conservative additions only; present land and its 1-original-pixel fringe excluded.",
+  "excluded_unclosed_lines": 0,
+  "geometry_revision": "current OSM after real satellite overlay revealed old GSHHG shoreline misregistration; no arbitrary pixel translation",
+  "coastline_source": "OpenStreetMap current coastline OSM live API 2026-11-17; ODbL 1.0; disused/abandoned filtered",
+  "alpha_identical_to_selected_source_mask": true,
+  "source_full_window_coverage": true,
+  "outside_mask_unchanged": true,
+  "imagery_metadata": "sources/imagery/chagos_modern_EOX2025.json",
+  "query": "[out:json][timeout:40];way[\"natural\"=\"coastline\"](-7.515,72.30499999999999,-7.1850000000000005,72.565);out body geom;",
+  "download_endpoint": "https://overpass-api.de/api/interpreter",
+  "raw_osm_response_sha256": "aa0ed4c2f4bb7a062e823101c7c7aac7b618aa54e5bf9d95ee6ad7f8181fa083",
+  "supplementary_osm_api_xml_sha256": "8f519cb195ccf5cd6ed89b23bf6b2fae3c5a8e82db6891fb351b00d96c9b60c7",
+  "supplementary_source": "https://api.openstreetmap.org/api/0.6/"
+}

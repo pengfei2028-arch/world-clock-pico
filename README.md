@@ -1,13 +1,13 @@
 # 地球观察 · PICO Vibe Lab 提交工程
 
-这是 V102（0.102.0）的独立投稿分支 `release/vibelab-v102`。
+当前投稿版本是 **V105（0.105.0）**。为保持原投稿地址与构建结构，分支沿用 `release/vibelab-v102`。
 
-完整 Android Gradle 工程直接位于仓库根目录。应用代码和运行资产来自原始提交
+完整 Android Gradle 工程直接位于仓库根目录。V102 基线代码和运行资产来自原始提交
 `53bf615742a2eb07cfccc519d7400da205aa25d9` 的 `WorldClockSpatial/`。
 原始工程、Spatial Editor 源资产、设计文档和版本历史保留在本仓库 `main` 分支。
-投稿分支不携带编辑器原稿及其历史；没有降低贴图分辨率，也没有修改应用功能或视觉。
+投稿分支不携带编辑器原稿及其历史；现有 8K/3K 贴图尺寸和地球材质保持。
 
-本次投稿适配仅补充 `.bundle` 不压缩的 Android 资源打包配置。所有运行资产仍保留。
+V105 补充了南海主要岛礁与部分全球群岛的颜色细节，并适度提亮南海补图。原图保留，未夸大岛屿面积，未改光照、云层、夜灯、法线或高光。增加65条离线南海地点搜索；修正城市输入框重复矩形悬停高亮，提示文字保持“城市”。更多菜单提供地图来源与许可。详细边界与验证见 `HANDOFF_V103.md` 至 `HANDOFF_V105.md`。
 
 ## 构建
 
@@ -26,7 +26,11 @@ Release 不含个人签名配置，由 PICO 平台签名。构建不调用 Spati
 城市/时区数据的来源与许可证保留在 `app/src/main/assets/cities/`。
 天气使用 Open-Meteo，应用保留来源标注；商业使用须按服务条款评估。
 地震使用 USGS 目录；气温请以界面标注的有效时间为准。
-这是私人项目的投稿源码，不额外授予代码或美术资源的公开分发许可。
+岛礁颜色补图包含 **EOxCloudless — EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2025)**，以 [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) 非商业方式使用和发布；来源：[EOxCloudless](https://cloudless.eox.at)。选定南海细节还含改编的 Copernicus Sentinel 2024 数据。
+
+岸线数据来自 [© OpenStreetMap contributors](https://www.openstreetmap.org/copyright)（ODbL 1.0）与 [GSHHG 2.3.7](https://www.soest.hawaii.edu/pwessel/gshhg/)（LGPL v3）。派生补图、坐标边界、几何和各自许可见 [来源归档](third_party/island_supplement/README.md)。搜索数据及来源完整保留于 `app/src/main/assets/places/`。这些素材不是无条件商业授权；各部分继续遵守其各自许可。
+
+除明确按第三方许可提供的补图与数据外，本仓库不额外授予代码或其他美术资源的许可。
 第三方数据继续遵守各自许可证。仓库不包含个人签名密钥、部署私钥或账户凭据。
 
 ## 投稿记录

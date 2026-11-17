@@ -101,5 +101,6 @@ import java.time.format.DateTimeFormatter
             GlassAction({state.touchUi();t.select(t.index+1)},Modifier.weight(1f).height(34.dp),t.index<(t.manifest?.frames?.lastIndex?:0)){Text("后一小时",style=uiText(12))}
         }
         GlassAction({t.refreshRequest++;state.touchUi()},Modifier.fillMaxWidth().height(34.dp)){Text("检查更新",style=uiText(13))}
+        MapSourceCredits()
     }
 }

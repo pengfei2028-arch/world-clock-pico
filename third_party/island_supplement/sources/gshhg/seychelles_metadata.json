@@ -1,0 +1,24 @@
+{
+  "id": "seychelles",
+  "name": "塞舌尔花岗岩主群",
+  "bounds_wsen": [
+    55,
+    -5,
+    56,
+    -3.5
+  ],
+  "size": [
+    1365,
+    2048
+  ],
+  "source": "GSHHG 2.3.7 full L1 with L2 enclosed water holes",
+  "source_url": "https://www.soest.hawaii.edu/pwessel/gshhg/",
+  "license": "LGPLv3; source and reproducible derivative extraction retained",
+  "source_date": "2017-06-15; underlying surveys older",
+  "coverage": "主岛附近只剩模糊亮斑，邻近小岛缺乏可辨轮廓。",
+  "polygon_count": 28,
+  "classification": "dry-land coastline draft only, not submerged reef",
+  "source_day_sha256": "e034b66dfefab2171d49ecbf8ac68606e0902397203447eea56b60ec6a2932eb",
+  "visual_material": "old day_8k.jpg sampled where land chroma exists; otherwise muted illustrative land colour, not invented satellite detail",
+  "limitations": "No island enlargement. 2K regional texels can still exceed tiny cay widths; full-detail coast is retained in vector and may need smaller geographic tiles. These are conservative additions only; present land and its 1-original-pixel fringe excluded."
+}

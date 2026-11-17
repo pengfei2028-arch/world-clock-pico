@@ -1,0 +1,36 @@
+{
+  "id": "marshall",
+  "name": "马绍尔主群",
+  "bounds_wsen": [
+    171.0,
+    6.9,
+    171.4,
+    7.3
+  ],
+  "size": [
+    1280,
+    960
+  ],
+  "source": "OpenStreetMap natural=coastline; live 2026-11-17; supersedes older GSHHG within this local detail window",
+  "source_url": "https://www.openstreetmap.org/copyright",
+  "license": "EOX2025 imagery CC BY-NC-SA 4.0; current OSM coastline ODbL / older GSHHG LGPLv3 where explicitly stated",
+  "source_date": "OSM live API 2026-11-17",
+  "coverage": "主图幅基本纯海色，多个真实环礁链无可辨陆地轮廓。",
+  "polygon_count": 46,
+  "classification": "dry-land coastline draft only, not submerged reef",
+  "source_day_sha256": "e034b66dfefab2171d49ecbf8ac68606e0902397203447eea56b60ec6a2932eb",
+  "visual_material": "Actual georeferenced 2025 EOX Sentinel-2 cloudless RGB on sourced land mask; no invented details",
+  "limitations": "No island enlargement. 2K regional texels can still exceed tiny cay widths; full-detail coast is retained in vector and may need smaller geographic tiles. These are conservative additions only; present land and its 1-original-pixel fringe excluded.",
+  "excluded_unclosed_lines": 0,
+  "geometry_revision": "current OSM after real satellite overlay revealed old GSHHG shoreline misregistration; no arbitrary pixel translation",
+  "coastline_source": "OpenStreetMap current coastline OSM live API 2026-11-17; ODbL 1.0; disused/abandoned filtered",
+  "alpha_identical_to_selected_source_mask": true,
+  "source_full_window_coverage": true,
+  "outside_mask_unchanged": true,
+  "imagery_metadata": "sources/imagery/marshall_modern_EOX2025.json",
+  "query": "[out:json][timeout:40];way[\"natural\"=\"coastline\"](6.885000000000001,170.985,7.3149999999999995,171.415);out body geom;",
+  "download_endpoint": "https://overpass-api.de/api/interpreter",
+  "raw_osm_response_sha256": "f1a2962930ad899dbeacd1c4813c2cc9d3bce81de689d44988070cd79254f398",
+  "supplementary_osm_api_xml_sha256": "d734e24ea0605ba588fd637060a251341ec2a60f37068e730669f52547947f32",
+  "supplementary_source": "https://api.openstreetmap.org/api/0.6/"
+}

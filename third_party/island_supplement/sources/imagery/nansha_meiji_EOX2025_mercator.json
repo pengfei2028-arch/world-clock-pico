@@ -1,0 +1,113 @@
+{
+  "name": "nansha_meiji",
+  "year": 2025,
+  "crs": "EPSG:3857",
+  "wgs84_bounds_wsen": [
+    115.4443359375,
+    9.838979375579338,
+    115.6201171875,
+    9.96885060854611
+  ],
+  "pixel_size_m": 19.109257071294063,
+  "size": [
+    1024,
+    768
+  ],
+  "tile_range": {
+    "z": 13,
+    "x0": 6723,
+    "x1": 6726,
+    "y0": 3868,
+    "y1": 3870
+  },
+  "tiles": [
+    {
+      "z": 13,
+      "x": 6723,
+      "y": 3868,
+      "url": "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2025_3857/default/GoogleMapsCompatible/13/3868/6723.jpg",
+      "sha256": "348aaf901cd55cbc10556278c23c6a208f7374aff7e72f5a83ae5f9ad5aa2f04"
+    },
+    {
+      "z": 13,
+      "x": 6724,
+      "y": 3868,
+      "url": "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2025_3857/default/GoogleMapsCompatible/13/3868/6724.jpg",
+      "sha256": "6446c12e069b082911e882460e949bb65f07194990fbdf019d33194099afce98"
+    },
+    {
+      "z": 13,
+      "x": 6725,
+      "y": 3868,
+      "url": "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2025_3857/default/GoogleMapsCompatible/13/3868/6725.jpg",
+      "sha256": "f2947517b39f06494db263c3be4b8b10196eeceeb85937df421a2b0f2dd35f45"
+    },
+    {
+      "z": 13,
+      "x": 6726,
+      "y": 3868,
+      "url": "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2025_3857/default/GoogleMapsCompatible/13/3868/6726.jpg",
+      "sha256": "e51a748b3d29e30328ea92b88a217c9d0c43478463ebf1767f6cba6b8360c138"
+    },
+    {
+      "z": 13,
+      "x": 6723,
+      "y": 3869,
+      "url": "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2025_3857/default/GoogleMapsCompatible/13/3869/6723.jpg",
+      "sha256": "aac6879b9dd375ca0957622ae1de4ed626199e8f9a0b88903b5a8107fadfac4f"
+    },
+    {
+      "z": 13,
+      "x": 6724,
+      "y": 3869,
+      "url": "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2025_3857/default/GoogleMapsCompatible/13/3869/6724.jpg",
+      "sha256": "47e5eaaed463804fbdbc9d463ce047465d23251c206dad3fa71f9a7f8cce82cd"
+    },
+    {
+      "z": 13,
+      "x": 6725,
+      "y": 3869,
+      "url": "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2025_3857/default/GoogleMapsCompatible/13/3869/6725.jpg",
+      "sha256": "4b69404a28e86b833ef33304aed487c35deadac882349bc1dc3240a81b467fde"
+    },
+    {
+      "z": 13,
+      "x": 6726,
+      "y": 3869,
+      "url": "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2025_3857/default/GoogleMapsCompatible/13/3869/6726.jpg",
+      "sha256": "0970fcfc92e16fb21cef0e0df8bfe46ccf10b95bbd284b0344f0dbd3e7524b8d"
+    },
+    {
+      "z": 13,
+      "x": 6723,
+      "y": 3870,
+      "url": "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2025_3857/default/GoogleMapsCompatible/13/3870/6723.jpg",
+      "sha256": "c474fa6eacb39f4eb0448f5bf6e99fadbe9d2e1059b4d66a619feec5a7bb7e24"
+    },
+    {
+      "z": 13,
+      "x": 6724,
+      "y": 3870,
+      "url": "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2025_3857/default/GoogleMapsCompatible/13/3870/6724.jpg",
+      "sha256": "9380965f2c85c474e6447ce10b019a22c0819557339a166cc11d416393fe806e"
+    },
+    {
+      "z": 13,
+      "x": 6725,
+      "y": 3870,
+      "url": "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2025_3857/default/GoogleMapsCompatible/13/3870/6725.jpg",
+      "sha256": "22c7cfbf1c939edd43fe7c7b26a09b465cada0ec2006b69301bb1ecaac88d54f"
+    },
+    {
+      "z": 13,
+      "x": 6726,
+      "y": 3870,
+      "url": "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2025_3857/default/GoogleMapsCompatible/13/3870/6726.jpg",
+      "sha256": "bd4b3e738bd3505cc2657f33e85efeeb7c0f199d2365e061b6ae5834eebe02e9"
+    }
+  ],
+  "license": "CC BY-NC-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "attribution": "EOxCloudless by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2025).",
+  "limitations": "Annual cloud-free mosaic, not a single acquisition, not 2026 current coastline, preview only; reefs and water are not dry-land polygons."
+}

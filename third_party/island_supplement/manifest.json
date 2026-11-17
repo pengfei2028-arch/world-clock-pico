@@ -1,0 +1,956 @@
+{
+  "archive_version": 1,
+  "application_release": "V105 / 0.105.0",
+  "prepared_date": "2026-11-17",
+  "purpose": "Editable island supplement source archive and attribution; contains no original 8K texture or application binaries.",
+  "coordinate_system": "WGS84 longitude/latitude degrees; bounds [west,south,east,north].",
+  "original_day_reference_sha256": "e034b66dfefab2171d49ecbf8ac68606e0902397203447eea56b60ec6a2932eb",
+  "original_day_included": false,
+  "mapping": "x=(longitude+180)/360*width; y=(90-latitude)/180*height. Sample geographic extents, not camera axes. Preserve per-patch alpha.",
+  "patch_count": 23,
+  "geometry_count": 23,
+  "imagery_source_metadata_count": 13,
+  "replacement_rule": "Old global draft alpha cleared within every modern detail bounds; original Day remains unchanged.",
+  "license_links": {
+    "CC-BY-NC-SA-4.0": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+    "ODbL-1.0": "https://opendatacommons.org/licenses/odbl/1-0/",
+    "LGPL-3.0-or-later": "https://www.gnu.org/licenses/lgpl-3.0.html",
+    "Copernicus Sentinel Data Legal Notice": "https://sentinels.copernicus.eu/documents/247904/690755/Sentinel_Data_Legal_Notice"
+  },
+  "patches": [
+    {
+      "id": "bermuda",
+      "file": "patches/bermuda.png",
+      "sha256": "6163b38ea4d8fbabf23d3897f45ef8bc06ff1b2c64d97274903be3bf56302c7c",
+      "bounds_wsen": [
+        -65.2,
+        31.8,
+        -64.4,
+        32.5
+      ],
+      "crs": "EPSG:4326",
+      "pixel_layout": "equirectangular; west to east, north to south; straight RGBA",
+      "size": [
+        2048,
+        1792
+      ],
+      "composition_order": 1,
+      "geometry_file": "sources/gshhg/bermuda_missing_land.geojson",
+      "geometry_metadata": "sources/gshhg/bermuda_metadata.json",
+      "geometry_license": "LGPL-3.0-or-later",
+      "raster_license_scope": "GSHHG-derived geometry under LGPL-3.0-or-later; project raster rendering and pre-existing color-source rights remain separately applicable. This file contains no EOX imagery.",
+      "source": "GSHHG 2.3.7 full-resolution L1 land boundaries with L2 water holes",
+      "source_url": "https://www.soest.hawaii.edu/pwessel/gshhg/",
+      "source_archive_url": "https://www.soest.hawaii.edu/pwessel/gshhg/gshhg-bin-2.3.7.zip",
+      "source_version_date": "2017-06-15",
+      "changes": [
+        "Selected missing-land polygons; normalized longitude to the regional window; retained inland-water holes.",
+        "Present land and its one-original-texel fringe excluded; actual coastline not enlarged.",
+        "Historical day texture sampled where useful land chroma exists; otherwise muted illustrative land color, not new satellite observation.",
+        "Alpha cleared inside the six modern replacement windows; do not overlay the older untrimmed draft."
+      ],
+      "legacy_replacement": {
+        "id": "bermuda",
+        "replaced_by": [
+          "bermuda_modern"
+        ],
+        "alpha_pixels_before": 47933,
+        "alpha_pixels_after": 62
+      },
+      "imagery_metadata": [],
+      "geometry_sha256": "1457dd9ba9a4098cb1dfe173af9a57cf711c09a9b87a27f1d3b110533cb14351",
+      "geometry_feature_count": 32
+    },
+    {
+      "id": "chagos",
+      "file": "patches/chagos.png",
+      "sha256": "e560a4b24a1b5cf6d9d1a8fcd2cf46656475ef6f85c8f59e64e62f850d624fce",
+      "bounds_wsen": [
+        70.7,
+        -7.6,
+        73.5,
+        -4.8
+      ],
+      "crs": "EPSG:4326",
+      "pixel_layout": "equirectangular; west to east, north to south; straight RGBA",
+      "size": [
+        2048,
+        2048
+      ],
+      "composition_order": 1,
+      "geometry_file": "sources/gshhg/chagos_missing_land.geojson",
+      "geometry_metadata": "sources/gshhg/chagos_metadata.json",
+      "geometry_license": "LGPL-3.0-or-later",
+      "raster_license_scope": "GSHHG-derived geometry under LGPL-3.0-or-later; project raster rendering and pre-existing color-source rights remain separately applicable. This file contains no EOX imagery.",
+      "source": "GSHHG 2.3.7 full-resolution L1 land boundaries with L2 water holes",
+      "source_url": "https://www.soest.hawaii.edu/pwessel/gshhg/",
+      "source_archive_url": "https://www.soest.hawaii.edu/pwessel/gshhg/gshhg-bin-2.3.7.zip",
+      "source_version_date": "2017-06-15",
+      "changes": [
+        "Selected missing-land polygons; normalized longitude to the regional window; retained inland-water holes.",
+        "Present land and its one-original-texel fringe excluded; actual coastline not enlarged.",
+        "Historical day texture sampled where useful land chroma exists; otherwise muted illustrative land color, not new satellite observation.",
+        "Alpha cleared inside the six modern replacement windows; do not overlay the older untrimmed draft."
+      ],
+      "legacy_replacement": {
+        "id": "chagos",
+        "replaced_by": [
+          "chagos_modern"
+        ],
+        "alpha_pixels_before": 4148,
+        "alpha_pixels_after": 1917
+      },
+      "imagery_metadata": [],
+      "geometry_sha256": "3da32a7b2008127505e3a2e2aa3b3da26b5a201d3a26ba8120a7c49900695367",
+      "geometry_feature_count": 62
+    },
+    {
+      "id": "cook_south",
+      "file": "patches/cook_south.png",
+      "sha256": "04f77d3e562812cd5ad9b6eca2ec0afd53a47e60dd001a7251a3e102092911cd",
+      "bounds_wsen": [
+        -161,
+        -22.5,
+        -157,
+        -18
+      ],
+      "crs": "EPSG:4326",
+      "pixel_layout": "equirectangular; west to east, north to south; straight RGBA",
+      "size": [
+        1820,
+        2048
+      ],
+      "composition_order": 1,
+      "geometry_file": "sources/gshhg/cook_south_missing_land.geojson",
+      "geometry_metadata": "sources/gshhg/cook_south_metadata.json",
+      "geometry_license": "LGPL-3.0-or-later",
+      "raster_license_scope": "GSHHG-derived geometry under LGPL-3.0-or-later; project raster rendering and pre-existing color-source rights remain separately applicable. This file contains no EOX imagery.",
+      "source": "GSHHG 2.3.7 full-resolution L1 land boundaries with L2 water holes",
+      "source_url": "https://www.soest.hawaii.edu/pwessel/gshhg/",
+      "source_archive_url": "https://www.soest.hawaii.edu/pwessel/gshhg/gshhg-bin-2.3.7.zip",
+      "source_version_date": "2017-06-15",
+      "changes": [
+        "Selected missing-land polygons; normalized longitude to the regional window; retained inland-water holes.",
+        "Present land and its one-original-texel fringe excluded; actual coastline not enlarged.",
+        "Historical day texture sampled where useful land chroma exists; otherwise muted illustrative land color, not new satellite observation.",
+        "Alpha cleared inside the six modern replacement windows; do not overlay the older untrimmed draft."
+      ],
+      "legacy_replacement": {
+        "id": "cook_south",
+        "replaced_by": [],
+        "alpha_pixels_before": 2843,
+        "alpha_pixels_after": 2843
+      },
+      "imagery_metadata": [],
+      "geometry_sha256": "89420954e138e39fe53f41c3bb7a9993d98d70d8025955a36b8b568b1c8e6510",
+      "geometry_feature_count": 22
+    },
+    {
+      "id": "kiribati_gilbert",
+      "file": "patches/kiribati_gilbert.png",
+      "sha256": "236f7e253ecb7f86895c5cd8c747ac6cdfd8e8512bc0490b311a7bdf84454fc8",
+      "bounds_wsen": [
+        172,
+        -3,
+        177,
+        4
+      ],
+      "crs": "EPSG:4326",
+      "pixel_layout": "equirectangular; west to east, north to south; straight RGBA",
+      "size": [
+        1463,
+        2048
+      ],
+      "composition_order": 1,
+      "geometry_file": "sources/gshhg/kiribati_gilbert_missing_land.geojson",
+      "geometry_metadata": "sources/gshhg/kiribati_gilbert_metadata.json",
+      "geometry_license": "LGPL-3.0-or-later",
+      "raster_license_scope": "GSHHG-derived geometry under LGPL-3.0-or-later; project raster rendering and pre-existing color-source rights remain separately applicable. This file contains no EOX imagery.",
+      "source": "GSHHG 2.3.7 full-resolution L1 land boundaries with L2 water holes",
+      "source_url": "https://www.soest.hawaii.edu/pwessel/gshhg/",
+      "source_archive_url": "https://www.soest.hawaii.edu/pwessel/gshhg/gshhg-bin-2.3.7.zip",
+      "source_version_date": "2017-06-15",
+      "changes": [
+        "Selected missing-land polygons; normalized longitude to the regional window; retained inland-water holes.",
+        "Present land and its one-original-texel fringe excluded; actual coastline not enlarged.",
+        "Historical day texture sampled where useful land chroma exists; otherwise muted illustrative land color, not new satellite observation.",
+        "Alpha cleared inside the six modern replacement windows; do not overlay the older untrimmed draft."
+      ],
+      "legacy_replacement": {
+        "id": "kiribati_gilbert",
+        "replaced_by": [],
+        "alpha_pixels_before": 3685,
+        "alpha_pixels_after": 3685
+      },
+      "imagery_metadata": [],
+      "geometry_sha256": "98b196ef93540023f9006e12b07c2786bae9b20f82603c9b7b8d2c464cccc7de",
+      "geometry_feature_count": 135
+    },
+    {
+      "id": "lakshadweep",
+      "file": "patches/lakshadweep.png",
+      "sha256": "06bbda3f288ea0708d586ba4b0b3fe3a789c1f729ed07b729b0981eb218afd8d",
+      "bounds_wsen": [
+        71.5,
+        8,
+        74,
+        12.5
+      ],
+      "crs": "EPSG:4326",
+      "pixel_layout": "equirectangular; west to east, north to south; straight RGBA",
+      "size": [
+        1138,
+        2048
+      ],
+      "composition_order": 1,
+      "geometry_file": "sources/gshhg/lakshadweep_missing_land.geojson",
+      "geometry_metadata": "sources/gshhg/lakshadweep_metadata.json",
+      "geometry_license": "LGPL-3.0-or-later",
+      "raster_license_scope": "GSHHG-derived geometry under LGPL-3.0-or-later; project raster rendering and pre-existing color-source rights remain separately applicable. This file contains no EOX imagery.",
+      "source": "GSHHG 2.3.7 full-resolution L1 land boundaries with L2 water holes",
+      "source_url": "https://www.soest.hawaii.edu/pwessel/gshhg/",
+      "source_archive_url": "https://www.soest.hawaii.edu/pwessel/gshhg/gshhg-bin-2.3.7.zip",
+      "source_version_date": "2017-06-15",
+      "changes": [
+        "Selected missing-land polygons; normalized longitude to the regional window; retained inland-water holes.",
+        "Present land and its one-original-texel fringe excluded; actual coastline not enlarged.",
+        "Historical day texture sampled where useful land chroma exists; otherwise muted illustrative land color, not new satellite observation.",
+        "Alpha cleared inside the six modern replacement windows; do not overlay the older untrimmed draft."
+      ],
+      "legacy_replacement": {
+        "id": "lakshadweep",
+        "replaced_by": [],
+        "alpha_pixels_before": 1325,
+        "alpha_pixels_after": 1325
+      },
+      "imagery_metadata": [],
+      "geometry_sha256": "6f3f4844f6c0c22e54509ecd4f1f9f1da8151606dc1fa1b1bbd89eb163e0dee2",
+      "geometry_feature_count": 21
+    },
+    {
+      "id": "maldives",
+      "file": "patches/maldives.png",
+      "sha256": "96bc955bb9cc829e08841de22bd55576d63ea8ebb3e97b2053c979d73dc6172d",
+      "bounds_wsen": [
+        72,
+        -1,
+        74,
+        8
+      ],
+      "crs": "EPSG:4326",
+      "pixel_layout": "equirectangular; west to east, north to south; straight RGBA",
+      "size": [
+        512,
+        2048
+      ],
+      "composition_order": 1,
+      "geometry_file": "sources/gshhg/maldives_missing_land.geojson",
+      "geometry_metadata": "sources/gshhg/maldives_metadata.json",
+      "geometry_license": "LGPL-3.0-or-later",
+      "raster_license_scope": "GSHHG-derived geometry under LGPL-3.0-or-later; project raster rendering and pre-existing color-source rights remain separately applicable. This file contains no EOX imagery.",
+      "source": "GSHHG 2.3.7 full-resolution L1 land boundaries with L2 water holes",
+      "source_url": "https://www.soest.hawaii.edu/pwessel/gshhg/",
+      "source_archive_url": "https://www.soest.hawaii.edu/pwessel/gshhg/gshhg-bin-2.3.7.zip",
+      "source_version_date": "2017-06-15",
+      "changes": [
+        "Selected missing-land polygons; normalized longitude to the regional window; retained inland-water holes.",
+        "Present land and its one-original-texel fringe excluded; actual coastline not enlarged.",
+        "Historical day texture sampled where useful land chroma exists; otherwise muted illustrative land color, not new satellite observation.",
+        "Alpha cleared inside the six modern replacement windows; do not overlay the older untrimmed draft."
+      ],
+      "legacy_replacement": {
+        "id": "maldives",
+        "replaced_by": [
+          "maldives_modern"
+        ],
+        "alpha_pixels_before": 4587,
+        "alpha_pixels_after": 4444
+      },
+      "imagery_metadata": [],
+      "geometry_sha256": "cf80d8f1f7c94c82664990a9e9abb79b815f7b296b441bf02fc42f723dab6ea8",
+      "geometry_feature_count": 899
+    },
+    {
+      "id": "mariana",
+      "file": "patches/mariana.png",
+      "sha256": "333f3ebdbcb4d97af1cecf2a96b3e466e8703a76db9e9791858b015d12c2eade",
+      "bounds_wsen": [
+        144,
+        13,
+        146.5,
+        21
+      ],
+      "crs": "EPSG:4326",
+      "pixel_layout": "equirectangular; west to east, north to south; straight RGBA",
+      "size": [
+        640,
+        2048
+      ],
+      "composition_order": 1,
+      "geometry_file": "sources/gshhg/mariana_missing_land.geojson",
+      "geometry_metadata": "sources/gshhg/mariana_metadata.json",
+      "geometry_license": "LGPL-3.0-or-later",
+      "raster_license_scope": "GSHHG-derived geometry under LGPL-3.0-or-later; project raster rendering and pre-existing color-source rights remain separately applicable. This file contains no EOX imagery.",
+      "source": "GSHHG 2.3.7 full-resolution L1 land boundaries with L2 water holes",
+      "source_url": "https://www.soest.hawaii.edu/pwessel/gshhg/",
+      "source_archive_url": "https://www.soest.hawaii.edu/pwessel/gshhg/gshhg-bin-2.3.7.zip",
+      "source_version_date": "2017-06-15",
+      "changes": [
+        "Selected missing-land polygons; normalized longitude to the regional window; retained inland-water holes.",
+        "Present land and its one-original-texel fringe excluded; actual coastline not enlarged.",
+        "Historical day texture sampled where useful land chroma exists; otherwise muted illustrative land color, not new satellite observation.",
+        "Alpha cleared inside the six modern replacement windows; do not overlay the older untrimmed draft."
+      ],
+      "legacy_replacement": {
+        "id": "mariana",
+        "replaced_by": [],
+        "alpha_pixels_before": 1121,
+        "alpha_pixels_after": 1121
+      },
+      "imagery_metadata": [],
+      "geometry_sha256": "c7e211679b4b8ca9c00d3897d545c6861d36ef4ccc9a4ada0dc5088cbec1e36a",
+      "geometry_feature_count": 20
+    },
+    {
+      "id": "marshall",
+      "file": "patches/marshall.png",
+      "sha256": "bd18a4e3e36e653aa1526258ce84feba8233dd88254db77a3c7839b6b3846ba3",
+      "bounds_wsen": [
+        160,
+        4,
+        173,
+        15
+      ],
+      "crs": "EPSG:4326",
+      "pixel_layout": "equirectangular; west to east, north to south; straight RGBA",
+      "size": [
+        2048,
+        1733
+      ],
+      "composition_order": 1,
+      "geometry_file": "sources/gshhg/marshall_missing_land.geojson",
+      "geometry_metadata": "sources/gshhg/marshall_metadata.json",
+      "geometry_license": "LGPL-3.0-or-later",
+      "raster_license_scope": "GSHHG-derived geometry under LGPL-3.0-or-later; project raster rendering and pre-existing color-source rights remain separately applicable. This file contains no EOX imagery.",
+      "source": "GSHHG 2.3.7 full-resolution L1 land boundaries with L2 water holes",
+      "source_url": "https://www.soest.hawaii.edu/pwessel/gshhg/",
+      "source_archive_url": "https://www.soest.hawaii.edu/pwessel/gshhg/gshhg-bin-2.3.7.zip",
+      "source_version_date": "2017-06-15",
+      "changes": [
+        "Selected missing-land polygons; normalized longitude to the regional window; retained inland-water holes.",
+        "Present land and its one-original-texel fringe excluded; actual coastline not enlarged.",
+        "Historical day texture sampled where useful land chroma exists; otherwise muted illustrative land color, not new satellite observation.",
+        "Alpha cleared inside the six modern replacement windows; do not overlay the older untrimmed draft."
+      ],
+      "legacy_replacement": {
+        "id": "marshall",
+        "replaced_by": [
+          "marshall_modern"
+        ],
+        "alpha_pixels_before": 2876,
+        "alpha_pixels_after": 2699
+      },
+      "imagery_metadata": [],
+      "geometry_sha256": "b6c03e09a05bc7710592270c8673f285fa7ca2c008e392a2c2b872b328efbc41",
+      "geometry_feature_count": 936
+    },
+    {
+      "id": "ogasawara",
+      "file": "patches/ogasawara.png",
+      "sha256": "2a3d1f9e4b2a93a3356cd8f272c877082adf0214f82f6dcdb656b28cfc083622",
+      "bounds_wsen": [
+        140.8,
+        23.5,
+        142.4,
+        28.1
+      ],
+      "crs": "EPSG:4326",
+      "pixel_layout": "equirectangular; west to east, north to south; straight RGBA",
+      "size": [
+        712,
+        2048
+      ],
+      "composition_order": 1,
+      "geometry_file": "sources/gshhg/ogasawara_missing_land.geojson",
+      "geometry_metadata": "sources/gshhg/ogasawara_metadata.json",
+      "geometry_license": "LGPL-3.0-or-later",
+      "raster_license_scope": "GSHHG-derived geometry under LGPL-3.0-or-later; project raster rendering and pre-existing color-source rights remain separately applicable. This file contains no EOX imagery.",
+      "source": "GSHHG 2.3.7 full-resolution L1 land boundaries with L2 water holes",
+      "source_url": "https://www.soest.hawaii.edu/pwessel/gshhg/",
+      "source_archive_url": "https://www.soest.hawaii.edu/pwessel/gshhg/gshhg-bin-2.3.7.zip",
+      "source_version_date": "2017-06-15",
+      "changes": [
+        "Selected missing-land polygons; normalized longitude to the regional window; retained inland-water holes.",
+        "Present land and its one-original-texel fringe excluded; actual coastline not enlarged.",
+        "Historical day texture sampled where useful land chroma exists; otherwise muted illustrative land color, not new satellite observation.",
+        "Alpha cleared inside the six modern replacement windows; do not overlay the older untrimmed draft."
+      ],
+      "legacy_replacement": {
+        "id": "ogasawara",
+        "replaced_by": [],
+        "alpha_pixels_before": 632,
+        "alpha_pixels_after": 632
+      },
+      "imagery_metadata": [],
+      "geometry_sha256": "6af3330d6e5bad56ebb1d9669aa489623cdd4cbbe51e58871e5666482a724c5c",
+      "geometry_feature_count": 42
+    },
+    {
+      "id": "palau",
+      "file": "patches/palau.png",
+      "sha256": "62494bb2f4777dc6014e580401b0edd0bff566a494337b50599475d655220992",
+      "bounds_wsen": [
+        131.0,
+        2.5,
+        135.2,
+        8.2
+      ],
+      "crs": "EPSG:4326",
+      "pixel_layout": "equirectangular; west to east, north to south; straight RGBA",
+      "size": [
+        1509,
+        2048
+      ],
+      "composition_order": 1,
+      "geometry_file": "sources/gshhg/palau_missing_land.geojson",
+      "geometry_metadata": "sources/gshhg/palau_metadata.json",
+      "geometry_license": "LGPL-3.0-or-later",
+      "raster_license_scope": "GSHHG-derived geometry under LGPL-3.0-or-later; project raster rendering and pre-existing color-source rights remain separately applicable. This file contains no EOX imagery.",
+      "source": "GSHHG 2.3.7 full-resolution L1 land boundaries with L2 water holes",
+      "source_url": "https://www.soest.hawaii.edu/pwessel/gshhg/",
+      "source_archive_url": "https://www.soest.hawaii.edu/pwessel/gshhg/gshhg-bin-2.3.7.zip",
+      "source_version_date": "2017-06-15",
+      "changes": [
+        "Selected missing-land polygons; normalized longitude to the regional window; retained inland-water holes.",
+        "Present land and its one-original-texel fringe excluded; actual coastline not enlarged.",
+        "Historical day texture sampled where useful land chroma exists; otherwise muted illustrative land color, not new satellite observation.",
+        "Alpha cleared inside the six modern replacement windows; do not overlay the older untrimmed draft."
+      ],
+      "legacy_replacement": {
+        "id": "palau",
+        "replaced_by": [],
+        "alpha_pixels_before": 6446,
+        "alpha_pixels_after": 6446
+      },
+      "imagery_metadata": [],
+      "geometry_sha256": "e534d8edc5e106a142e3f94c3b695ebb81c3a383fdcfb494e8cf7d1e7159b91f",
+      "geometry_feature_count": 114
+    },
+    {
+      "id": "seychelles",
+      "file": "patches/seychelles.png",
+      "sha256": "5d4ababca8ed9048d1206c7071a879b98ceeba0fe31f07f08ed389762d7f2814",
+      "bounds_wsen": [
+        55,
+        -5,
+        56,
+        -3.5
+      ],
+      "crs": "EPSG:4326",
+      "pixel_layout": "equirectangular; west to east, north to south; straight RGBA",
+      "size": [
+        1365,
+        2048
+      ],
+      "composition_order": 1,
+      "geometry_file": "sources/gshhg/seychelles_missing_land.geojson",
+      "geometry_metadata": "sources/gshhg/seychelles_metadata.json",
+      "geometry_license": "LGPL-3.0-or-later",
+      "raster_license_scope": "GSHHG-derived geometry under LGPL-3.0-or-later; project raster rendering and pre-existing color-source rights remain separately applicable. This file contains no EOX imagery.",
+      "source": "GSHHG 2.3.7 full-resolution L1 land boundaries with L2 water holes",
+      "source_url": "https://www.soest.hawaii.edu/pwessel/gshhg/",
+      "source_archive_url": "https://www.soest.hawaii.edu/pwessel/gshhg/gshhg-bin-2.3.7.zip",
+      "source_version_date": "2017-06-15",
+      "changes": [
+        "Selected missing-land polygons; normalized longitude to the regional window; retained inland-water holes.",
+        "Present land and its one-original-texel fringe excluded; actual coastline not enlarged.",
+        "Historical day texture sampled where useful land chroma exists; otherwise muted illustrative land color, not new satellite observation.",
+        "Alpha cleared inside the six modern replacement windows; do not overlay the older untrimmed draft."
+      ],
+      "legacy_replacement": {
+        "id": "seychelles",
+        "replaced_by": [],
+        "alpha_pixels_before": 15430,
+        "alpha_pixels_after": 15430
+      },
+      "imagery_metadata": [],
+      "geometry_sha256": "aa8ebb8936ff0a17d6bdde7137dfb2b65e11418bef7a155b702cb1b16c7a5345",
+      "geometry_feature_count": 28
+    },
+    {
+      "id": "society",
+      "file": "patches/society.png",
+      "sha256": "ba1bd6a0ecaace1f19683544ce7804a5093c0cc83ae84117aae73303ce3e2593",
+      "bounds_wsen": [
+        -152.2,
+        -18.1,
+        -149,
+        -16
+      ],
+      "crs": "EPSG:4326",
+      "pixel_layout": "equirectangular; west to east, north to south; straight RGBA",
+      "size": [
+        2048,
+        1344
+      ],
+      "composition_order": 1,
+      "geometry_file": "sources/gshhg/society_missing_land.geojson",
+      "geometry_metadata": "sources/gshhg/society_metadata.json",
+      "geometry_license": "LGPL-3.0-or-later",
+      "raster_license_scope": "GSHHG-derived geometry under LGPL-3.0-or-later; project raster rendering and pre-existing color-source rights remain separately applicable. This file contains no EOX imagery.",
+      "source": "GSHHG 2.3.7 full-resolution L1 land boundaries with L2 water holes",
+      "source_url": "https://www.soest.hawaii.edu/pwessel/gshhg/",
+      "source_archive_url": "https://www.soest.hawaii.edu/pwessel/gshhg/gshhg-bin-2.3.7.zip",
+      "source_version_date": "2017-06-15",
+      "changes": [
+        "Selected missing-land polygons; normalized longitude to the regional window; retained inland-water holes.",
+        "Present land and its one-original-texel fringe excluded; actual coastline not enlarged.",
+        "Historical day texture sampled where useful land chroma exists; otherwise muted illustrative land color, not new satellite observation.",
+        "Alpha cleared inside the six modern replacement windows; do not overlay the older untrimmed draft."
+      ],
+      "legacy_replacement": {
+        "id": "society",
+        "replaced_by": [],
+        "alpha_pixels_before": 6317,
+        "alpha_pixels_after": 6317
+      },
+      "imagery_metadata": [],
+      "geometry_sha256": "f1cc95330aba970298527534c2e980309eb6fb6bf39afb44d698c4faa5b6dc51",
+      "geometry_feature_count": 71
+    },
+    {
+      "id": "tonga",
+      "file": "patches/tonga.png",
+      "sha256": "f3870ab6ae265c5f741ecd4d4ac0bf1744e62b7e209a4478247f84603defa252",
+      "bounds_wsen": [
+        -176.5,
+        -22.5,
+        -173,
+        -15.5
+      ],
+      "crs": "EPSG:4326",
+      "pixel_layout": "equirectangular; west to east, north to south; straight RGBA",
+      "size": [
+        1024,
+        2048
+      ],
+      "composition_order": 1,
+      "geometry_file": "sources/gshhg/tonga_missing_land.geojson",
+      "geometry_metadata": "sources/gshhg/tonga_metadata.json",
+      "geometry_license": "LGPL-3.0-or-later",
+      "raster_license_scope": "GSHHG-derived geometry under LGPL-3.0-or-later; project raster rendering and pre-existing color-source rights remain separately applicable. This file contains no EOX imagery.",
+      "source": "GSHHG 2.3.7 full-resolution L1 land boundaries with L2 water holes",
+      "source_url": "https://www.soest.hawaii.edu/pwessel/gshhg/",
+      "source_archive_url": "https://www.soest.hawaii.edu/pwessel/gshhg/gshhg-bin-2.3.7.zip",
+      "source_version_date": "2017-06-15",
+      "changes": [
+        "Selected missing-land polygons; normalized longitude to the regional window; retained inland-water holes.",
+        "Present land and its one-original-texel fringe excluded; actual coastline not enlarged.",
+        "Historical day texture sampled where useful land chroma exists; otherwise muted illustrative land color, not new satellite observation.",
+        "Alpha cleared inside the six modern replacement windows; do not overlay the older untrimmed draft."
+      ],
+      "legacy_replacement": {
+        "id": "tonga",
+        "replaced_by": [
+          "tonga_modern"
+        ],
+        "alpha_pixels_before": 7170,
+        "alpha_pixels_after": 4823
+      },
+      "imagery_metadata": [],
+      "geometry_sha256": "1b4beba8dbdb0fad31291d38a3aa86ff56c5cb809d657ef7ef2c258f9fd4dacd",
+      "geometry_feature_count": 172
+    },
+    {
+      "id": "tuamotu",
+      "file": "patches/tuamotu.png",
+      "sha256": "162ddc9f9a9858aee9524ce3461b26da2f8e8fd73de7affb062036cac7d2bcf9",
+      "bounds_wsen": [
+        -149,
+        -22,
+        -135,
+        -14
+      ],
+      "crs": "EPSG:4326",
+      "pixel_layout": "equirectangular; west to east, north to south; straight RGBA",
+      "size": [
+        2048,
+        1170
+      ],
+      "composition_order": 1,
+      "geometry_file": "sources/gshhg/tuamotu_missing_land.geojson",
+      "geometry_metadata": "sources/gshhg/tuamotu_metadata.json",
+      "geometry_license": "LGPL-3.0-or-later",
+      "raster_license_scope": "GSHHG-derived geometry under LGPL-3.0-or-later; project raster rendering and pre-existing color-source rights remain separately applicable. This file contains no EOX imagery.",
+      "source": "GSHHG 2.3.7 full-resolution L1 land boundaries with L2 water holes",
+      "source_url": "https://www.soest.hawaii.edu/pwessel/gshhg/",
+      "source_archive_url": "https://www.soest.hawaii.edu/pwessel/gshhg/gshhg-bin-2.3.7.zip",
+      "source_version_date": "2017-06-15",
+      "changes": [
+        "Selected missing-land polygons; normalized longitude to the regional window; retained inland-water holes.",
+        "Present land and its one-original-texel fringe excluded; actual coastline not enlarged.",
+        "Historical day texture sampled where useful land chroma exists; otherwise muted illustrative land color, not new satellite observation.",
+        "Alpha cleared inside the six modern replacement windows; do not overlay the older untrimmed draft."
+      ],
+      "legacy_replacement": {
+        "id": "tuamotu",
+        "replaced_by": [
+          "tuamotu_modern"
+        ],
+        "alpha_pixels_before": 5169,
+        "alpha_pixels_after": 4794
+      },
+      "imagery_metadata": [],
+      "geometry_sha256": "dce70142324eab60b9ea750236ccc87b31f3464298436fd8e861e7c0d2aed8aa",
+      "geometry_feature_count": 1285
+    },
+    {
+      "id": "scs_dongsha",
+      "file": "patches/scs_dongsha.png",
+      "sha256": "03699bb94b2221d13cdee5a32d0d845363d9f1171f7845ee7285336677ea8192",
+      "bounds_wsen": [
+        116.65,
+        20.53,
+        116.95,
+        20.83
+      ],
+      "crs": "EPSG:4326",
+      "pixel_layout": "equirectangular; west to east, north to south; straight RGBA",
+      "size": [
+        1536,
+        1536
+      ],
+      "composition_order": 2,
+      "geometry_file": "sources/osm_scs/dongsha_land_reef.geojson",
+      "geometry_metadata": "sources/osm_scs/dongsha_metadata.json",
+      "geometry_license": "ODbL-1.0",
+      "raster_license": "CC-BY-NC-SA-4.0",
+      "source": "OpenStreetMap contributors; EOX 2025 imagery; Xisha also selected Copernicus Sentinel-2 2024-02-03 RGB windows",
+      "attribution": [
+        "© OpenStreetMap contributors",
+        "EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2025)"
+      ],
+      "imagery_metadata": [
+        "sources/imagery/dongsha_atoll_EOX2025_mercator.json"
+      ],
+      "changes": [
+        "Georeferenced imagery resampled onto actual sourced land/reef masks with lagoon holes; transparent outside the selected footprint.",
+        "Dry land and submerged reefs remain separate classes; reef tint is illustrative, not measured bathymetry.",
+        "Outside available image windows, illustrative color uses sourced geometry; no island enlargement.",
+        "V105 brightens existing RGB in place: encoded sRGB land target 1.35, reef target 1.15, maximum-channel cap preserves hue; alpha/bounds unchanged. Do not composite this over the old patch a second time."
+      ],
+      "geometry_sha256": "d358d24a7a78087b7ede0dd4e6de0c17fdbee016a7d96e4d3e36d392e496270c",
+      "geometry_feature_count": 27
+    },
+    {
+      "id": "scs_nansha",
+      "file": "patches/scs_nansha.png",
+      "sha256": "5d6bde19dc90ade7e3c006986d3c594c87ce5afb8845a995662a2bb47bb80a32",
+      "bounds_wsen": [
+        111.0,
+        7.3,
+        116.0,
+        12.0
+      ],
+      "crs": "EPSG:4326",
+      "pixel_layout": "equirectangular; west to east, north to south; straight RGBA",
+      "size": [
+        2560,
+        2406
+      ],
+      "composition_order": 2,
+      "geometry_file": "sources/osm_scs/nansha_offshore_land_reef.geojson",
+      "geometry_metadata": "sources/osm_scs/nansha_metadata.json",
+      "geometry_license": "ODbL-1.0",
+      "raster_license": "CC-BY-NC-SA-4.0",
+      "source": "OpenStreetMap contributors; EOX 2025 imagery; Xisha also selected Copernicus Sentinel-2 2024-02-03 RGB windows",
+      "attribution": [
+        "© OpenStreetMap contributors",
+        "EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2025)"
+      ],
+      "imagery_metadata": [
+        "sources/imagery/nansha_meiji_EOX2025_mercator.json"
+      ],
+      "changes": [
+        "Georeferenced imagery resampled onto actual sourced land/reef masks with lagoon holes; transparent outside the selected footprint.",
+        "Dry land and submerged reefs remain separate classes; reef tint is illustrative, not measured bathymetry.",
+        "Outside available image windows, illustrative color uses sourced geometry; no island enlargement.",
+        "V105 brightens existing RGB in place: encoded sRGB land target 1.35, reef target 1.15, maximum-channel cap preserves hue; alpha/bounds unchanged. Do not composite this over the old patch a second time."
+      ],
+      "geometry_sha256": "d1b98a14b9a3f2f1424de413ff0665187ad007c75bc5490a2a29f7dac617a2fb",
+      "geometry_feature_count": 875
+    },
+    {
+      "id": "scs_xisha",
+      "file": "patches/scs_xisha.png",
+      "sha256": "f7ad0f04bd851f2798d9946d65299782694b90008ab2318e11da7857febee3a5",
+      "bounds_wsen": [
+        110.8,
+        15.6,
+        113.0,
+        17.2
+      ],
+      "crs": "EPSG:4326",
+      "pixel_layout": "equirectangular; west to east, north to south; straight RGBA",
+      "size": [
+        2816,
+        2048
+      ],
+      "composition_order": 2,
+      "geometry_file": "sources/osm_scs/xisha_land_reef.geojson",
+      "geometry_metadata": "sources/osm_scs/xisha_metadata.json",
+      "geometry_license": "ODbL-1.0",
+      "raster_license": "CC-BY-NC-SA-4.0",
+      "source": "OpenStreetMap contributors; EOX 2025 imagery; Xisha also selected Copernicus Sentinel-2 2024-02-03 RGB windows",
+      "attribution": [
+        "© OpenStreetMap contributors",
+        "EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2025)",
+        "Contains modified Copernicus Sentinel data 2024."
+      ],
+      "imagery_metadata": [
+        "sources/imagery/xisha_overview_EOX2025_mercator.json",
+        "sources/imagery/xisha_yongle_EOX2025_mercator.json",
+        "sources/imagery/xisha_yongxing_EOX2025_mercator.json",
+        "sources/imagery/xisha_yongle_Sentinel2_20240203_4326.json",
+        "sources/imagery/xisha_yongxing_Sentinel2_20240203_4326.json"
+      ],
+      "changes": [
+        "Georeferenced imagery resampled onto actual sourced land/reef masks with lagoon holes; transparent outside the selected footprint.",
+        "Dry land and submerged reefs remain separate classes; reef tint is illustrative, not measured bathymetry.",
+        "Outside available image windows, illustrative color uses sourced geometry; no island enlargement.",
+        "V105 brightens existing RGB in place: encoded sRGB land target 1.35, reef target 1.15, maximum-channel cap preserves hue; alpha/bounds unchanged. Do not composite this over the old patch a second time."
+      ],
+      "geometry_sha256": "372435ffd00994a313df73f17f9cf99f07e6528496c397050e3435164809efbc",
+      "geometry_feature_count": 97
+    },
+    {
+      "id": "bermuda_modern",
+      "file": "patches/bermuda_modern.png",
+      "sha256": "ead66c94bd879daae8a23a5093aaaba9b6450d046e8cfd93500c1c552495e691",
+      "bounds_wsen": [
+        -64.9,
+        32.2,
+        -64.65,
+        32.45
+      ],
+      "crs": "EPSG:4326",
+      "pixel_layout": "equirectangular; west to east, north to south; straight RGBA",
+      "size": [
+        1280,
+        960
+      ],
+      "composition_order": 3,
+      "geometry_file": "sources/osm_modern/bermuda_land.geojson",
+      "geometry_metadata": "sources/osm_modern/bermuda_metadata.json",
+      "geometry_license": "ODbL-1.0",
+      "raster_license": "CC-BY-NC-SA-4.0",
+      "source": "OpenStreetMap 2026-11-17 coastline mask with EOX 2025 georeferenced RGB",
+      "attribution": [
+        "© OpenStreetMap contributors",
+        "EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2025)"
+      ],
+      "imagery_metadata": [
+        "sources/imagery/bermuda_modern_EOX2025.json"
+      ],
+      "replaces_legacy_patch": "bermuda",
+      "changes": [
+        "Uses current sourced OSM coastline in this detail window; replaces the older GSHHG mask here rather than translating historical pixels arbitrarily.",
+        "Disused/abandoned features and unclosed lines excluded; polygon holes retained.",
+        "EOX imagery warped from EPSG:3857 into equirectangular WGS84 and clipped to the sourced mask; transparent outside mask."
+      ],
+      "geometry_sha256": "fd33946e9785a4dda38e645a932debaf38f9dc7fd57aa781d56c081c1ae8a8fd",
+      "geometry_feature_count": 342
+    },
+    {
+      "id": "chagos_modern",
+      "file": "patches/chagos_modern.png",
+      "sha256": "62148a0c2008b323f54586442faec2e7f6cecaeca8badcb3d969e1402d4508b7",
+      "bounds_wsen": [
+        72.32,
+        -7.5,
+        72.55,
+        -7.2
+      ],
+      "crs": "EPSG:4326",
+      "pixel_layout": "equirectangular; west to east, north to south; straight RGBA",
+      "size": [
+        1280,
+        960
+      ],
+      "composition_order": 3,
+      "geometry_file": "sources/osm_modern/chagos_land.geojson",
+      "geometry_metadata": "sources/osm_modern/chagos_metadata.json",
+      "geometry_license": "ODbL-1.0",
+      "raster_license": "CC-BY-NC-SA-4.0",
+      "source": "OpenStreetMap 2026-11-17 coastline mask with EOX 2025 georeferenced RGB",
+      "attribution": [
+        "© OpenStreetMap contributors",
+        "EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2025)"
+      ],
+      "imagery_metadata": [
+        "sources/imagery/chagos_modern_EOX2025.json"
+      ],
+      "replaces_legacy_patch": "chagos",
+      "changes": [
+        "Uses current sourced OSM coastline in this detail window; replaces the older GSHHG mask here rather than translating historical pixels arbitrarily.",
+        "Disused/abandoned features and unclosed lines excluded; polygon holes retained.",
+        "EOX imagery warped from EPSG:3857 into equirectangular WGS84 and clipped to the sourced mask; transparent outside mask."
+      ],
+      "geometry_sha256": "3985a0b2f73e6d176a7972c36e82e1f5e314abe806fd4a5bec04fc92d0e3976d",
+      "geometry_feature_count": 13
+    },
+    {
+      "id": "maldives_modern",
+      "file": "patches/maldives_modern.png",
+      "sha256": "5701405f1bd5166ae03dd6764a8cbe74dc3229ce98f547590728df854ffff2aa",
+      "bounds_wsen": [
+        73.25,
+        4.0,
+        73.65,
+        4.45
+      ],
+      "crs": "EPSG:4326",
+      "pixel_layout": "equirectangular; west to east, north to south; straight RGBA",
+      "size": [
+        1280,
+        960
+      ],
+      "composition_order": 3,
+      "geometry_file": "sources/osm_modern/maldives_land.geojson",
+      "geometry_metadata": "sources/osm_modern/maldives_metadata.json",
+      "geometry_license": "ODbL-1.0",
+      "raster_license": "CC-BY-NC-SA-4.0",
+      "source": "OpenStreetMap 2026-11-17 coastline mask with EOX 2025 georeferenced RGB",
+      "attribution": [
+        "© OpenStreetMap contributors",
+        "EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2025)"
+      ],
+      "imagery_metadata": [
+        "sources/imagery/maldives_modern_EOX2025.json"
+      ],
+      "replaces_legacy_patch": "maldives",
+      "changes": [
+        "Uses current sourced OSM coastline in this detail window; replaces the older GSHHG mask here rather than translating historical pixels arbitrarily.",
+        "Disused/abandoned features and unclosed lines excluded; polygon holes retained.",
+        "EOX imagery warped from EPSG:3857 into equirectangular WGS84 and clipped to the sourced mask; transparent outside mask."
+      ],
+      "geometry_sha256": "03faff31bee187a371c0ad444b50b46d8abb09e478ad3751d5602b0a778c75f4",
+      "geometry_feature_count": 129
+    },
+    {
+      "id": "marshall_modern",
+      "file": "patches/marshall_modern.png",
+      "sha256": "dba38081969a85d6e8d1a0c9aa86c5c64bcbbae4ca814ce23a83aee214675056",
+      "bounds_wsen": [
+        171.0,
+        6.9,
+        171.4,
+        7.3
+      ],
+      "crs": "EPSG:4326",
+      "pixel_layout": "equirectangular; west to east, north to south; straight RGBA",
+      "size": [
+        1280,
+        960
+      ],
+      "composition_order": 3,
+      "geometry_file": "sources/osm_modern/marshall_land.geojson",
+      "geometry_metadata": "sources/osm_modern/marshall_metadata.json",
+      "geometry_license": "ODbL-1.0",
+      "raster_license": "CC-BY-NC-SA-4.0",
+      "source": "OpenStreetMap 2026-11-17 coastline mask with EOX 2025 georeferenced RGB",
+      "attribution": [
+        "© OpenStreetMap contributors",
+        "EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2025)"
+      ],
+      "imagery_metadata": [
+        "sources/imagery/marshall_modern_EOX2025.json"
+      ],
+      "replaces_legacy_patch": "marshall",
+      "changes": [
+        "Uses current sourced OSM coastline in this detail window; replaces the older GSHHG mask here rather than translating historical pixels arbitrarily.",
+        "Disused/abandoned features and unclosed lines excluded; polygon holes retained.",
+        "EOX imagery warped from EPSG:3857 into equirectangular WGS84 and clipped to the sourced mask; transparent outside mask."
+      ],
+      "geometry_sha256": "4c6182964796fa263cae363c9b706280fb85cb63f2adacad9630f289fce2356a",
+      "geometry_feature_count": 46
+    },
+    {
+      "id": "tonga_modern",
+      "file": "patches/tonga_modern.png",
+      "sha256": "6cbfea8614eb617fae9b1e11e2f3ca76fdcdf6c2e16b821753909d7f198ca2b6",
+      "bounds_wsen": [
+        -175.45,
+        -21.35,
+        -175.0,
+        -20.95
+      ],
+      "crs": "EPSG:4326",
+      "pixel_layout": "equirectangular; west to east, north to south; straight RGBA",
+      "size": [
+        1280,
+        960
+      ],
+      "composition_order": 3,
+      "geometry_file": "sources/osm_modern/tonga_land.geojson",
+      "geometry_metadata": "sources/osm_modern/tonga_metadata.json",
+      "geometry_license": "ODbL-1.0",
+      "raster_license": "CC-BY-NC-SA-4.0",
+      "source": "OpenStreetMap 2026-11-17 coastline mask with EOX 2025 georeferenced RGB",
+      "attribution": [
+        "© OpenStreetMap contributors",
+        "EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2025)"
+      ],
+      "imagery_metadata": [
+        "sources/imagery/tonga_modern_EOX2025.json"
+      ],
+      "replaces_legacy_patch": "tonga",
+      "changes": [
+        "Uses current sourced OSM coastline in this detail window; replaces the older GSHHG mask here rather than translating historical pixels arbitrarily.",
+        "Disused/abandoned features and unclosed lines excluded; polygon holes retained.",
+        "EOX imagery warped from EPSG:3857 into equirectangular WGS84 and clipped to the sourced mask; transparent outside mask."
+      ],
+      "geometry_sha256": "943288b6b53f39004e6b960ec022f4a905fc931c60af5cabe28ab84d8a11f9cd",
+      "geometry_feature_count": 62
+    },
+    {
+      "id": "tuamotu_modern",
+      "file": "patches/tuamotu_modern.png",
+      "sha256": "e7806900aa8883f833ebeaef2e4e53d9ef65c8428e04e6aac9af82f20ad7ba92",
+      "bounds_wsen": [
+        -148.1,
+        -15.5,
+        -147.1,
+        -14.8
+      ],
+      "crs": "EPSG:4326",
+      "pixel_layout": "equirectangular; west to east, north to south; straight RGBA",
+      "size": [
+        1280,
+        960
+      ],
+      "composition_order": 3,
+      "geometry_file": "sources/osm_modern/tuamotu_land.geojson",
+      "geometry_metadata": "sources/osm_modern/tuamotu_metadata.json",
+      "geometry_license": "ODbL-1.0",
+      "raster_license": "CC-BY-NC-SA-4.0",
+      "source": "OpenStreetMap 2026-11-17 coastline mask with EOX 2025 georeferenced RGB",
+      "attribution": [
+        "© OpenStreetMap contributors",
+        "EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2025)"
+      ],
+      "imagery_metadata": [
+        "sources/imagery/tuamotu_modern_EOX2025.json"
+      ],
+      "replaces_legacy_patch": "tuamotu",
+      "changes": [
+        "Uses current sourced OSM coastline in this detail window; replaces the older GSHHG mask here rather than translating historical pixels arbitrarily.",
+        "Disused/abandoned features and unclosed lines excluded; polygon holes retained.",
+        "EOX imagery warped from EPSG:3857 into equirectangular WGS84 and clipped to the sourced mask; transparent outside mask."
+      ],
+      "geometry_sha256": "d2dc9e75a4b0ac0a652eb93f44786fd8b288653f4c540439e0b330e546a2187b",
+      "geometry_feature_count": 489
+    }
+  ],
+  "runtime_integration_note": "These are the final georeferenced authoring PNG inputs, not a byte-for-byte independently reproducible complete Earth bundle. Full uses color-managed per-mip composition into affected ASTC blocks on the existing base bundle; Shared uses area integration. V105 applies old/new SCS RGB differences to the V104 result, with identical alpha, instead of compositing twice. The original textures and compression tools are not redistributed here."
+}

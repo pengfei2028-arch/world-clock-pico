@@ -1,0 +1,34 @@
+{
+  "id": "bermuda",
+  "name": "百慕大",
+  "bounds_wsen": [
+    -64.9,
+    32.2,
+    -64.65,
+    32.45
+  ],
+  "size": [
+    1280,
+    960
+  ],
+  "source": "OpenStreetMap natural=coastline; live 2026-11-17; supersedes older GSHHG within this local detail window",
+  "source_url": "https://www.openstreetmap.org/copyright",
+  "license": "EOX2025 imagery CC BY-NC-SA 4.0; current OSM coastline ODbL / older GSHHG LGPLv3 where explicitly stated",
+  "source_date": "2026-11-17T08:08:05Z",
+  "coverage": "只有放大的少量白蓝像素，实际岛体细轮廓没有可辨表现。",
+  "polygon_count": 342,
+  "classification": "dry-land coastline draft only, not submerged reef",
+  "source_day_sha256": "e034b66dfefab2171d49ecbf8ac68606e0902397203447eea56b60ec6a2932eb",
+  "visual_material": "Actual georeferenced 2025 EOX Sentinel-2 cloudless RGB on sourced land mask; no invented details",
+  "limitations": "No island enlargement. 2K regional texels can still exceed tiny cay widths; full-detail coast is retained in vector and may need smaller geographic tiles. These are conservative additions only; present land and its 1-original-pixel fringe excluded.",
+  "excluded_unclosed_lines": 0,
+  "geometry_revision": "current OSM after real satellite overlay revealed old GSHHG shoreline misregistration; no arbitrary pixel translation",
+  "coastline_source": "OpenStreetMap current coastline 2026-11-17T08:08:05Z; ODbL 1.0; disused/abandoned filtered",
+  "alpha_identical_to_selected_source_mask": true,
+  "source_full_window_coverage": true,
+  "outside_mask_unchanged": true,
+  "imagery_metadata": "sources/imagery/bermuda_modern_EOX2025.json",
+  "query": "[out:json][timeout:40];way[\"natural\"=\"coastline\"](32.185,-64.915,32.465,-64.635);out body geom;",
+  "download_endpoint": "https://overpass-api.de/api/interpreter",
+  "raw_osm_response_sha256": "6f50f5e2c01de1e5988497d34bf327f530e6d3126fc9777a12906d0ecaa453a5"
+}
