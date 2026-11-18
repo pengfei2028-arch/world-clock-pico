@@ -1,8 +1,12 @@
 # 地球观察 · Earth Observer for PICO
 
-基于 **PICO Spatial SDK 6.1.9、Kotlin 和 Compose** 的 MR 地球、世界时间、全球气温、地震活动、城市距离及个人足迹应用。当前交付版本 **V105 / 0.105.0**。保留原有8K资源，不新增8K贴图。本工程不是Unity项目。
+基于 **PICO Spatial SDK 6.1.9、Kotlin 和 Compose** 的 MR 地球、世界时间、全球气温、地震活动、城市距离及个人足迹应用。当前交付版本 **V106 / 0.106.0**。保留原有8K资源，不新增8K贴图。本工程不是Unity项目。
 
-[下载 V105 APK 与 SHA256 校验值](https://github.com/pengfei2028-arch/world-clock-pico/releases/tag/v0.105.0) · 使用现有开发签名，支持保留数据覆盖安装；不是商店发行包。
+[下载 V106 APK 与 SHA256 校验值](https://github.com/pengfei2028-arch/world-clock-pico/releases/tag/v0.106.0) · 使用现有开发签名，支持保留数据覆盖安装；不是商店发行包。
+
+## V106 城市后缀与应用外链修复
+
+台湾地区34条城市的显示后缀统一“中国”，原城市ID、时区及地区搜索仍保留。地图、天气、气温与地震界面的外链入口全部移除，来源署名保留为不可点击文字。地球视觉资产与V105一致，未增加运行贴图。261项测试、构建、APK签名与资源核对通过；用户头显体验确认正常并授权发布和重新送审。见[V106交接](HANDOFF_V106.md)。
 
 ## V105 群岛细节与离线搜索
 
