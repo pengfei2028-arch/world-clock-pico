@@ -31,7 +31,9 @@ internal data class ClockCity(val id: String,val name: String,val english: Strin
         else->region.removeSuffix("群岛")+" · 礁"
     }
     val albumTitle get()=listOf(name,locationLabel).filter{it.isNotBlank()}.distinct().joinToString(" · ")
-    val countryKey=CityCatalog.normalize(country+" "+countryCode+" "+Locale("",countryCode).getDisplayCountry(Locale.ENGLISH))
+    // Keep regional search terms available independently of the displayed country suffix.
+    val countryKey=CityCatalog.normalize(country+" "+countryCode+" "+Locale("",countryCode).getDisplayCountry(Locale.ENGLISH)+
+        if(countryCode=="TW")" 台湾 臺灣 China CN" else "")
     fun time(instant: Instant): String=DateTimeFormatter.ofPattern("HH:mm").format(instant.atZone(zoneAt(instant)))
     fun date(instant: Instant): String=DateTimeFormatter.ofPattern("M月d日 EEEE",Locale.SIMPLIFIED_CHINESE).format(instant.atZone(zoneAt(instant)))
     fun offset(instant: Instant): String {

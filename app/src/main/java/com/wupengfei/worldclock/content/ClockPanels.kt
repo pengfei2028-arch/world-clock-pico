@@ -43,7 +43,6 @@ import com.pico.spatial.ui.foundation.gesture.detectDragGestures
 import com.pico.spatial.ui.foundation.hover.spatialHoverEffect
 import com.pico.spatial.ui.foundation.hover.spatialHoverEffectGroup
 import com.pico.spatial.ui.foundation.hover.SpatialHoverEffectGroup
-import com.pico.spatial.ui.foundation.hover.disableSpatialHoverEffect
 import com.pico.spatial.ui.platform.containers.closeStage
 import com.pico.spatial.ui.platform.containers.LocalSpatialNavigator
 import androidx.compose.ui.res.painterResource
@@ -322,11 +321,7 @@ internal fun CityPanel(state:ClockState,context:Context){
             Text("＋",style=uiText(20))
         }
         Text(if(state.mode==EarthMode.TEMPERATURE)"气温预报 NOAA GFS · 2 m" else "天气 Open-Meteo · CC BY 4.0",style=uiText(10),color=PicoTheme.colorScheme.labelSecondary,
-            modifier=Modifier.fillMaxWidth().disableSpatialHoverEffect(true).clickable(
-                interactionSource=remember{MutableInteractionSource()},indication=null) {
-                context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW,
-                    android.net.Uri.parse(if(state.mode==EarthMode.TEMPERATURE)"https://www.nco.ncep.noaa.gov/pmb/products/gfs/nomads/" else "https://open-meteo.com/en/licence")))
-            },textAlign=TextAlign.Center)
+            modifier=Modifier.fillMaxWidth(),textAlign=TextAlign.Center)
     }
 }
 
@@ -586,7 +581,6 @@ private fun DateWheel(label:String,value:Int,range:IntRange,state:ClockState,onV
 
 @Composable
 internal fun MapSourceCredits(){
-    val context=LocalContext.current
     var expanded by remember{mutableStateOf(false)}
     GlassAction({expanded=!expanded},Modifier.fillMaxWidth().height(32.dp)){
         Text(if(expanded)"收起地图来源" else "地图来源与许可",style=uiText(12))
@@ -595,15 +589,12 @@ internal fun MapSourceCredits(){
         verticalArrangement=Arrangement.spacedBy(8.dp)){
         Text("以下来源用于岛礁补图，按非商业许可发布。",style=uiText(12),color=PicoTheme.colorScheme.labelSecondary)
         listOf(
-            "EOxCloudless — EOX IT Services GmbH\nContains modified Copernicus Sentinel data 2025\nCC BY-NC-SA 4.0" to "https://cloudless.eox.at",
-            "© OpenStreetMap contributors · ODbL 1.0" to "https://www.openstreetmap.org/copyright",
-            "GSHHG 2.3.7 — Paul Wessel / Walter H. F. Smith\nLGPL v3" to "https://www.soest.hawaii.edu/pwessel/gshhg/",
-            "Contains modified Copernicus Sentinel data 2024" to "https://registry.opendata.aws/sentinel-2-l2a-cogs/",
-        ).forEach{(label,url)->
-            Text(label,style=uiText(12).copy(textDecoration=androidx.compose.ui.text.style.TextDecoration.Underline),
-                modifier=Modifier.fillMaxWidth().clickable(interactionSource=remember{MutableInteractionSource()},indication=null){
-                    context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW,android.net.Uri.parse(url)))
-                }.padding(vertical=4.dp))
+            "EOxCloudless — EOX IT Services GmbH\nContains modified Copernicus Sentinel data 2025\nCC BY-NC-SA 4.0",
+            "© OpenStreetMap contributors · ODbL 1.0",
+            "GSHHG 2.3.7 — Paul Wessel / Walter H. F. Smith\nLGPL v3",
+            "Contains modified Copernicus Sentinel data 2024",
+        ).forEach{label->
+            Text(label,style=uiText(12),modifier=Modifier.fillMaxWidth().padding(vertical=4.dp))
         }
     }
 }

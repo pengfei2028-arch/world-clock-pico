@@ -1,2 +1,4 @@
 Offline city catalogue: GeoNames (https://www.geonames.org), CC BY 4.0. Snapshot 2026-10-21. Adapted from cities15000: capital/admin-1 seats; China admin-2 seats; other admin-2 seats >=50,000 and populated cities >=100,000. District/borough, village and lower administrative feature codes excluded. This is a curated major-city catalogue, not an exhaustive legal register of municipal status. Chinese names/aliases adapted; country names from CLDR. Source: https://download.geonames.org/export/dump/
 Timezone rules: IANA tzdata 2026.5 via Python tzdata package, bundled transitions for 1900-2100. See TZDATA_LICENSE.txt.
+
+V106 display adaptation: the country suffix for catalogue entries with source region code TW is displayed as 中国. Source IDs, region codes, coordinates, aliases and timezone rules are retained.

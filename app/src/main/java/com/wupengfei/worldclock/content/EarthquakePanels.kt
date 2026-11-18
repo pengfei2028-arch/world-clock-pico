@@ -7,9 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.ui.platform.LocalContext
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.alpha
@@ -106,7 +103,6 @@ private fun number(value:Double?,digits:Int=1)=value?.let{String.format(Locale.R
 @Composable internal fun EarthquakePanel(clock:ClockState){
     val q=clock.earthquakes;val event=q.selected;val group=q.group;val catalog=q.catalog
     val regions=remember(q.filtered,q.replayTime,q.sortOrder){q.listed}
-    val context=LocalContext.current
     LaunchedEffect(catalog,q.minimum,q.sortOrder,q.replay){
         android.util.Log.i("WorldClockQuakes","V90 displayed list source=USGS period=${q.period} minimum=${q.minimum} sort=${q.sortOrder} records=${regions.size} globe=${q.visible.size} fetched=${catalog?.fetchedAt} first=${regions.take(3).joinToString{it.id+":M"+it.magnitudeText}}")
     }
@@ -139,10 +135,6 @@ private fun number(value:Double?,digits:Int=1)=value?.let{String.format(Locale.R
                     if(!q.selectedFront)GlassAction({act{q.select(event,focus=true)}},Modifier.fillMaxWidth().height(40.dp)){Text("查看震中",style=uiText(14))}
                     Text("记录更新  ${time(event.updatedAt)}",style=uiText(12),color=Color.White.copy(alpha=.68f))
                     Text("USGS · ${event.id}",style=uiText(12),color=Color.White.copy(alpha=.68f))
-                    QuakeRules.sourceUrl(event)?.let{url->GlassAction({act{
-                        runCatching{context.startActivity(Intent(Intent.ACTION_VIEW,Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))}
-                            .onFailure{q.status="无法打开浏览器，可用上方事件 ID 在 USGS 查询"}
-                    }},Modifier.fillMaxWidth().height(36.dp)){Text("查看官方记录",style=uiText(14))}}
                     Text("历史事件 · 波纹仅标示事件位置",style=uiText(12),color=Color.White.copy(alpha=.68f))
                   }
                 }
